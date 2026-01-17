@@ -158,8 +158,8 @@ class MyGui():
         temp.grid(row=22, column=5, sticky='w', rowspan=1, columnspan=20)
         temp['values'] = [m for m in range(1, 13)]
 
-        selectedImportFile = tk.StringVar()
-        self.importDropdown = ttk.Combobox(root, textvariable=selectedImportFile, font=('Calibri', 11), width=60)
+        self.selectedImportFile = tk.StringVar()
+        self.importDropdown = ttk.Combobox(root, textvariable=self.selectedImportFile, font=('Calibri', 11), width=60)
         self.importDropdown.grid(row=2, column=29, sticky='w', rowspan=1, columnspan=14)
 
         selectedAssAcct = tk.StringVar()

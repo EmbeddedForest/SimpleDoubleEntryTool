@@ -88,8 +88,12 @@ GUI updates so far:
 
 '''
 
-ACCOUNTS_FP = 'Accounts.csv'
-JOURNAL_FP  = 'Journal.csv'
+GOOD = 'good'
+BAD  = 'bad'
+
+ACCOUNTS_FP  = 'Accounts.csv'
+JOURNAL_FP   = 'Journal.csv'
+DATA_FOLDER  = 'Data/'
 
 ACCT_HEADERS =                                          \
     ['Type', 'Full Account Name', 'Account Name',       \
@@ -100,7 +104,19 @@ ACCT_HEADERS =                                          \
 JRNL_HEADERS =                                          \
     ['Date', 'TransactionID', 'Description', 'Memo',    \
      'Full Account Name', 'Account Name',               \
-     'Amount Num.']                                    \
+     'Amount Num.']                                     \
+
+# Add more as needed
+ACCEPTED_DATE_NAMES =                                   \
+    ['Date', 'Trans. Date', 'Trans Date']               \
+
+# Add more as needed
+ACCEPTED_DESCRIPTION_NAMES =                            \
+    ['Description', 'Descr.']                           \
+
+# Add more as needed
+ACCEPTED_AMOUNT_NAMES =                                 \
+    ['Amount', 'Amount Num.', 'Amt']                    \
 
 
 def InitializationChecks(gui):
@@ -159,10 +175,9 @@ def GetAllDataFileNames():
     return returnList
 
 
-def GetAllAccountNames(fullName):
-    ''' Returns account names '''
+def GetAllAccountNames(gui, fullName):
+    ''' Returns account names as a list of strings '''
     returnList = list()
-    filePath = 'Accounts.csv'
 
     if (fullName == True):
         colName = 'Full Account Name'
@@ -170,20 +185,63 @@ def GetAllAccountNames(fullName):
         colName = 'Account Name'
 
     try:
-        with open(filePath, newline="", encoding="utf-8") as f:
+        with open(ACCOUNTS_FP, newline="", encoding="utf-8-sig") as f:
             reader = csv.DictReader(f)
             for row in reader:
                 returnList.append(row[colName])
     except:
-        print("file not foundz")
+        gui.Log('Something bad happened', 'error')
+        raise
 
     return returnList
 
+def CheckImportColmns(gui):
+    ''' Checks to see if selected csv import file is legit '''
+
+    # Check that csv file has necessary columns
+    try:
+        filePath = DATA_FOLDER + gui.selectedImportFile.get()
+
+        with open(filePath, newline="", encoding="utf-8-sig") as f:
+            reader = csv.DictReader(f)
+            headerList = list(next(reader).keys())
+
+            tmp = any(head in headerList for head in ACCEPTED_DATE_NAMES)
+            if (tmp == False):
+                gui.Log('Import csv does not have Date column.', 'error')
+                return BAD
+
+            tmp = any(head in headerList for head in ACCEPTED_DESCRIPTION_NAMES)
+            if (tmp == False):
+                gui.Log('Import csv does not have Description column.', 'error')
+                return BAD
+
+            tmp = any(head in headerList for head in ACCEPTED_AMOUNT_NAMES)
+            if (tmp == False):
+                gui.Log('Import csv does not have Amount column.', 'error')
+                return BAD
+
+    except:
+        gui.Log('Something bad happened', 'error')
+        raise
+
+    return GOOD
 
 def ToolStart(gui):
     ''' TODO '''
-    # Check that jounral exists
-    # Check that account
+
+    # Clear log
+    gui.Log(' ', 'default')
+
+    # Check if csv file has valid columns for parsing
+    retVal = CheckImportColmns(gui)
+    if (retVal == BAD):
+        return
+
+    # Map import csv columns
+    # Map journal csv columns
+
+    # Loop through all import transactions and compare against journal
 
 
 def Main():
@@ -197,7 +255,7 @@ def Main():
     gui.LoadImportDropdown(importList)
 
     # Load associated account dropdown
-    accountList = GetAllAccountNames(fullName=True)
+    accountList = GetAllAccountNames(gui, fullName=True)
     gui.LoadAssAcctDropdown(accountList)
 
     # Bind buttons
