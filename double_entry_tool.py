@@ -1,3 +1,23 @@
+#------------------------------------------------------------------------------
+# File:
+#   double_entry_tool.py
+#
+# Author:
+#   EmbeddedForest
+#
+# Date:
+#   01/17/2026
+#
+# Description:
+#   This file executes the "Simple Double Entry Tool". It interfaces with the
+#   GUI and associated csv files to help categorize and balance financial
+#   transactions and accounts using double entry bookkeeping.
+#
+# TODO:
+#   - Break the tool down into different classes to better organize code
+#
+#------------------------------------------------------------------------------
+
 import os
 import csv
 from gui import MyGui
@@ -5,6 +25,9 @@ from pathlib import Path
 from datetime import datetime
 
 
+#------------------------------------------------------------------------------
+# Application Constants
+#------------------------------------------------------------------------------
 GOOD = 'good'
 BAD  = 'bad'
 
@@ -34,6 +57,7 @@ ACCEPTED_DESCRIPTION_NAMES =                            \
 # Add more as needed
 ACCEPTED_AMOUNT_NAMES =                                 \
     ['Amount', 'Amount Num.', 'Amt']                    \
+
 
 
 def InitializationChecks(gui):
@@ -80,6 +104,7 @@ def InitializationChecks(gui):
         raise
 
 
+
 def GetAllDataFileNames():
     ''' Returns all csv file names from Data folder as a list of strings'''
     returnList = list()
@@ -90,6 +115,7 @@ def GetAllDataFileNames():
             returnList.append(file)
 
     return returnList
+
 
 
 def GetAllAccountNames(gui, fullName):
@@ -111,6 +137,8 @@ def GetAllAccountNames(gui, fullName):
         raise
 
     return returnList
+
+
 
 def CheckImportColmns(gui):
     ''' Checks to see if selected csv import file is legit '''
@@ -144,6 +172,8 @@ def CheckImportColmns(gui):
 
     return GOOD
 
+
+
 def ToolStart(gui):
     ''' TODO '''
 
@@ -159,6 +189,7 @@ def ToolStart(gui):
     # Map journal csv columns
 
     # Loop through all import transactions and compare against journal
+
 
 
 def Main():
@@ -180,6 +211,7 @@ def Main():
 
     # Begin main thread
     gui.root.mainloop()
+
 
 
 Main()
