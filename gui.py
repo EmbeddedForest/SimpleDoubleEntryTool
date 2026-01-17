@@ -68,10 +68,10 @@ class MyGui():
 
         # Static Labels - TODO: create function which just runs through a config/table to generate labels
         temp = tk.Label(root, text='Import File:', font=('Calibri', 14, 'bold'))
-        temp.grid(row=2, column=24, sticky='e', padx=0, pady=0, rowspan=1, columnspan=4)
+        temp.grid(row=2, column=24, sticky='e', padx=0, pady=0, rowspan=1, columnspan=5)
 
-        temp = tk.Label(root, text='Journal File:', font=('Calibri', 14, 'bold'))
-        temp.grid(row=4, column=24, sticky='e', padx=0, pady=0, rowspan=1, columnspan=4)
+        temp = tk.Label(root, text='Asscociated Acct:', font=('Calibri', 14, 'bold'))
+        temp.grid(row=4, column=24, sticky='e', padx=0, pady=0, rowspan=1, columnspan=5)
 
         temp = tk.Label(root, text='Date:', font=('Calibri', 14, 'bold'))
         temp.grid(row=9, column=2, sticky='w', padx=0, pady=0, rowspan=1, columnspan=3)
@@ -158,15 +158,13 @@ class MyGui():
         temp.grid(row=22, column=5, sticky='w', rowspan=1, columnspan=20)
         temp['values'] = [m for m in range(1, 13)]
 
-        selectionImport = tk.StringVar()
-        temp = ttk.Combobox(root, textvariable=selectionImport, font=('Calibri', 11), width=60)
-        temp.grid(row=2, column=28, sticky='w', rowspan=1, columnspan=14)
-        temp['values'] = [m for m in range(1, 13)]
+        selectedImportFile = tk.StringVar()
+        self.importDropdown = ttk.Combobox(root, textvariable=selectedImportFile, font=('Calibri', 11), width=60)
+        self.importDropdown.grid(row=2, column=29, sticky='w', rowspan=1, columnspan=14)
 
-        selectionJournal = tk.StringVar()
-        temp = ttk.Combobox(root, textvariable=selectionJournal, font=('Calibri', 11), width=60)
-        temp.grid(row=4, column=28, sticky='w', rowspan=1, columnspan=14)
-        temp['values'] = [m for m in range(1, 13)]
+        selectedAssAcct = tk.StringVar()
+        self.assAcctDropdown = ttk.Combobox(root, textvariable=selectedAssAcct, font=('Calibri', 11), width=60)
+        self.assAcctDropdown.grid(row=4, column=29, sticky='w', rowspan=1, columnspan=14)
 
         selectionJournal = tk.StringVar()
         temp = ttk.Combobox(root, textvariable=selectionJournal, font=('Calibri', 11), width=72)
@@ -184,96 +182,32 @@ class MyGui():
 
         # Preview box
         previewText = tk.StringVar(value='  Line:   Date:         Description:   ')
-        temp = tk.Text(root, font=('Consolas', 9), width=170, height=15)
-        temp.grid(row=27, column=13, sticky='w', padx=0, pady=0, rowspan=10, columnspan=36)
-        temp.insert(tk.END, '  Line:   Date:         Description:   ')
+        self.previewBox = tk.Text(root, font=('Consolas', 9), width=170, height=15)
+        self.previewBox.grid(row=27, column=13, sticky='w', padx=0, pady=0, rowspan=10, columnspan=36)
+        self.previewBox.insert(tk.END, '  Line:   Date:         Description:   ')
 
         # Buttons
-        temp = tk.Button(root, text='Start', font=('Calibri', 14, 'bold'))
-        temp.grid(row=2, column=43, sticky='nesw', padx=20, pady=20, rowspan=3, columnspan=6)
+        self.startButton = tk.Button(root, text='Start', font=('Calibri', 14, 'bold'))
+        self.startButton.grid(row=2, column=43, sticky='nesw', padx=20, pady=20, rowspan=3, columnspan=6)
 
-        temp = tk.Button(root, text='Add Split', font=('Calibri', 14, 'bold'))
-        temp.grid(row=18, column=32, sticky='nesw', padx=20, pady=0, rowspan=2, columnspan=5)
+        self.addSplitButton = tk.Button(root, text='Add Split', font=('Calibri', 14, 'bold'))
+        self.addSplitButton.grid(row=18, column=32, sticky='nesw', padx=20, pady=0, rowspan=2, columnspan=5)
 
-        temp = tk.Button(root, text='Undo', font=('Calibri', 14, 'bold'))
-        temp.grid(row=18, column=40, sticky='nesw', padx=20, pady=0, rowspan=2, columnspan=5)
+        self.undoSplitButton = tk.Button(root, text='Undo', font=('Calibri', 14, 'bold'))
+        self.undoSplitButton.grid(row=18, column=40, sticky='nesw', padx=20, pady=0, rowspan=2, columnspan=5)
 
-        temp = tk.Button(root, text='Add to Ledger', font=('Calibri', 14, 'bold'))
-        temp.grid(row=27, column=2, sticky='nesw', padx=20, pady=20, rowspan=6, columnspan=8)
+        self.addEntryButton = tk.Button(root, text='Add to Ledger', font=('Calibri', 14, 'bold'))
+        self.addEntryButton.grid(row=27, column=2, sticky='nesw', padx=20, pady=20, rowspan=6, columnspan=8)
 
-        temp = tk.Button(root, text='Redo Last Entry', font=('Calibri', 14, 'bold'))
-        temp.grid(row=34, column=3, sticky='nesw', padx=20, pady=20, rowspan=2, columnspan=6)
-
-
-def Main():
-     gui = MyGui()
-     gui.root.mainloop()
+        self.redoEntryButton = tk.Button(root, text='Redo Last Entry', font=('Calibri', 14, 'bold'))
+        self.redoEntryButton.grid(row=34, column=3, sticky='nesw', padx=20, pady=20, rowspan=2, columnspan=6)
 
 
-Main()
+    def LoadImportDropdown(self, list):
+         ''' Loads import dropdown combobox'''
+         self.importDropdown['values'] = list
 
 
-
-
-# CUT
-
-
-        # selectedImportFile = tk.StringVar()
-        # temp = ttk.Combobox(root, textvariable=selectedImportFile)
-        # temp.grid(row=2, column=2, sticky='nsew', rowspan=1, columnspan=5)
-        # temp['values'] = [m for m in range(1, 13)]
-
-
-        # # Setup resize event
-        # self.root.bind('<Configure>', self.ResizeEvent)
-        # self.curHeight = self.root.winfo_reqheight()
-        # self.curWidth = self.root.winfo_reqwidth()
-
-
-        # temp = tk.LabelFrame(root)
-        # temp.grid(row=y, column=x, sticky='nesw', padx=0, pady=0, rowspan=1, columnspan=1)
-        # for x in range(self.NUM_COLS):
-        #     for y in range(self.NUM_ROWS):
-        #         temp = tk.Label(root, text='x',  font=('Segoe UI', 9, 'bold'))
-        #         temp.grid(row=x, column=y, sticky='nsew', padx=0, pady=0)
-
-        # self.canvas = tk.Canvas(root, bg='green')
-        # self.canvas.pack(fill=tk.BOTH, expand=True)
-        # # self.canvas.grid(row=0, column=0, sticky='nesw', padx=0, pady=0, columnspan=self.NUM_COLS, rowspan=self.NUM_ROWS)
-
-        # for x in range(self.NUM_COLS):
-        #     for y in range(self.NUM_ROWS):
-        #         self.canvas.create_line(x*self.COL_SIZE, 0, x*self.COL_SIZE, self.ROW_SIZE*self.NUM_ROWS, fill='#fff')
-        #         self.canvas.create_line(0, y*self.ROW_SIZE, self.COL_SIZE*self.NUM_COLS, y*self.ROW_SIZE, fill='#fff')
-
-        # self.canvas.addtag_all('all')
-
-    # def ResizeEvent(self, event):
-    #     ''' Resize of window occurred, adjust grid scaling '''
-        # wscale = float(event.width)/self.curWidth
-        # hscale = float(event.height)/self.curHeight
-        # self.curWidth = event.width
-        # self.curHeight = event.height
-        # # # resize the canvas
-        # # self.canvas.config(width=self.curWidth, height=self.curHeight)
-        # # rescale all the objects tagged with the 'all' tag
-        # self.canvas.scale('all',0,0,wscale,hscale)
-        # print('balls')
-
-
-'''
-TKinter threading notes:
-
-- Python threads are different than Tcl threads
-    - Each Tcl thread has separate Tcl instance associated with it
-        - Thread 1
-            Tcl Interpreter 1
-        - Thread 2
-            Tcl Interpreter 2
-    - Python interpreter can have many threads associated with it
-        - Python
-            - Thread 1
-            - Thread 2
-
-
-'''
+    def LoadAssAcctDropdown(self, list):
+         ''' Loads associated account dropdown combobox'''
+         self.assAcctDropdown['values'] = list
