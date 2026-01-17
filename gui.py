@@ -180,11 +180,21 @@ class MyGui():
         temp = tk.Entry(root, textvariable=inputAmount, font=('Calibri', 11), width=16, justify='left')
         temp.grid(row=15, column=31, sticky='w', padx=0, pady=0, rowspan=1, columnspan=4)
 
-        # Preview box
-        previewText = tk.StringVar(value='  Line:   Date:         Description:   ')
-        self.previewBox = tk.Text(root, font=('Consolas', 9), width=170, height=15)
-        self.previewBox.grid(row=27, column=13, sticky='w', padx=0, pady=0, rowspan=10, columnspan=36)
-        self.previewBox.insert(tk.END, '  Line:   Date:         Description:   ')
+        # Log box
+        self.logBox = tk.Text(root, font=('Consolas', 9), width=170, height=15)
+        self.logBox.grid(row=27, column=13, sticky='nsew', padx=0, pady=0, rowspan=10, columnspan=36)
+
+        # Scroll bar for log box
+        logScroll = tk.Scrollbar(root, orient='vertical', command=self.logBox.yview)
+        self.logBox.configure(yscrollcommand=logScroll.set)
+        logScroll.grid(row=27, column=49, sticky='wns', padx=0, pady=0, rowspan=10)
+
+        # Tags for different text types
+        self.logBox.tag_configure('header', background='white', foreground='black', font=('consolas', 10, 'bold'))
+        self.logBox.tag_configure('default', background='white', foreground='black', font=('consolas', 10))
+        self.logBox.tag_configure('error', background='white', foreground='red', font=('consolas', 10))
+
+
 
         # Buttons
         self.startButton = tk.Button(root, text='Start', font=('Calibri', 14, 'bold'))
@@ -204,10 +214,16 @@ class MyGui():
 
 
     def LoadImportDropdown(self, list):
-         ''' Loads import dropdown combobox'''
+         ''' Loads import dropdown combobox '''
          self.importDropdown['values'] = list
 
 
     def LoadAssAcctDropdown(self, list):
-         ''' Loads associated account dropdown combobox'''
+         ''' Loads associated account dropdown combobox '''
          self.assAcctDropdown['values'] = list
+
+
+    def Log(self, txt, tag):
+         ''' Logs information to '''
+         self.logBox.insert('end', txt, tag)
+         self.logBox.insert('end', '\n', tag)
