@@ -225,5 +225,11 @@ class MyGui():
 
     def Log(self, txt, tag):
          ''' Logs information to '''
+
+         if (txt == ' '):
+            # Blank log means delete log
+            self.logBox.delete('1.0', 'end')
+            return
+
          self.logBox.insert('end', txt, tag)
          self.logBox.insert('end', '\n', tag)
