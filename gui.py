@@ -1,3 +1,21 @@
+#------------------------------------------------------------------------------
+# File:
+#   gui.py
+#
+# Author:
+#   EmbeddedForest
+#
+# Date:
+#   01/17/2026
+#
+# Description:
+#   This file executes manages the GUI for the "Simple Double Entry Tool".
+#
+# TODO:
+#   - Clean up GUI initializations to make more flexible to changes
+#
+#------------------------------------------------------------------------------
+
 import tkinter as tk
 from tkinter import ttk
 from PIL import Image, ImageTk
