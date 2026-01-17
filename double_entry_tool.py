@@ -1,12 +1,21 @@
-import gui as g
-
+import os
+import csv
+from gui import MyGui
+from pathlib import Path
+from datetime import datetime
 
 
 '''
 Brain Dump:
 
+- alright, consensus is that we should keep the account file in the same format as gnucash
+    - allows compatibility between my excel journal and gnucash
+- also going to keep journal as separate file for the same reason
+    - allows me to verify my math / have redundancy
+
 Should be all event driven.
     - only thing that should happen on startup is loading combo boxes during startup
+        - combo boxes filled when journal file confirmed
 
 - nothing can happen until the start button is pressed
 - if any button is pressed before, show err msg in preview box
@@ -72,29 +81,93 @@ Functions:
 - check if split is balanced
 - update split status and preview
 
-
+ 
 GUI updates so far:
 - add new drop down in settings section to verify account associated with transaction list
 - use preview window to present errors / instructions ?
 
 '''
 
+def GetAllDataFiles():
+    ''' Returns all csv file names from Data folder as a list of strings'''
+    returnList = list()
+    folderPath = 'Data'
 
-# def Setup():
+    for file in os.listdir(folderPath):
+        if (file.lower().endswith(".csv")):
+            returnList.append(file)
+
+    return returnList
 
 
+def GetAllAccountNames(fullName):
+    ''' Returns account names '''
+    returnList = list()
+    filePath = 'Accounts.csv'
+
+    if (fullName == True):
+        colName = 'Full Account Name'
+    else:
+        colName = 'Account Name'
+
+    with open(filePath, newline="", encoding="utf-8") as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            returnList.append(row[colName])
+
+    return returnList
 
 
+def ToolStart(gui):
+    '''  '''
+    # gui.previewBox.insert(tk.END, '  BALLS   ')
+    print('Balls')
 
 
 def Main():
-    gui = g.MyGui()
+    gui = MyGui()
+
+    # Load import dropdown
+    importList = GetAllDataFiles()
+    gui.LoadImportDropdown(importList)
+
+    # Load associated account dropdown
+    accountList = GetAllAccountNames(fullName=True)
+    gui.LoadAssAcctDropdown(accountList)
 
     # Bind buttons
+    gui.startButton.configure(command=lambda:ToolStart(gui))
 
-    # Setup()
-
+    # Begin main thread
     gui.root.mainloop()
 
 
 Main()
+
+
+
+'''
+CUT
+
+'''
+
+    # folder_path = Path('Data')
+    # importFiles = list(folder_path.glob("*.csv"))
+
+    # importFiles
+
+    # print(importFiles[0])
+    # for fileName in importList:
+    #     path = os.path.join(folderPath, fileName)
+    #     lastModified = os.path.getmtime(path)
+    #     lastModified = datetime.fromtimestamp(lastModified).strftime('%m-%d-%Y %H:%M:%S')
+    #     importList
+    #     print(fileName, lastModified)
+
+    # for file in os.listdir(folderPath):
+    #     if (file.lower().endswith(".csv")):
+    #         path = os.path.join(folderPath, file)
+    #         lastModified = os.path.getmtime(path)
+    #         lastModified = datetime.fromtimestamp(lastModified).strftime('(Last Modified: %m/%d/%Y at %I:%M%p)').lstrip("0").lower()
+    #         print(file, lastModified)
+    #         importList.append(file + '     ' + lastModified)
