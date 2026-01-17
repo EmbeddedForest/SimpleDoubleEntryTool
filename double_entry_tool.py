@@ -88,7 +88,66 @@ GUI updates so far:
 
 '''
 
-def GetAllDataFiles():
+ACCOUNTS_FP = 'Accounts.csv'
+JOURNAL_FP  = 'Journal.csv'
+
+ACCT_HEADERS =                                          \
+    ['Type', 'Full Account Name', 'Account Name',       \
+     'Account Code', 'Description', 'Account Color',    \
+     'Notes', 'Symbol', 'Namespace', 'Hidden',          \
+     'Tax Info', 'Placeholder']                         \
+
+JRNL_HEADERS =                                          \
+    ['Date', 'TransactionID', 'Description', 'Memo',    \
+     'Full Account Name', 'Account Name',               \
+     'Amount Num.']                                    \
+
+
+def InitializationChecks(gui):
+    ''' Check Accounts.csv and Journal.csv are legit '''
+
+    # Check that 'Accounts.csv' file exists
+    try:
+        open(ACCOUNTS_FP, newline="", encoding="utf-8-sig")
+    except:
+        gui.Log('Accounts.csv does not exist in current directory.', 'error')
+
+    # Check that 'Journal.csv' file exists
+    try:
+        open(JOURNAL_FP, newline="", encoding="utf-8-sig")
+    except:
+        gui.Log('Journal.csv does not exist in current directory.', 'error')
+
+
+    # Check that 'Accounts.csv' file has necessary columns
+    try:
+        with open(ACCOUNTS_FP, newline="", encoding="utf-8-sig") as f:
+            reader = csv.DictReader(f)
+            headerList = list(next(reader).keys())
+
+        if (set(headerList) != set(ACCT_HEADERS)):
+            gui.Log('Accounts.csv is not syntactically correct.', 'error')
+
+    except:
+        gui.Log('Something bad happened', 'error')
+        raise
+
+
+    # Check that 'Journal.csv' file has necessary columns
+    try:
+        with open(JOURNAL_FP, newline="", encoding="utf-8-sig") as f:
+            reader = csv.DictReader(f)
+            headerList = list(next(reader).keys())
+
+        if (set(headerList) != set(JRNL_HEADERS)):
+            gui.Log('Journal.csv is not syntactically correct.', 'error')
+
+    except:
+        gui.Log('Something bad happened', 'error')
+        raise
+
+
+def GetAllDataFileNames():
     ''' Returns all csv file names from Data folder as a list of strings'''
     returnList = list()
     folderPath = 'Data'
@@ -110,25 +169,31 @@ def GetAllAccountNames(fullName):
     else:
         colName = 'Account Name'
 
-    with open(filePath, newline="", encoding="utf-8") as f:
-        reader = csv.DictReader(f)
-        for row in reader:
-            returnList.append(row[colName])
+    try:
+        with open(filePath, newline="", encoding="utf-8") as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                returnList.append(row[colName])
+    except:
+        print("file not foundz")
 
     return returnList
 
 
 def ToolStart(gui):
-    '''  '''
-    # gui.previewBox.insert(tk.END, '  BALLS   ')
-    print('Balls')
+    ''' TODO '''
+    # Check that jounral exists
+    # Check that account
 
 
 def Main():
     gui = MyGui()
 
+    # Initialization Checks
+    InitializationChecks(gui)
+
     # Load import dropdown
-    importList = GetAllDataFiles()
+    importList = GetAllDataFileNames()
     gui.LoadImportDropdown(importList)
 
     # Load associated account dropdown
