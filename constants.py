@@ -18,7 +18,7 @@ GOOD = 'good'
 BAD  = 'bad'
 
 # Accepted header names (add more as needed)
-ACCEPTED_DATE_NAMES         = ['Date', 'Trans. Date', 'Trans Date']
+ACCEPTED_DATE_NAMES         = ['Date', 'Trans. Date', 'Posting Date']
 ACCEPTED_DESCRIPTION_NAMES  = ['Description', 'Descr.']
 ACCEPTED_AMOUNT_NAMES       = ['Amount', 'Amount Num.', 'Amt']
 
