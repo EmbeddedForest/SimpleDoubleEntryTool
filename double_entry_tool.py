@@ -20,93 +20,62 @@
 
 import os
 import csv
+import constants as c
 from gui import MyGui
-from pathlib import Path
-from datetime import datetime
-
-
-#------------------------------------------------------------------------------
-# Application Constants
-#------------------------------------------------------------------------------
-GOOD = 'good'
-BAD  = 'bad'
-
-ACCOUNTS_FP  = 'Accounts.csv'
-JOURNAL_FP   = 'Journal.csv'
-DATA_FOLDER  = 'Data/'
-
-ACCT_HEADERS =                                          \
-    ['Type', 'Full Account Name', 'Account Name',       \
-     'Account Code', 'Description', 'Account Color',    \
-     'Notes', 'Symbol', 'Namespace', 'Hidden',          \
-     'Tax Info', 'Placeholder']                         \
-
-JRNL_HEADERS =                                          \
-    ['Date', 'TransactionID', 'Description', 'Memo',    \
-     'Full Account Name', 'Account Name',               \
-     'Amount Num.']                                     \
-
-# Add more as needed
-ACCEPTED_DATE_NAMES =                                   \
-    ['Date', 'Trans. Date', 'Trans Date']               \
-
-# Add more as needed
-ACCEPTED_DESCRIPTION_NAMES =                            \
-    ['Description', 'Descr.']                           \
-
-# Add more as needed
-ACCEPTED_AMOUNT_NAMES =                                 \
-    ['Amount', 'Amount Num.', 'Amt']                    \
+from import_file import ImportFile
+from account_file import AccountFile
+from journal_file import JournalFile
 
 
 
-def InitializationChecks(gui):
-    ''' Check Accounts.csv and Journal.csv are legit '''
+# def InitializationChecks(gui):
+#     ''' Check Accounts.csv and Journal.csv are legit '''
 
-    # Check that 'Accounts.csv' file exists
-    try:
-        open(ACCOUNTS_FP, newline="", encoding="utf-8-sig")
-    except:
-        gui.Log('Accounts.csv does not exist in current directory.', 'error')
+#     # Check that 'Accounts.csv' file exists
+#     try:
+#         open(ACCOUNTS_FP, newline="", encoding="utf-8-sig")
+#     except:
+#         gui.Log('Accounts.csv does not exist in current directory.', 'error')
 
-    # Check that 'Journal.csv' file exists
-    try:
-        open(JOURNAL_FP, newline="", encoding="utf-8-sig")
-    except:
-        gui.Log('Journal.csv does not exist in current directory.', 'error')
-
-
-    # Check that 'Accounts.csv' file has necessary columns
-    try:
-        with open(ACCOUNTS_FP, newline="", encoding="utf-8-sig") as f:
-            reader = csv.DictReader(f)
-            headerList = list(next(reader).keys())
-
-        if (set(headerList) != set(ACCT_HEADERS)):
-            gui.Log('Accounts.csv is not syntactically correct.', 'error')
-
-    except:
-        gui.Log('Something bad happened', 'error')
-        raise
+#     # Check that 'Journal.csv' file exists
+#     try:
+#         open(JOURNAL_FP, newline="", encoding="utf-8-sig")
+#     except:
+#         gui.Log('Journal.csv does not exist in current directory.', 'error')
 
 
-    # Check that 'Journal.csv' file has necessary columns
-    try:
-        with open(JOURNAL_FP, newline="", encoding="utf-8-sig") as f:
-            reader = csv.DictReader(f)
-            headerList = list(next(reader).keys())
+#     # Check that 'Accounts.csv' file has necessary columns
+#     try:
+#         with open(ACCOUNTS_FP, newline="", encoding="utf-8-sig") as f:
+#             reader = csv.DictReader(f)
+#             headerList = list(next(reader).keys())
 
-        if (set(headerList) != set(JRNL_HEADERS)):
-            gui.Log('Journal.csv is not syntactically correct.', 'error')
+#         if (set(headerList) != set(ACCT_HEADERS)):
+#             gui.Log('Accounts.csv is not syntactically correct.', 'error')
 
-    except:
-        gui.Log('Something bad happened', 'error')
-        raise
+#     except:
+#         gui.Log('Something bad happened', 'error')
+#         raise
+
+
+#     # Check that 'Journal.csv' file has necessary columns
+#     try:
+#         with open(JOURNAL_FP, newline="", encoding="utf-8-sig") as f:
+#             reader = csv.DictReader(f)
+#             headerList = list(next(reader).keys())
+
+#         if (set(headerList) != set(JRNL_HEADERS)):
+#             gui.Log('Journal.csv is not syntactically correct.', 'error')
+
+#     except:
+#         gui.Log('Something bad happened', 'error')
+#         raise
 
 
 
 def GetAllDataFileNames():
-    ''' Returns all csv file names from Data folder as a list of strings'''
+    ''' Returns all csv file names from Data folder as a list of strings '''
+
     returnList = list()
     folderPath = 'Data'
 
@@ -118,74 +87,85 @@ def GetAllDataFileNames():
 
 
 
-def GetAllAccountNames(gui, fullName):
-    ''' Returns account names as a list of strings '''
-    returnList = list()
+# def GetAllAccountNames(gui, fullName):
+#     ''' Returns account names as a list of strings '''
 
-    if (fullName == True):
-        colName = 'Full Account Name'
-    else:
-        colName = 'Account Name'
+#     returnList = list()
 
-    try:
-        with open(ACCOUNTS_FP, newline="", encoding="utf-8-sig") as f:
-            reader = csv.DictReader(f)
-            for row in reader:
-                returnList.append(row[colName])
-    except:
-        gui.Log('Something bad happened', 'error')
-        raise
+#     if (fullName == True):
+#         colName = 'Full Account Name'
+#     else:
+#         colName = 'Account Name'
 
-    return returnList
+#     try:
+#         with open(c.ACCOUNTS_FP, newline="", encoding="utf-8-sig") as f:
+#             reader = csv.DictReader(f)
+#             for row in reader:
+#                 returnList.append(row[colName])
+#     except:
+#         gui.Log('Something bad happened', 'error')
+#         raise
 
-
-
-def CheckImportColmns(gui):
-    ''' Checks to see if selected csv import file is legit '''
-
-    # Check that csv file has necessary columns
-    try:
-        filePath = DATA_FOLDER + gui.selectedImportFile.get()
-
-        with open(filePath, newline="", encoding="utf-8-sig") as f:
-            reader = csv.DictReader(f)
-            headerList = list(next(reader).keys())
-
-            tmp = any(head in headerList for head in ACCEPTED_DATE_NAMES)
-            if (tmp == False):
-                gui.Log('Import csv does not have Date column.', 'error')
-                return BAD
-
-            tmp = any(head in headerList for head in ACCEPTED_DESCRIPTION_NAMES)
-            if (tmp == False):
-                gui.Log('Import csv does not have Description column.', 'error')
-                return BAD
-
-            tmp = any(head in headerList for head in ACCEPTED_AMOUNT_NAMES)
-            if (tmp == False):
-                gui.Log('Import csv does not have Amount column.', 'error')
-                return BAD
-
-    except:
-        gui.Log('Something bad happened', 'error')
-        raise
-
-    return GOOD
+#     return returnList
 
 
 
-def ToolStart(gui):
+# def CheckImportColmns(gui):
+#     ''' Checks to see if selected csv import file is legit '''
+
+#     # Check that csv file has necessary columns
+#     try:
+#         filePath = DATA_FOLDER + 'balls.csv'
+
+#         with open(filePath, newline="", encoding="utf-8-sig") as f:
+#             reader = csv.DictReader(f)
+#             headerList = list(next(reader).keys())
+
+#             tmp = any(head in headerList for head in ACCEPTED_DATE_NAMES)
+#             if (tmp == False):
+#                 gui.Log('Import csv does not have Date column.', 'error')
+#                 return BAD
+
+#             tmp = any(head in headerList for head in ACCEPTED_DESCRIPTION_NAMES)
+#             if (tmp == False):
+#                 gui.Log('Import csv does not have Description column.', 'error')
+#                 return BAD
+
+#             tmp = any(head in headerList for head in ACCEPTED_AMOUNT_NAMES)
+#             if (tmp == False):
+#                 gui.Log('Import csv does not have Amount column.', 'error')
+#                 return BAD
+
+#     except FileNotFoundError:
+#         gui.Log('Selected Import csv file does not exist', 'error')
+
+#     except:
+#         gui.Log('Something bad happened', 'error')
+#         raise
+
+#     return GOOD
+
+
+
+def ToolStart(gui, inFile, acctFile, journalFile):
     ''' TODO '''
 
     # Clear log
-    gui.Log(' ', 'default')
+    msg = ' ', 'default'
+    gui.Log(msg)
 
     # Check if csv file has valid columns for parsing
-    retVal = CheckImportColmns(gui)
-    if (retVal == BAD):
+    filePath = c.DATA_FOLDER + gui.selectedImportFile.get()
+    retVal, msg = inFile.CheckFile(filePath)
+    if (retVal == c.BAD):
+        gui.Log(msg)
         return
 
-    # Map import csv columns
+    # # Map import csv columns
+    # retVal = MapImportColmns(gui)
+    # if (retVal == BAD):
+    #     return
+
     # Map journal csv columns
 
     # Loop through all import transactions and compare against journal
@@ -193,21 +173,33 @@ def ToolStart(gui):
 
 
 def Main():
-    gui = MyGui()
 
-    # Initialization Checks
-    InitializationChecks(gui)
+    # Initialization
+    gui = MyGui()
+    inFile = ImportFile()
+    acctFile = AccountFile()
+    journalFile = JournalFile()
+
+    # Check that Account.csv is legit
+    retVal, msg = acctFile.CheckFile()
+    if (retVal == c.BAD):
+        gui.Log(msg)
+
+    # Check that Account.csv is legit
+    retVal, msg = journalFile.CheckFile()
+    if (retVal == c.BAD):
+        gui.Log(msg)
 
     # Load import dropdown
     importList = GetAllDataFileNames()
     gui.LoadImportDropdown(importList)
 
     # Load associated account dropdown
-    accountList = GetAllAccountNames(gui, fullName=True)
+    accountList = acctFile._GetAccountNames(fullName=True)
     gui.LoadAssAcctDropdown(accountList)
 
     # Bind buttons
-    gui.startButton.configure(command=lambda:ToolStart(gui))
+    gui.startButton.configure(command=lambda:ToolStart(gui, inFile, acctFile, journalFile))
 
     # Begin main thread
     gui.root.mainloop()

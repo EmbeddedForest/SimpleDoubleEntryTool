@@ -241,13 +241,20 @@ class MyGui():
          self.assAcctDropdown['values'] = list
 
 
-    def Log(self, txt, tag):
-         ''' Logs information to '''
+    def Log(self, payload):
+        '''
+        Logs information to GUI preview box
 
-         if (txt == ' '):
+        payload = (msg, tag)
+        '''
+
+        txt = payload[0]
+        tag = payload[1]
+
+        if (txt == ' '):
             # Blank log means delete log
             self.logBox.delete('1.0', 'end')
             return
 
-         self.logBox.insert('end', txt, tag)
-         self.logBox.insert('end', '\n', tag)
+        self.logBox.insert('end', txt, tag)
+        self.logBox.insert('end', '\n', tag)
