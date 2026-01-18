@@ -53,3 +53,13 @@ class JournalFile():
         # Looks good
         log = 'Journal.csv is legit', 'default'
         return c.GOOD, log
+
+
+    def FindLatest(self, dateD, descD, amntD):
+        ''' TODO '''
+
+        self.LatestIndex = 2
+
+
+        log = 'All good', 'default'
+        return c.GOOD, log

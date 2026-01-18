@@ -40,7 +40,7 @@ def GetAllDataFileNames():
     return returnList
 
 
-def ToolStart(gui, inFile, acctFile, journalFile):
+def ToolStart(gui, iFile, aFile, jFile):
     ''' TODO '''
 
     # Clear log
@@ -51,12 +51,30 @@ def ToolStart(gui, inFile, acctFile, journalFile):
     filePath = c.DATA_FOLDER + gui.selectedImportFile.get()
 
     # Setup the new import file
-    retVal, msg = inFile.SetupFile(filePath)
+    retVal, msg = iFile.SetupFile(filePath)
     if (retVal == c.BAD):
         gui.Log(msg)
         return
 
-    print(inFile.descData)
+    # Find latest transaction which doesn't already exist in journal
+    retVal, msg = jFile.FindLatest(iFile.dateData, iFile.descData, iFile.amntData)
+    if (retVal == c.BAD):
+        gui.Log(msg)
+        return
+
+    # Check to see if all transactions accounted for already
+    if (jFile.LatestIndex >= iFile.numTrans):
+        msg = 'All transactions accounted for already', 'default'
+        gui.Log(msg)
+        return
+
+    # Load transaction to GUI
+    i = jFile.LatestIndex
+    date = iFile.dateData[i]
+    gui.displayDate.set(date)
+
+
+    print(iFile.descData)
 
 
 
