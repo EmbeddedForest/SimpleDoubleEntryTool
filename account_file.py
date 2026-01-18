@@ -54,7 +54,7 @@ class AccountFile():
         log = 'Account.csv is legit', 'default'
         return c.GOOD, log
 
-    def _GetAccountNames(self, fullName):
+    def GetAccountNames(self, fullName):
         ''' Returns all account names as a list of strings '''
 
         returnList = list()
