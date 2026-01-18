@@ -55,13 +55,16 @@ def ToolStart(gui, inFile, acctFile, journalFile):
         return
 
     # Setup import file object to point to correct columns
-    filePath = c.DATA_FOLDER + gui.selectedImportFile.get()
-    retVal, msg = inFile.MapColumns(filePath)
+    retVal, msg = inFile.MapColumns()
     if (retVal == c.BAD):
         gui.Log(msg)
         return
 
-    # Loop through all import transactions and compare against journal
+    # Find latest uncategorized transaction from import file
+    retVal, msg = inFile.LoadLatestTransactionData()
+    if (retVal == c.BAD):
+        gui.Log(msg)
+        return
 
 
 
@@ -88,7 +91,7 @@ def Main():
     gui.LoadImportDropdown(importList)
 
     # Load associated account dropdown
-    accountList = acctFile._GetAccountNames(fullName=True)
+    accountList = acctFile.GetAccountNames(fullName=True)
     gui.LoadAssAcctDropdown(accountList)
 
     # Bind buttons
