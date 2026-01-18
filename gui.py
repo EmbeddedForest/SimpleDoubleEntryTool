@@ -139,16 +139,17 @@ class MyGui():
         # lableTextAutoAccount.set('NEW TEXT')
 
         # Data display boxes
-        displayDate = tk.StringVar(value='12/12/2025')
-        temp = tk.Entry(root, textvariable=displayDate, font=('Calibri', 11), width=12, justify='center', state='readonly')
+        self.displayDate = tk.StringVar(value='12/12/2025')
+        self.displayDate.set('balls')
+        temp = tk.Entry(root, textvariable=self.displayDate, font=('Calibri', 11), width=12, justify='center', state='readonly')
         temp.grid(row=10, column=2, sticky='w', padx=0, pady=0, rowspan=1, columnspan=3)
 
-        displayDescription = tk.StringVar(value='  COMPANY INC PAYROLL')
-        temp = tk.Entry(root, textvariable=displayDescription, font=('Calibri', 11), width=64, justify='left', state='readonly')
+        self.displayDescription = tk.StringVar(value='  COMPANY INC PAYROLL')
+        temp = tk.Entry(root, textvariable=self.displayDescription, font=('Calibri', 11), width=64, justify='left', state='readonly')
         temp.grid(row=10, column=6, sticky='w', padx=0, pady=0, rowspan=1, columnspan=15)
 
-        displayAmount = tk.StringVar(value='420.69')
-        temp = tk.Entry(root, textvariable=displayAmount, font=('Calibri', 11), width=12, justify='center', state='readonly')
+        self.displayAmount = tk.StringVar(value='420.69')
+        temp = tk.Entry(root, textvariable=self.displayAmount, font=('Calibri', 11), width=12, justify='center', state='readonly')
         temp.grid(row=10, column=22, sticky='w', padx=0, pady=0, rowspan=1, columnspan=3)
 
         displaySplitStatus = tk.StringVar(value='  SPLIT NOT BALANCED')

@@ -33,6 +33,7 @@ class ImportFile():
         self.dateData = []
         self.descData = []
         self.amntData = []
+        self.numTrans = 0
 
         # Check if the file actually exists
         retVal, log = self._CheckIfFileExists(filePath)
@@ -60,6 +61,10 @@ class ImportFile():
 
     def _CheckIfFileExists(self, filePath):
         ''' Check that specified csv file exists '''
+
+        if (filePath == 'Data/'):
+            log = 'Selected Import csv file empty', 'error'
+            return c.BAD, log
 
         try:
             f = open(filePath, newline="", encoding="utf-8-sig")
@@ -175,6 +180,7 @@ class ImportFile():
         self.dateData = []
         self.descData = []
         self.amntData = []
+        self.numTrans = 0
 
         try:
             with open(self.filePath, newline="", encoding="utf-8-sig") as f:
@@ -183,6 +189,7 @@ class ImportFile():
                     self.dateData.append(row[self.dateCol])
                     self.descData.append(row[self.descCol])
                     self.amntData.append(row[self.amntCol])
+                    self.numTrans = self.numTrans + 1
 
         except FileNotFoundError:
             log = 'Selected Import csv file does not exist', 'error'
