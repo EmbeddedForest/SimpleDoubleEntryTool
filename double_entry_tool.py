@@ -47,24 +47,16 @@ def ToolStart(gui, inFile, acctFile, journalFile):
     msg = ' ', 'default'
     gui.Log(msg)
 
-    # Check if csv file has valid columns for parsing
+    # Get selected import file path from GUI
     filePath = c.DATA_FOLDER + gui.selectedImportFile.get()
-    retVal, msg = inFile.CheckFile(filePath)
+
+    # Setup the new import file
+    retVal, msg = inFile.SetupFile(filePath)
     if (retVal == c.BAD):
         gui.Log(msg)
         return
 
-    # Setup import file object to point to correct columns
-    retVal, msg = inFile.MapColumns()
-    if (retVal == c.BAD):
-        gui.Log(msg)
-        return
-
-    # Find latest uncategorized transaction from import file
-    retVal, msg = inFile.LoadLatestTransactionData()
-    if (retVal == c.BAD):
-        gui.Log(msg)
-        return
+    print(inFile.descData)
 
 
 
