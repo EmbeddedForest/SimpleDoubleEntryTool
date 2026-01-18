@@ -19,10 +19,69 @@ import constants as c
 
 class ImportFile():
 
-    def CheckFile(self, filePath):
-        ''' Checks to see if specified csv import file is legit '''
+    def SetupFile(self, filePath):
+        ''' Set up specified import file '''
 
-        # Check that csv file exists
+        # Cleanup previous data
+        self.filePath = ' '
+        self.dateCol = ' '
+        self.descCol = ' '
+        self.amntCol = ' '
+        self.dateCur = ' '
+        self.descCur = ' '
+        self.amntCur = ' '
+        self.dateData = []
+        self.descData = []
+        self.amntData = []
+
+        # Check if the file actually exists
+        retVal, log = self._CheckIfFileExists(filePath)
+        if (retVal == c.BAD):
+            return c.BAD, log
+
+        # Check that csv file has necessary column headers
+        retVal, log = self._CheckIfColumnsExists(filePath)
+        if (retVal == c.BAD):
+            return c.BAD, log
+
+        # Map and update column headers
+        retVal, log = self._UpdateColumnHeaders()
+        if (retVal == c.BAD):
+            return c.BAD, log
+
+        # Update transaction data lists
+        retVal, log = self._UpdateDataLists()
+        if (retVal == c.BAD):
+            return c.BAD, log
+
+        log = 'Import file setup is successful', 'default'
+        return c.GOOD, log
+
+
+    def _CheckIfFileExists(self, filePath):
+        ''' Check that specified csv file exists '''
+
+        try:
+            f = open(filePath, newline="", encoding="utf-8-sig")
+            f.close()
+
+        except FileNotFoundError:
+            log = 'Selected Import csv file does not exist', 'error'
+            return c.BAD, log
+
+        except:
+            log = 'Something bad happened', 'error'
+            raise
+
+        log = 'Import file does exist', 'default'
+        return c.GOOD, log
+
+
+    def _CheckIfColumnsExists(self, filePath):
+        ''' Check if necessary column headers exist '''
+
+        self.filePath = ' '
+
         try:
             with open(filePath, newline="", encoding="utf-8-sig") as f:
                 reader = csv.DictReader(f)
@@ -36,7 +95,6 @@ class ImportFile():
             log = 'Something bad happened', 'error'
             raise
 
-        # Check that csv file has necessary column headers
         tmp = any(head in headerList for head in c.ACCEPTED_DATE_NAMES)
         if (tmp == False):
             log = 'Import csv does not have Date column.', 'error'
@@ -52,15 +110,20 @@ class ImportFile():
             log = 'Import csv does not have Amount column.', 'error'
             return c.BAD, log
 
-        # All good
+        # Safe to update filePath
         self.filePath = filePath
-        log = 'Import file is legit', 'default'
+
+        log = 'Import file has necessary columns', 'default'
         return c.GOOD, log
 
-    def MapColumns(self):
-        ''' Connects to necessary headers in specified csv file '''
 
-        # Check that csv file exists
+    def _UpdateColumnHeaders(self):
+        ''' Links object to necessary headers in current csv file '''
+
+        self.dateCol = ' '
+        self.descCol = ' '
+        self.amntCol = ' '
+
         try:
             with open(self.filePath, newline="", encoding="utf-8-sig") as f:
                 reader = csv.DictReader(f)
@@ -73,10 +136,6 @@ class ImportFile():
         except:
             log = 'Something bad happened', 'error'
             raise
-
-        self.dateCol = ' '
-        self.descCol = ' '
-        self.amntCol = ' '
 
         for dateName in c.ACCEPTED_DATE_NAMES:
             if (dateName in headerList):
@@ -106,28 +165,24 @@ class ImportFile():
             return c.BAD, log
 
         # Looks good
-        log = 'Import columns mapped successfully'
+        log = 'Import columns updated successfully'
         return c.GOOD, log
 
 
-    def LoadLatestTransactionData(self):
-        ''' Load the latest transaction data '''
+    def _UpdateDataLists(self):
+        ''' Updates data lists with latest transaction data '''
 
-        self.curDate = ' '
-        self.curDesc = ' '
-        self.curAmnt = ' '
-
-        dateData = []
-        descData = []
-        amntData = []
+        self.dateData = []
+        self.descData = []
+        self.amntData = []
 
         try:
             with open(self.filePath, newline="", encoding="utf-8-sig") as f:
                 reader = csv.DictReader(f)
                 for row in reader:
-                    dateData.append(row[self.dateCol])
-                    descData.append(row[self.descCol])
-                    amntData.append(row[self.amntCol])
+                    self.dateData.append(row[self.dateCol])
+                    self.descData.append(row[self.descCol])
+                    self.amntData.append(row[self.amntCol])
 
         except FileNotFoundError:
             log = 'Selected Import csv file does not exist', 'error'
@@ -137,14 +192,5 @@ class ImportFile():
             log = 'Something bad happened', 'error'
             raise
 
-        self.curDate = dateData[2]
-        self.curDesc = descData[2]
-        self.curAmnt = amntData[2]
-
-        print(self.curDate)
-        print(self.curDesc)
-        print(self.curAmnt)
-
-        # Looks good
-        log = 'Import data pulled successfully'
+        log = 'Import data updated successfully'
         return c.GOOD, log
