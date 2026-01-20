@@ -53,7 +53,6 @@ class AccountFile():
     def _CheckIfFileExists(self):
         ''' Check that Accounts.csv file exists '''
 
-        # Check that 'Accounts.csv' file exists
         try:
             f = open(c.ACCOUNTS_FP, newline="", encoding="utf-8-sig")
             f.close()
@@ -110,8 +109,8 @@ class AccountFile():
                 reader = csv.DictReader(f)
 
                 for row in reader:
-                    self.allAcctsFullName.append(row[c.ACCT_NAME])
-                    self.allAcctsShortName.append(row[c.ACCT_NAME_FULL])
+                    self.allAcctsShortName.append(row[c.ACCT_NAME])
+                    self.allAcctsFullName.append(row[c.ACCT_NAME_FULL])
 
                     if ('Assets' in row[c.ACCT_NAME_FULL]):
                         self.assetAcctList.append(row[c.ACCT_NAME_FULL])
