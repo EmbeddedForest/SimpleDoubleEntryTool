@@ -27,17 +27,30 @@ from account_file import AccountFile
 from journal_file import JournalFile
 
 
-def GetAllDataFileNames():
-    ''' Returns all csv file names from Data folder as a list of strings '''
+def LoadNewTransaction(gui, iFile, aFile, jFile):
+    ''' TODO '''
 
-    returnList = list()
-    folderPath = 'Data'
+    # Place new data into GUI
+    i = jFile.LatestIndex
+    date = iFile.dateData[i]
+    desc = iFile.descData[i]
+    amnt = iFile.amntData[i]
+    gui.displayDate.set(date)
+    gui.displayDescription.set(desc)
+    gui.displayAmount.set(amnt)
 
-    for file in os.listdir(folderPath):
-        if (file.lower().endswith(".csv")):
-            returnList.append(file)
+    # Find suggested account
+    jFile.FindLast(date, desc, amnt)
 
-    return returnList
+    # # Clear all accounts
+
+
+    # # Load suggested account
+    # acctList = aFile.GetAccountNames(True)
+
+    # if (jFile.suggestedAcct in acctList):
+        
+
 
 
 def ToolStart(gui, iFile, aFile, jFile):
@@ -68,13 +81,8 @@ def ToolStart(gui, iFile, aFile, jFile):
         gui.Log(msg)
         return
 
-    # Load transaction to GUI
-    i = jFile.LatestIndex
-    date = iFile.dateData[i]
-    gui.displayDate.set(date)
-
-
-    print(iFile.descData)
+    # Load new transaction to GUI
+    LoadNewTransaction(gui, iFile, aFile, jFile)
 
 
 
@@ -82,30 +90,33 @@ def Main():
 
     # Initialization
     gui = MyGui()
-    inFile = ImportFile()
-    acctFile = AccountFile()
-    journalFile = JournalFile()
+    iFile = ImportFile()
+    aFile = AccountFile()
+    jFile = JournalFile()
 
-    # Check that Account.csv is legit
-    retVal, msg = acctFile.CheckFile()
+    # Setup Account.csv file
+    retVal, msg = aFile.SetupFile()
     if (retVal == c.BAD):
         gui.Log(msg)
 
     # Check that Account.csv is legit
-    retVal, msg = journalFile.CheckFile()
+    retVal, msg = jFile.CheckFile()
     if (retVal == c.BAD):
         gui.Log(msg)
 
     # Load import dropdown
-    importList = GetAllDataFileNames()
-    gui.LoadImportDropdown(importList)
+    iFile.LoadAllDataFileNames()
+    gui.LoadImportDropdown(iFile.importFileList)
 
-    # Load associated account dropdown
-    accountList = acctFile.GetAccountNames(fullName=True)
-    gui.LoadAssAcctDropdown(accountList)
+    # Load account dropdowns
+    gui.assAcctDropdown['values'] = aFile.allAcctsFullName
+    gui.expensesDropdown['values'] = aFile.expenseAcctList
+    gui.liabilityDropdown['values'] = aFile.liabilityAcctList
+    gui.incomeDropdown['values'] = aFile.incomeAcctList
+    gui.assetDropdown['values'] = aFile.assetAcctList
 
     # Bind buttons
-    gui.startButton.configure(command=lambda:ToolStart(gui, inFile, acctFile, journalFile))
+    gui.startButton.configure(command=lambda:ToolStart(gui, iFile, aFile, jFile))
 
     # Begin main thread
     gui.root.mainloop()

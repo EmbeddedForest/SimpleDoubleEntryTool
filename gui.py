@@ -140,7 +140,6 @@ class MyGui():
 
         # Data display boxes
         self.displayDate = tk.StringVar(value='12/12/2025')
-        self.displayDate.set('balls')
         temp = tk.Entry(root, textvariable=self.displayDate, font=('Calibri', 11), width=12, justify='center', state='readonly')
         temp.grid(row=10, column=2, sticky='w', padx=0, pady=0, rowspan=1, columnspan=3)
 
@@ -157,38 +156,33 @@ class MyGui():
         temp.grid(row=22, column=31, sticky='w', padx=0, pady=0, rowspan=1, columnspan=18)
 
         # Selection boxes
-        selectionExpenses = tk.StringVar()
-        temp = ttk.Combobox(root, textvariable=selectionExpenses, font=('Calibri', 11), width=80)
-        temp.grid(row=16, column=5, sticky='w', rowspan=1, columnspan=20)
-        temp['values'] = [m for m in range(1, 13)]
+        self.selectionExpenses = tk.StringVar()
+        self.expensesDropdown = ttk.Combobox(root, textvariable=self.selectionExpenses, font=('Calibri', 11), width=80)
+        self.expensesDropdown.grid(row=16, column=5, sticky='w', rowspan=1, columnspan=20)
 
-        selectionLiability = tk.StringVar()
-        temp = ttk.Combobox(root, textvariable=selectionLiability, font=('Calibri', 11), width=80)
-        temp.grid(row=18, column=5, sticky='w', rowspan=1, columnspan=20)
-        temp['values'] = [m for m in range(1, 13)]
+        self.selectionLiability = tk.StringVar()
+        self.liabilityDropdown = ttk.Combobox(root, textvariable=self.selectionLiability, font=('Calibri', 11), width=80)
+        self.liabilityDropdown.grid(row=18, column=5, sticky='w', rowspan=1, columnspan=20)
 
-        selectionIncome = tk.StringVar()
-        temp = ttk.Combobox(root, textvariable=selectionIncome, font=('Calibri', 11), width=80)
-        temp.grid(row=20, column=5, sticky='w', rowspan=1, columnspan=20)
-        temp['values'] = [m for m in range(1, 13)]
+        self.selectionIncome = tk.StringVar()
+        self.incomeDropdown = ttk.Combobox(root, textvariable=self.selectionIncome, font=('Calibri', 11), width=80)
+        self.incomeDropdown.grid(row=20, column=5, sticky='w', rowspan=1, columnspan=20)
 
-        selectionAsset = tk.StringVar()
-        temp = ttk.Combobox(root, textvariable=selectionAsset, font=('Calibri', 11), width=80)
-        temp.grid(row=22, column=5, sticky='w', rowspan=1, columnspan=20)
-        temp['values'] = [m for m in range(1, 13)]
+        self.selectionAsset = tk.StringVar()
+        self.assetDropdown = ttk.Combobox(root, textvariable=self.selectionAsset, font=('Calibri', 11), width=80)
+        self.assetDropdown.grid(row=22, column=5, sticky='w', rowspan=1, columnspan=20)
 
         self.selectedImportFile = tk.StringVar()
         self.importDropdown = ttk.Combobox(root, textvariable=self.selectedImportFile, font=('Calibri', 11), width=60)
         self.importDropdown.grid(row=2, column=29, sticky='w', rowspan=1, columnspan=14)
 
-        selectedAssAcct = tk.StringVar()
-        self.assAcctDropdown = ttk.Combobox(root, textvariable=selectedAssAcct, font=('Calibri', 11), width=60)
+        self.selectedAssAcct = tk.StringVar()
+        self.assAcctDropdown = ttk.Combobox(root, textvariable=self.selectedAssAcct, font=('Calibri', 11), width=60)
         self.assAcctDropdown.grid(row=4, column=29, sticky='w', rowspan=1, columnspan=14)
 
         selectionJournal = tk.StringVar()
         temp = ttk.Combobox(root, textvariable=selectionJournal, font=('Calibri', 11), width=72)
         temp.grid(row=10, column=31, sticky='w', rowspan=1, columnspan=18)
-        temp['values'] = [m for m in range(1, 13)]
 
         # Input boxes
         inputMemo = tk.StringVar(value='')

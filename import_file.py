@@ -13,11 +13,16 @@
 #
 #------------------------------------------------------------------------------
 
+import os
 import csv
 import constants as c
 
 
 class ImportFile():
+
+    # def __init__(self):
+    #     self._GetAllDataFileNames()
+
 
     def SetupFile(self, filePath):
         ''' Set up specified import file '''
@@ -201,3 +206,17 @@ class ImportFile():
 
         log = 'Import data updated successfully'
         return c.GOOD, log
+
+
+    def LoadAllDataFileNames(self):
+        ''' Load all csv file names from Data folder into list '''
+
+        self.importFileList = []
+
+        for file in os.listdir(c.DATA_FOLDER):
+            if (file.lower().endswith(".csv")):
+                self.importFileList.append(file)
+
+        log = 'Import data files captured successfully'
+        return c.GOOD, log
+
