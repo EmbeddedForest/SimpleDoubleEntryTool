@@ -42,15 +42,22 @@ def LoadNewTransaction(gui, iFile, aFile, jFile):
     # Find suggested account
     jFile.FindLast(date, desc, amnt)
 
-    # # Clear all accounts
+    # Clear all accounts
+    gui.selectionAsset.set(' ')
+    gui.selectionIncome.set(' ')
+    gui.selectionExpenses.set(' ')
+    gui.selectionLiability.set(' ')
 
 
-    # # Load suggested account
-    # acctList = aFile.GetAccountNames(True)
-
-    # if (jFile.suggestedAcct in acctList):
-        
-
+    # Load suggested account
+    if ('Assets' in jFile.suggestedAcct):
+        gui.selectionAsset.set(jFile.suggestedAcct)
+    if ('Income' in jFile.suggestedAcct):
+        gui.selectionIncome.set(jFile.suggestedAcct)
+    if ('Expenses' in jFile.suggestedAcct):
+        gui.selectionExpenses.set(jFile.suggestedAcct)
+    if ('Liabilities' in jFile.suggestedAcct):
+        gui.selectionLiability.set(jFile.suggestedAcct)
 
 
 def ToolStart(gui, iFile, aFile, jFile):
@@ -83,7 +90,6 @@ def ToolStart(gui, iFile, aFile, jFile):
 
     # Load new transaction to GUI
     LoadNewTransaction(gui, iFile, aFile, jFile)
-
 
 
 def Main():
@@ -120,7 +126,6 @@ def Main():
 
     # Begin main thread
     gui.root.mainloop()
-
 
 
 Main()
