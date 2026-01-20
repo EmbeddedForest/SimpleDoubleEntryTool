@@ -99,8 +99,8 @@ def Main():
     if (retVal == c.BAD):
         gui.Log(msg)
 
-    # Check that Account.csv is legit
-    retVal, msg = jFile.CheckFile()
+    # Setup Journal.csv file
+    retVal, msg = jFile.SetupFile()
     if (retVal == c.BAD):
         gui.Log(msg)
 
