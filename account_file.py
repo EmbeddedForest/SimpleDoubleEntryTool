@@ -19,8 +19,39 @@ import constants as c
 
 class AccountFile():
 
-    def CheckFile(self):
-        ''' Checks to see if Account.csv file is legit '''
+    def SetupFile(self):
+        ''' Setup Account.csv file object '''
+
+        # Cleanup previous data
+        self.allAcctsFullName = []
+        self.allAcctsShortName = []
+        self.assetAcctList = []
+        self.incomeAcctList = []
+        self.expenseAcctList = []
+        self.liabilityAcctList = []
+
+        # Check if the file actually exists
+        retVal, log = self._CheckIfFileExists()
+        if (retVal == c.BAD):
+            return c.BAD, log
+
+        # Check that file has necessary column headers
+        retVal, log = self._CheckIfColumnsExists()
+        if (retVal == c.BAD):
+            return c.BAD, log
+
+        # Update account lists
+        retVal, log = self._UpdateAccountLists()
+        if (retVal == c.BAD):
+            return c.BAD, log
+
+        # Looks good
+        log = 'Account.csv setup is successful', 'default'
+        return c.GOOD, log
+
+
+    def _CheckIfFileExists(self):
+        ''' Check that Accounts.csv file exists '''
 
         # Check that 'Accounts.csv' file exists
         try:
@@ -35,13 +66,22 @@ class AccountFile():
             log = 'Something bad happened', 'error'
             raise
 
+        log = 'Accounts.csv file does exist', 'default'
+        return c.GOOD, log
 
-        # Check that 'Accounts.csv' file has necessary columns
+
+    def _CheckIfColumnsExists(self):
+        ''' Check if necessary column headers exist '''
+
         try:
             with open(c.ACCOUNTS_FP, newline="", encoding="utf-8-sig") as f:
                 reader = csv.DictReader(f)
                 headerList = list(next(reader).keys())
 
+        except FileNotFoundError:
+            log = 'Accounts.csv does not exist in current directory.', 'error'
+            return c.BAD, log
+    
         except:
             log = 'Something bad happened', 'error'
             raise
@@ -50,29 +90,49 @@ class AccountFile():
             log = 'Accounts.csv is not syntactically correct.', 'error'
             return c.BAD, log
 
-        # Looks good
-        log = 'Account.csv is legit', 'default'
+        log = 'Account.csv file has necessary columns', 'default'
         return c.GOOD, log
 
-    def GetAccountNames(self, fullName):
-        ''' Returns all account names as a list of strings '''
 
-        returnList = list()
+    def _UpdateAccountLists(self):
+        ''' Updates all account lists '''
 
-        if (fullName == True):
-            colName = c.ACCT_NAME_FULL
-        else:
-            colName = c.ACCT_NAME
+        self.allAcctsFullName = []
+        self.allAcctsShortName = []
+        self.assetAcctList = []
+        self.incomeAcctList = []
+        self.expenseAcctList = []
+        self.liabilityAcctList = []
 
+        # TODO - Check if it's a "placeholder", if so, don't add
         try:
             with open(c.ACCOUNTS_FP, newline="", encoding="utf-8-sig") as f:
                 reader = csv.DictReader(f)
+
                 for row in reader:
-                    returnList.append(row[colName])
+                    self.allAcctsFullName.append(row[c.ACCT_NAME])
+                    self.allAcctsShortName.append(row[c.ACCT_NAME_FULL])
+
+                    if ('Assets' in row[c.ACCT_NAME_FULL]):
+                        self.assetAcctList.append(row[c.ACCT_NAME_FULL])
+
+                    if ('Income' in row[c.ACCT_NAME_FULL]):
+                        self.incomeAcctList.append(row[c.ACCT_NAME_FULL])
+
+                    if ('Expenses' in row[c.ACCT_NAME_FULL]):
+                        self.expenseAcctList.append(row[c.ACCT_NAME_FULL])
+
+                    if ('Liabilities' in row[c.ACCT_NAME_FULL]):
+                        self.liabilityAcctList.append(row[c.ACCT_NAME_FULL])
+
+        except FileNotFoundError:
+            log = 'Accounts.csv does not exist in current directory.', 'error'
+            return c.BAD, log
+
         except:
             log = 'Something bad happened', 'error'
             raise
 
         # All Good
         log = 'Account names read successfully', 'default'
-        return returnList, log
+        return c.GOOD, log

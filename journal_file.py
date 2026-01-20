@@ -58,7 +58,23 @@ class JournalFile():
     def FindLatest(self, dateD, descD, amntD):
         ''' TODO '''
 
+        # Find latest transaction which doesn't already exist in journal
+
         self.LatestIndex = 2
+        log = 'All good', 'default'
+        return c.GOOD, log
+
+
+    def FindLast(self, date, desc, amnt):
+        ''' TODO '''
+
+        # Check to see if the transaction was accounted for previously
+        # Start with identical description AND amount
+        # Next try full description match
+        # Next try partial description match
+        # Update "suggested account" variable
+
+        self.suggestedAcct = 'Expenses:Shared:Entertainment:Streaming'
 
 
         log = 'All good', 'default'
