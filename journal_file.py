@@ -19,10 +19,30 @@ import constants as c
 
 class JournalFile():
 
-    def CheckFile(self):
-        ''' Checks to see if Journal.csv file is legit '''
+    def SetupFile(self):
+        ''' Setup Journal.csv file object '''
 
-        # Check that 'Journal.csv' file exists
+        # Cleanup previous data
+        # TODO
+
+        # Check if the file actually exists
+        retVal, log = self._CheckIfFileExists()
+        if (retVal == c.BAD):
+            return c.BAD, log
+
+        # Check that file has necessary column headers
+        retVal, log = self._CheckIfColumnsExists()
+        if (retVal == c.BAD):
+            return c.BAD, log
+
+        # Looks good
+        log = 'Journal.csv setup is successful', 'default'
+        return c.GOOD, log
+
+
+    def _CheckIfFileExists(self):
+        ''' Check that Journal.csv file exists '''
+
         try:
             f = open(c.JOURNAL_FP, newline="", encoding="utf-8-sig")
             f.close()
@@ -35,12 +55,21 @@ class JournalFile():
             log = 'Something bad happened', 'error'
             raise
 
+        log = 'Journal.csv file does exist', 'default'
+        return c.GOOD, log
 
-        # Check that 'Journal.csv' file has necessary columns
+
+    def _CheckIfColumnsExists(self):
+        ''' Check if necessary column headers exist '''
+
         try:
             with open(c.JOURNAL_FP, newline="", encoding="utf-8-sig") as f:
                 reader = csv.DictReader(f)
                 headerList = list(next(reader).keys())
+
+        except FileNotFoundError:
+            log = 'Journal.csv does not exist in current directory.', 'error'
+            return c.BAD, log
 
         except:
             log = 'Something bad happened', 'error'
