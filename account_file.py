@@ -109,6 +109,9 @@ class AccountFile():
                 reader = csv.DictReader(f)
 
                 for row in reader:
+                    if (row[c.ACCT_PLACEHOLDER] == 'T'):
+                        continue
+
                     self.allAcctsShortName.append(row[c.ACCT_NAME])
                     self.allAcctsFullName.append(row[c.ACCT_NAME_FULL])
 
