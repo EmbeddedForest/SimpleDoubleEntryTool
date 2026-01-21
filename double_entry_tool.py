@@ -13,9 +13,8 @@
 #   GUI and associated csv files to help categorize and balance financial
 #   transactions and accounts using double entry bookkeeping.
 #
-# TODO:
-#   - Break the tool down into different classes to better organize code
-#
+# TODO - Add ability to add opening balances from GUI
+# TODO - Add memo box for normal simple transactions
 #------------------------------------------------------------------------------
 
 import os
@@ -31,7 +30,7 @@ def LoadNewTransaction(gui, iFile, aFile, jFile):
     ''' TODO '''
 
     # Place new data into GUI
-    i = jFile.LatestIndex
+    i = jFile.latestIndex
     date = iFile.dateData[i]
     desc = iFile.descData[i]
     amnt = iFile.amntData[i]
@@ -48,7 +47,6 @@ def LoadNewTransaction(gui, iFile, aFile, jFile):
     gui.selectionExpenses.set(' ')
     gui.selectionLiability.set(' ')
 
-
     # Load suggested account
     if ('Assets' in jFile.suggestedAcct):
         gui.selectionAsset.set(jFile.suggestedAcct)
@@ -58,6 +56,32 @@ def LoadNewTransaction(gui, iFile, aFile, jFile):
         gui.selectionExpenses.set(jFile.suggestedAcct)
     if ('Liabilities' in jFile.suggestedAcct):
         gui.selectionLiability.set(jFile.suggestedAcct)
+
+    # Update preview box with journal entry inputs
+
+
+def AddToLedger(gui, iFile, aFile, jFile):
+    ''' TODO '''
+
+    # Make sure import file is active
+    if (iFile.active != True):
+        msg = 'Import file is not active', 'error'
+        gui.Log(msg)
+        return
+
+    # Make sure journal file is active
+    if (jFile.active != True):
+        msg = 'Journal file is not active', 'error'
+        gui.Log(msg)
+        return
+
+    # Make sure account file is active
+    if (aFile.active != True):
+        msg = 'Account file is not active', 'error'
+        gui.Log(msg)
+        return
+
+    # Check that valid account selected
 
 
 def ToolStart(gui, iFile, aFile, jFile):
@@ -83,13 +107,63 @@ def ToolStart(gui, iFile, aFile, jFile):
         return
 
     # Check to see if all transactions accounted for already
-    if (jFile.LatestIndex >= iFile.numTrans):
+    if (jFile.latestIndex >= iFile.numTrans):
         msg = 'All transactions accounted for already', 'default'
         gui.Log(msg)
         return
 
     # Load new transaction to GUI
     LoadNewTransaction(gui, iFile, aFile, jFile)
+
+
+def UpdatePreview(gui, iFile, aFile, jFile, selectedAcct):
+    ''' TODO '''
+
+    payload = []
+    date = gui.displayDate.get()
+    desc = gui.displayDescription.get()
+    amnt = gui.displayAmount.get()
+    fullAcct = selectedAcct
+    shortAcct = aFile.GetShortHand(selectedAcct) 
+
+    msg =       'Date:    Description:    Amount:    Account: \n'
+    msg = msg + date + '      ' + desc + '      ' + amnt + '      ' + fullAcct + '      ' + shortAcct
+
+    payload = msg, 'default'
+    gui.Log(payload)
+
+
+def UpdateAccounts(event, gui, iFile, aFile, jFile, who):
+    ''' TODO '''
+
+    selectedAcct = ' '
+
+    # Clear out account boxes that weren't selected - Brute force for now
+    if (who == c.EXPENSES):
+        gui.selectionAsset.set(' ')
+        gui.selectionIncome.set(' ')
+        gui.selectionLiability.set(' ')
+        selectedAcct = gui.selectionExpenses.get()
+    if (who == c.LIABILITIES):
+        gui.selectionAsset.set(' ')
+        gui.selectionIncome.set(' ')
+        gui.selectionExpenses.set(' ')
+        selectedAcct = gui.selectionLiability.get()
+    if (who == c.INCOME):
+        gui.selectionAsset.set(' ')
+        gui.selectionExpenses.set(' ')
+        gui.selectionLiability.set(' ')
+        selectedAcct = gui.selectionIncome.get()
+    if (who == c.ASSETS):
+        gui.selectionIncome.set(' ')
+        gui.selectionExpenses.set(' ')
+        gui.selectionLiability.set(' ')
+        selectedAcct = gui.selectionAssets.get()
+
+    if (selectedAcct == ' '):
+        return
+
+    UpdatePreview(gui, iFile, aFile, jFile, selectedAcct)
 
 
 def Main():
@@ -123,6 +197,12 @@ def Main():
 
     # Bind buttons
     gui.startButton.configure(command=lambda:ToolStart(gui, iFile, aFile, jFile))
+    gui.addEntryButton.configure(command=lambda:AddToLedger(gui, iFile, aFile, jFile))
+    gui.expensesDropdown.bind('<<ComboboxSelected>>', lambda event: UpdateAccounts(event, gui, iFile, aFile, jFile, c.EXPENSES))
+    gui.liabilityDropdown.bind('<<ComboboxSelected>>', lambda event: UpdateAccounts(event, gui, iFile, aFile, jFile, c.LIABILITIES))
+    gui.incomeDropdown.bind('<<ComboboxSelected>>', lambda event: UpdateAccounts(event, gui, iFile, aFile, jFile, c.INCOME))
+    gui.assetDropdown.bind('<<ComboboxSelected>>', lambda event: UpdateAccounts(event, gui, iFile, aFile, jFile, c.ASSETS))
+
 
     # Begin main thread
     gui.root.mainloop()

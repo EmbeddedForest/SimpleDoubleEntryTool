@@ -20,9 +20,19 @@ import constants as c
 
 class ImportFile():
 
-    # def __init__(self):
-    #     self._GetAllDataFileNames()
-
+    # Object data
+    filePath = ' '
+    dateCol = ' '
+    descCol = ' '
+    amntCol = ' '
+    dateCur = ' '
+    descCur = ' '
+    amntCur = ' '
+    dateData = []
+    descData = []
+    amntData = []
+    numTrans = 0
+    active = False
 
     def SetupFile(self, filePath):
         ''' Set up specified import file '''
@@ -39,6 +49,7 @@ class ImportFile():
         self.descData = []
         self.amntData = []
         self.numTrans = 0
+        self.active = False
 
         # Check if the file actually exists
         retVal, log = self._CheckIfFileExists(filePath)
@@ -60,6 +71,7 @@ class ImportFile():
         if (retVal == c.BAD):
             return c.BAD, log
 
+        self.active = True
         log = 'Import file setup is successful', 'default'
         return c.GOOD, log
 
