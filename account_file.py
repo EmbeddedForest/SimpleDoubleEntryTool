@@ -19,6 +19,15 @@ import constants as c
 
 class AccountFile():
 
+    # Object data
+    allAcctsFullName = []
+    allAcctsShortName = []
+    assetAcctList = []
+    incomeAcctList = []
+    expenseAcctList = []
+    liabilityAcctList = []
+    active = False
+
     def SetupFile(self):
         ''' Setup Account.csv file object '''
 
@@ -29,6 +38,7 @@ class AccountFile():
         self.incomeAcctList = []
         self.expenseAcctList = []
         self.liabilityAcctList = []
+        self.active = False
 
         # Check if the file actually exists
         retVal, log = self._CheckIfFileExists()
@@ -46,6 +56,7 @@ class AccountFile():
             return c.BAD, log
 
         # Looks good
+        self.active = True
         log = 'Account.csv setup is successful', 'default'
         return c.GOOD, log
 
@@ -138,3 +149,10 @@ class AccountFile():
         # All Good
         log = 'Account names read successfully', 'default'
         return c.GOOD, log
+
+    def GetShortHand(self, fullAcctName):
+        ''' Returns short hand account name of given full account name '''
+
+        index = self.allAcctsFullName.index(fullAcctName)
+
+        return self.allAcctsShortName[index]

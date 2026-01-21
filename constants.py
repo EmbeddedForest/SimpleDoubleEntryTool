@@ -58,3 +58,9 @@ JRNL_AMOUNT      = 'Amount Num.'
 JRNL_HEADERS =                                                          \
     [JRNL_DATE, JRNL_ID, JRNL_DSCRP, JRNL_MEMO,                         \
      JRNL_ACCT_NAME_F, JRNL_ACCT_NAME, JRNL_AMOUNT]
+
+# Account Types
+EXPENSES = 'Expenses'
+ASSETS = 'Assets'
+INCOME = 'Income'
+LIABILITIES = 'Liabilities'

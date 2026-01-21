@@ -19,11 +19,18 @@ import constants as c
 
 class JournalFile():
 
+    # Object data
+    latestIndex = 0
+    suggestedAcct = ' '
+    active = False
+
     def SetupFile(self):
         ''' Setup Journal.csv file object '''
 
         # Cleanup previous data
-        # TODO
+        self.latestIndex = 0
+        self.suggestedAcct = ' '
+        self.active = False
 
         # Check if the file actually exists
         retVal, log = self._CheckIfFileExists()
@@ -36,6 +43,7 @@ class JournalFile():
             return c.BAD, log
 
         # Looks good
+        self.active = True
         log = 'Journal.csv setup is successful', 'default'
         return c.GOOD, log
 
@@ -89,7 +97,7 @@ class JournalFile():
 
         # Find latest transaction which doesn't already exist in journal
 
-        self.LatestIndex = 2
+        self.latestIndex = 2
         log = 'All good', 'default'
         return c.GOOD, log
 
