@@ -21,6 +21,54 @@ from tkinter import ttk
 from PIL import Image, ImageTk
 
 
+# Generic Fonts
+FONT_TITLE = ('Calibri', 36, 'bold italic')
+FONT_FRAME = ('Calibri', 11, 'italic')
+FONT_LABEL = ('Calibri', 14, 'bold')
+FONT_BOXES = ('Calibri', 11)
+FONT_NOTES = ('Calibri', 9)
+
+# Static Frame Labels
+FRAMES = \
+[
+    ('Setup',           FONT_FRAME, (1,  24), (5,  26), 'nesw'),
+    ('Date',            FONT_FRAME, (8,   1), (5,  25), 'nesw'),
+    ('Split',           FONT_FRAME, (8,  27), (11, 23), 'nesw'),
+    ('Select Account',  FONT_FRAME, (14,  1), (13, 25), 'nesw'),
+    ('Log Box',         FONT_FRAME, (28, 12), (10, 38), 'nesw'),
+    ('Opening Balance', FONT_FRAME, (20, 27), (7,  23), 'nesw')
+]
+
+# Static Labels
+LABELS = \
+[
+    # Title
+    ('Simple Double Entry Tool', FONT_TITLE, (1,   5), (5,  18), 'nesw'),
+
+    # Setup Frame
+    ('Import File:',             FONT_LABEL, (2,  24), (1,   5),    'e'),
+    ('Asscociated Acct:',        FONT_LABEL, (4,  24), (1,   5),    'e'),
+
+    # Data Frame
+    ('Date:',                    FONT_LABEL, (9,   2), (1,   3),    'w'),
+    ('Description:',             FONT_LABEL, (9,   6), (1,  15),    'w'),
+    ('Amount:',                  FONT_LABEL, (9,  22), (1,   3),    'w'),
+
+    # Account Frame
+    ('Expense:',                 FONT_LABEL, (16,  1), (1,   4),    'e'),
+    ('Liability:',               FONT_LABEL, (18,  1), (1,   4),    'e'),
+    ('Income:',                  FONT_LABEL, (20,  1), (1,   4),    'e'),
+    ('Asset:',                   FONT_LABEL, (22,  1), (1,   4),    'e'),
+    ('Memo:',                    FONT_LABEL, (24,  1), (1,   4),    'e'),
+
+    # Split Frame
+    ('Account:',                 FONT_LABEL, (10, 27), (1,   4),    'e'),
+    ('Memo:',                    FONT_LABEL, (12, 27), (1,   4),    'e'),
+    ('Amount:',                  FONT_LABEL, (14, 27), (1,   4),    'e'),
+    ('(Negative = Credit)',      FONT_NOTES, (14, 35), (1,  15),    'w'),
+]
+
+
 class MyGui():
     ''' Class to hold all GUI functionality '''
 
@@ -34,29 +82,52 @@ class MyGui():
         self.root = tk.Tk()
         self._BuildGui()
 
+    def _AddStaticFrames(self):
+        ''' Add all static label frames to GUI '''
+
+        for frame in FRAMES:
+            text = frame[0]
+            font = frame[1]
+            r    = frame[2][0]
+            c    = frame[2][1]
+            rs   = frame[3][0]
+            cs   = frame[3][1]
+            s    = frame[4]
+
+            t = tk.LabelFrame(self.root, text=text, font=font)
+            t.grid(row=r, column=c, sticky=s, rowspan=rs, columnspan=cs)
+
+
+    def _AddStaticLabels(self):
+        ''' Add all static labels to GUI '''
+
+        for label in LABELS:
+            text = label[0]
+            font = label[1]
+            r    = label[2][0]
+            c    = label[2][1]
+            rs   = label[3][0]
+            cs   = label[3][1]
+            s    = label[4]
+
+            t = tk.Label(self.root, text=text, font=font)
+            t.grid(row=r, column=c, sticky=s, rowspan=rs, columnspan=cs)
+
+
     def _BuildGui(self):
         root = self.root
 
         # Application Title
-        self.root.title('EmbeddedForest')
+        root.title('EmbeddedForest')
 
-        # Define and build main GUI grid
+        # Define GUI grid
         for i in range(self.NUM_COLS):
-            root.columnconfigure(i, minsize=self.COL_SIZE, weight=1)
+            root.columnconfigure(i, minsize=self.COL_SIZE, weight=2)
         for i in range(self.NUM_ROWS):
-            root.rowconfigure(i, minsize=self.ROW_SIZE, weight=1)
+            root.rowconfigure(i, minsize=self.ROW_SIZE, weight=2)
 
-        # Add blank labels into first row and column to visually see GUI size
-        for x in range(self.NUM_COLS):
-                temp = tk.Label(root, text=' ', font=('Segoe UI', 9, 'bold'))
-                temp.grid(row=0, column=x, sticky='nesw', padx=0, pady=0)
-        for y in range(self.NUM_ROWS):
-                temp = tk.Label(root, text=' ', font=('Segoe UI', 9, 'bold'))
-                temp.grid(row=y, column=0, sticky='nesw', padx=0, pady=0)
-
-        # Title
-        temp = tk.Label(root, text='Simple Double Entry Tool', font=('Calibri', 36, 'bold italic'))
-        temp.grid(row=1, column=5, sticky='nesw', padx=0, pady=0, rowspan=5, columnspan=18)
+        self._AddStaticFrames()
+        self._AddStaticLabels()
 
         # Logo
         tkLogo = ImageTk.PhotoImage(Image.open('tree.png'))
@@ -64,79 +135,11 @@ class MyGui():
         temp.image = tkLogo     # This is the only way to make image work properly
         temp.grid(row=1, column=2, sticky='nesw', padx=0, pady=0, rowspan=5, columnspan=4)
 
-        # Setup Frame
-        temp = tk.LabelFrame(root, text='Setup', font=('Calibri', 11, 'italic'))
-        temp.grid(row=1, column=24, sticky='nesw', padx=0, pady=0, rowspan=5, columnspan=26)
-
-        # Data Frame
-        temp = tk.LabelFrame(root, text='Data', font=('Calibri', 11, 'italic'))
-        temp.grid(row=8, column=1, sticky='nesw', padx=0, pady=0, rowspan=5, columnspan=25)
-
-        # Split Frame
-        temp = tk.LabelFrame(root, text='Split', font=('Calibri', 11, 'italic'))
-        temp.grid(row=8, column=27, sticky='nesw', padx=0, pady=0, rowspan=17, columnspan=23)
-
-        # Account Frame
-        temp = tk.LabelFrame(root, text='Select Account', font=('Calibri', 11, 'italic'))
-        temp.grid(row=14, column=1, sticky='nesw', padx=0, pady=0, rowspan=11, columnspan=25)
-
-        # Preview Frame
-        temp = tk.LabelFrame(root, text='Preview', font=('Calibri', 11, 'italic'))
-        temp.grid(row=26, column=12, sticky='nesw', padx=0, pady=0, rowspan=12, columnspan=38)
-
-        # Static Labels - TODO: create function which just runs through a config/table to generate labels
-        temp = tk.Label(root, text='Import File:', font=('Calibri', 14, 'bold'))
-        temp.grid(row=2, column=24, sticky='e', padx=0, pady=0, rowspan=1, columnspan=5)
-
-        temp = tk.Label(root, text='Asscociated Acct:', font=('Calibri', 14, 'bold'))
-        temp.grid(row=4, column=24, sticky='e', padx=0, pady=0, rowspan=1, columnspan=5)
-
-        temp = tk.Label(root, text='Date:', font=('Calibri', 14, 'bold'))
-        temp.grid(row=9, column=2, sticky='w', padx=0, pady=0, rowspan=1, columnspan=3)
-
-        temp = tk.Label(root, text='Description:', font=('Calibri', 14, 'bold'))
-        temp.grid(row=9, column=6, sticky='w', padx=0, pady=0, rowspan=1, columnspan=15)
-
-        temp = tk.Label(root, text='Amount:', font=('Calibri', 14, 'bold'))
-        temp.grid(row=9, column=22, sticky='w', padx=0, pady=0, rowspan=1, columnspan=3)
-
-        temp = tk.Label(root, text='Expense:', font=('Calibri', 14, 'bold'))
-        temp.grid(row=16, column=1, sticky='e', padx=0, pady=0, rowspan=1, columnspan=4)
-
-        temp = tk.Label(root, text='Liability:', font=('Calibri', 14, 'bold'))
-        temp.grid(row=18, column=1, sticky='e', padx=0, pady=0, rowspan=1, columnspan=4)
-
-        temp = tk.Label(root, text='Income:', font=('Calibri', 14, 'bold'))
-        temp.grid(row=20, column=1, sticky='e', padx=0, pady=0, rowspan=1, columnspan=4)
-
-        temp = tk.Label(root, text='Asset:', font=('Calibri', 14, 'bold'))
-        temp.grid(row=22, column=1, sticky='e', padx=0, pady=0, rowspan=1, columnspan=4)
-
-        temp = tk.Label(root, text='Account:', font=('Calibri', 14, 'bold'))
-        temp.grid(row=10, column=27, sticky='e', padx=0, pady=0, rowspan=1, columnspan=4)
-
-        temp = tk.Label(root, text='Memo:', font=('Calibri', 14, 'bold'))
-        temp.grid(row=12, column=27, sticky='e', padx=0, pady=0, rowspan=1, columnspan=4)
-
-        temp = tk.Label(root, text='Amount:', font=('Calibri', 14, 'bold'))
-        temp.grid(row=15, column=27, sticky='e', padx=0, pady=0, rowspan=1, columnspan=4)
-
-        temp = tk.Label(root, text='Status:', font=('Calibri', 14, 'bold'))
-        temp.grid(row=22, column=27, sticky='e', padx=0, pady=0, rowspan=1, columnspan=4)
-
-        temp = tk.Label(root, text='(Negative = Credit = Moving out of selected account)', font=('Calibri', 9))
-        temp.grid(row=15, column=35, sticky='w', padx=0, pady=0, rowspan=1, columnspan=15)
-
         # Dynamic Labels
         lableTextTransCount = tk.StringVar(value='(Transaction 0 of 0 in spreadsheet.csv)')
         temp = tk.Label(root, textvariable=lableTextTransCount, font=('Calibri', 9))
         temp.grid(row=12, column=2, sticky='w', padx=0, pady=0, rowspan=1, columnspan=24)
         # lableTextTransCount.set('NEW TEXT')
-
-        lableTextAutoAccount = tk.StringVar(value='(Account auto-populated based on previous entry)')
-        temp = tk.Label(root, textvariable=lableTextAutoAccount, font=('Calibri', 9))
-        temp.grid(row=24, column=2, sticky='w', padx=0, pady=0, rowspan=1, columnspan=24)
-        # lableTextAutoAccount.set('NEW TEXT')
 
         # Data display boxes
         self.displayDate = tk.StringVar(value='12/12/2025')
@@ -150,10 +153,6 @@ class MyGui():
         self.displayAmount = tk.StringVar(value='420.69')
         temp = tk.Entry(root, textvariable=self.displayAmount, font=('Calibri', 11), width=12, justify='center', state='readonly')
         temp.grid(row=10, column=22, sticky='w', padx=0, pady=0, rowspan=1, columnspan=3)
-
-        displaySplitStatus = tk.StringVar(value='  SPLIT NOT BALANCED')
-        temp = tk.Entry(root, textvariable=displaySplitStatus, font=('Calibri', 11), width=72, justify='left', state='readonly')
-        temp.grid(row=22, column=31, sticky='w', padx=0, pady=0, rowspan=1, columnspan=18)
 
         # Selection boxes
         self.selectionExpenses = tk.StringVar()
@@ -185,22 +184,26 @@ class MyGui():
         temp.grid(row=10, column=31, sticky='w', rowspan=1, columnspan=18)
 
         # Input boxes
+        self.memo = tk.StringVar(value='')
+        temp = tk.Entry(root, textvariable=self.memo, font=('Calibri', 11), width=82, justify='left')
+        temp.grid(row=24, column=5, sticky='w', padx=0, pady=0, rowspan=1, columnspan=20)
+
         inputMemo = tk.StringVar(value='')
-        temp = tk.Entry(root, textvariable=inputMemo, font=('Calibri', 11), width=72, justify='left')
+        temp = tk.Entry(root, textvariable=inputMemo, font=('Calibri', 11), width=74, justify='left')
         temp.grid(row=12, column=31, sticky='w', padx=0, pady=0, rowspan=1, columnspan=18)
 
         inputAmount = tk.StringVar(value='')
         temp = tk.Entry(root, textvariable=inputAmount, font=('Calibri', 11), width=16, justify='left')
-        temp.grid(row=15, column=31, sticky='w', padx=0, pady=0, rowspan=1, columnspan=4)
+        temp.grid(row=14, column=31, sticky='w', padx=0, pady=0, rowspan=1, columnspan=4)
 
         # Log box
         self.logBox = tk.Text(root, font=('Consolas', 9), width=170, height=15)
-        self.logBox.grid(row=27, column=13, sticky='nsew', padx=0, pady=0, rowspan=10, columnspan=36)
+        self.logBox.grid(row=29, column=13, sticky='nsew', padx=0, pady=0, rowspan=8, columnspan=36)
 
         # Scroll bar for log box
         logScroll = tk.Scrollbar(root, orient='vertical', command=self.logBox.yview)
         self.logBox.configure(yscrollcommand=logScroll.set)
-        logScroll.grid(row=27, column=49, sticky='wns', padx=0, pady=0, rowspan=10)
+        logScroll.grid(row=29, column=49, sticky='wns', padx=0, pady=0, rowspan=8)
 
         # Tags for different text types
         self.logBox.tag_configure('header', background='white', foreground='black', font=('consolas', 10, 'bold'))
@@ -214,10 +217,10 @@ class MyGui():
         self.startButton.grid(row=2, column=43, sticky='nesw', padx=20, pady=20, rowspan=3, columnspan=6)
 
         self.addSplitButton = tk.Button(root, text='Add Split', font=('Calibri', 14, 'bold'))
-        self.addSplitButton.grid(row=18, column=32, sticky='nesw', padx=20, pady=0, rowspan=2, columnspan=5)
+        self.addSplitButton.grid(row=16, column=32, sticky='nesw', padx=20, pady=0, rowspan=2, columnspan=5)
 
         self.undoSplitButton = tk.Button(root, text='Undo', font=('Calibri', 14, 'bold'))
-        self.undoSplitButton.grid(row=18, column=40, sticky='nesw', padx=20, pady=0, rowspan=2, columnspan=5)
+        self.undoSplitButton.grid(row=16, column=40, sticky='nesw', padx=20, pady=0, rowspan=2, columnspan=5)
 
         self.addEntryButton = tk.Button(root, text='Add to Ledger', font=('Calibri', 14, 'bold'))
         self.addEntryButton.grid(row=27, column=2, sticky='nesw', padx=20, pady=20, rowspan=6, columnspan=8)
