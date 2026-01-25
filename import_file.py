@@ -219,6 +219,9 @@ class ImportFile():
             # Create dataframe using import file data
             df = pd.read_csv(self.filePath)
 
+            # Make sure date is in correct format before sorting
+            df[self.dateCol] = pd.to_datetime(df[self.dateCol], format='%m/%d/%Y')
+
             # Create new df that is ordered by date and description
             newDf = df.sort_values(by=[self.dateCol, self.descCol])
 
@@ -243,18 +246,18 @@ class ImportFile():
             desc = row[self.descCol]
             amnt = row[self.amntCol]
 
-            idString = date + desc + str(amnt) + str(count)
+            idString = str(date) + desc + str(amnt) + str(count)
             encodedString = idString.encode('utf-8')
             fullHash = hashlib.md5(encodedString).hexdigest()
 
             if (fullHash == prevId):
                 count = count + 1
-                idString = date + desc + str(amnt) + str(count)
+                idString = str(date) + desc + str(amnt) + str(count)
                 encodedString = idString.encode('utf-8')
                 fullHash = hashlib.md5(encodedString).hexdigest()
             else:
                 count = 0
-                idString = date + desc + str(amnt) + str(count)
+                idString = str(date) + desc + str(amnt) + str(count)
                 encodedString = idString.encode('utf-8')
                 fullHash = hashlib.md5(encodedString).hexdigest()
 
