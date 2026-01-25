@@ -17,8 +17,6 @@
 # TODO - Add memo box for normal simple transactions
 #------------------------------------------------------------------------------
 
-import os
-import csv
 import constants as c
 from gui import MyGui
 from import_file import ImportFile
@@ -39,7 +37,7 @@ def LoadNewTransaction(gui, iFile, aFile, jFile):
     gui.displayAmount.set(amnt)
 
     # Find suggested account
-    jFile.FindLast(date, desc, amnt)
+    jFile.FindSuggestedAccount(desc, amnt)
 
     # Clear all accounts
     gui.selectedAsset.set(' ')
@@ -206,7 +204,6 @@ def Main():
     gui.liabilityDropdown.bind('<<ComboboxSelected>>', lambda event: UpdateAccounts(event, gui, iFile, aFile, jFile, c.LIABILITIES))
     gui.incomeDropdown.bind('<<ComboboxSelected>>', lambda event: UpdateAccounts(event, gui, iFile, aFile, jFile, c.INCOME))
     gui.assetDropdown.bind('<<ComboboxSelected>>', lambda event: UpdateAccounts(event, gui, iFile, aFile, jFile, c.ASSETS))
-
 
     # Begin main thread
     gui.root.mainloop()
