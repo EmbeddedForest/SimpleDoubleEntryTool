@@ -205,14 +205,14 @@ class ImportFile():
 
     def _CreateTempFile(self):
         '''
-        Creates a temp csv file will all transactions from import file. Adds a
-        hash for each transaction to more easily compare against entries in
-        Journal.csv.
+        Creates a temp csv file with all transactions from import file. Adds a
+        unique hash for each transaction to more easily compare against entries
+        in Journal.csv.
 
         Go row by row, create a hash using date, desc, amnt, and count.
         If previous hash is same as new hash, increment count and rehash.
-        If above line is not same as current line, make count = 0.
-        Add hashes to TransactionID column (inserted into temp csv file).
+        If previous hash is not same as new hash, make count = 0. Add hashes to
+        TransactionID column (inserted into temp csv file).
         '''
 
         try:
@@ -254,6 +254,9 @@ class ImportFile():
                 fullHash = hashlib.md5(encodedString).hexdigest()
             else:
                 count = 0
+                idString = date + desc + str(amnt) + str(count)
+                encodedString = idString.encode('utf-8')
+                fullHash = hashlib.md5(encodedString).hexdigest()
 
             idList.append(fullHash)
             prevId = fullHash
