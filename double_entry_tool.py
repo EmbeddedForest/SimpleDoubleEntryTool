@@ -42,20 +42,20 @@ def LoadNewTransaction(gui, iFile, aFile, jFile):
     jFile.FindLast(date, desc, amnt)
 
     # Clear all accounts
-    gui.selectionAsset.set(' ')
-    gui.selectionIncome.set(' ')
-    gui.selectionExpenses.set(' ')
-    gui.selectionLiability.set(' ')
+    gui.selectedAsset.set(' ')
+    gui.selectedIncome.set(' ')
+    gui.selectedExpense.set(' ')
+    gui.selectedLiability.set(' ')
 
     # Load suggested account
     if ('Assets' in jFile.suggestedAcct):
-        gui.selectionAsset.set(jFile.suggestedAcct)
+        gui.selectedAsset.set(jFile.suggestedAcct)
     if ('Income' in jFile.suggestedAcct):
-        gui.selectionIncome.set(jFile.suggestedAcct)
+        gui.selectedIncome.set(jFile.suggestedAcct)
     if ('Expenses' in jFile.suggestedAcct):
-        gui.selectionExpenses.set(jFile.suggestedAcct)
+        gui.selectedExpense.set(jFile.suggestedAcct)
     if ('Liabilities' in jFile.suggestedAcct):
-        gui.selectionLiability.set(jFile.suggestedAcct)
+        gui.selectedLiability.set(jFile.suggestedAcct)
 
     # Update preview box with journal entry inputs
 
@@ -119,6 +119,10 @@ def ToolStart(gui, iFile, aFile, jFile):
 def UpdatePreview(gui, iFile, aFile, jFile, selectedAcct):
     ''' TODO '''
 
+    # Clear log
+    msg = ' ', 'default'
+    gui.Log(msg)
+
     payload = []
     date = gui.displayDate.get()
     desc = gui.displayDescription.get()
@@ -140,25 +144,25 @@ def UpdateAccounts(event, gui, iFile, aFile, jFile, who):
 
     # Clear out account boxes that weren't selected - Brute force for now
     if (who == c.EXPENSES):
-        gui.selectionAsset.set(' ')
-        gui.selectionIncome.set(' ')
-        gui.selectionLiability.set(' ')
-        selectedAcct = gui.selectionExpenses.get()
+        gui.selectedAsset.set(' ')
+        gui.selectedIncome.set(' ')
+        gui.selectedLiability.set(' ')
+        selectedAcct = gui.selectedExpense.get()
     if (who == c.LIABILITIES):
-        gui.selectionAsset.set(' ')
-        gui.selectionIncome.set(' ')
-        gui.selectionExpenses.set(' ')
-        selectedAcct = gui.selectionLiability.get()
+        gui.selectedAsset.set(' ')
+        gui.selectedIncome.set(' ')
+        gui.selectedExpense.set(' ')
+        selectedAcct = gui.selectedLiability.get()
     if (who == c.INCOME):
-        gui.selectionAsset.set(' ')
-        gui.selectionExpenses.set(' ')
-        gui.selectionLiability.set(' ')
-        selectedAcct = gui.selectionIncome.get()
+        gui.selectedAsset.set(' ')
+        gui.selectedExpense.set(' ')
+        gui.selectedLiability.set(' ')
+        selectedAcct = gui.selectedIncome.get()
     if (who == c.ASSETS):
-        gui.selectionIncome.set(' ')
-        gui.selectionExpenses.set(' ')
-        gui.selectionLiability.set(' ')
-        selectedAcct = gui.selectionAssets.get()
+        gui.selectedIncome.set(' ')
+        gui.selectedExpense.set(' ')
+        gui.selectedLiability.set(' ')
+        selectedAcct = gui.selectedAssets.get()
 
     if (selectedAcct == ' '):
         return
@@ -190,7 +194,7 @@ def Main():
 
     # Load account dropdowns
     gui.assAcctDropdown['values'] = aFile.allAcctsFullName
-    gui.expensesDropdown['values'] = aFile.expenseAcctList
+    gui.expenseDropdown['values'] = aFile.expenseAcctList
     gui.liabilityDropdown['values'] = aFile.liabilityAcctList
     gui.incomeDropdown['values'] = aFile.incomeAcctList
     gui.assetDropdown['values'] = aFile.assetAcctList
@@ -198,7 +202,7 @@ def Main():
     # Bind buttons
     gui.startButton.configure(command=lambda:ToolStart(gui, iFile, aFile, jFile))
     gui.addEntryButton.configure(command=lambda:AddToLedger(gui, iFile, aFile, jFile))
-    gui.expensesDropdown.bind('<<ComboboxSelected>>', lambda event: UpdateAccounts(event, gui, iFile, aFile, jFile, c.EXPENSES))
+    gui.expenseDropdown.bind('<<ComboboxSelected>>', lambda event: UpdateAccounts(event, gui, iFile, aFile, jFile, c.EXPENSES))
     gui.liabilityDropdown.bind('<<ComboboxSelected>>', lambda event: UpdateAccounts(event, gui, iFile, aFile, jFile, c.LIABILITIES))
     gui.incomeDropdown.bind('<<ComboboxSelected>>', lambda event: UpdateAccounts(event, gui, iFile, aFile, jFile, c.INCOME))
     gui.assetDropdown.bind('<<ComboboxSelected>>', lambda event: UpdateAccounts(event, gui, iFile, aFile, jFile, c.ASSETS))

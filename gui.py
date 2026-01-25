@@ -66,6 +66,11 @@ LABELS = \
     ('Memo:',                    FONT_LABEL, (12, 27), (1,   4),    'e'),
     ('Amount:',                  FONT_LABEL, (14, 27), (1,   4),    'e'),
     ('(Negative = Credit)',      FONT_NOTES, (14, 35), (1,  15),    'w'),
+
+    # Opening Balance
+    ('Account:',                 FONT_LABEL, (22, 27), (1,   4),    'e'),
+    ('Amount:',                  FONT_LABEL, (24, 27), (1,   4),    'e'),
+    ('Date:',                    FONT_LABEL, (24, 35), (1,   4),    'e'),
 ]
 
 
@@ -78,40 +83,46 @@ class MyGui():
     COL_SIZE = 30
     ROW_SIZE = 24
 
+
     def __init__(self):
         self.root = tk.Tk()
         self._BuildGui()
 
+
     def _AddStaticFrames(self):
         ''' Add all static label frames to GUI '''
-
         for frame in FRAMES:
-            text = frame[0]
-            font = frame[1]
-            r    = frame[2][0]
-            c    = frame[2][1]
-            rs   = frame[3][0]
-            cs   = frame[3][1]
-            s    = frame[4]
+            tmp = tk.LabelFrame(
+                self.root,
+                text       =frame[0],
+                font       =frame[1]
+            )
 
-            t = tk.LabelFrame(self.root, text=text, font=font)
-            t.grid(row=r, column=c, sticky=s, rowspan=rs, columnspan=cs)
+            tmp.grid(
+                row        =frame[2][0],
+                column     =frame[2][1],
+                rowspan    =frame[3][0],
+                columnspan =frame[3][1],
+                sticky     =frame[4]
+            )
 
 
     def _AddStaticLabels(self):
         ''' Add all static labels to GUI '''
-
         for label in LABELS:
-            text = label[0]
-            font = label[1]
-            r    = label[2][0]
-            c    = label[2][1]
-            rs   = label[3][0]
-            cs   = label[3][1]
-            s    = label[4]
+            tmp = tk.Label(
+                self.root,
+                text       =label[0],
+                font       =label[1]
+            )
 
-            t = tk.Label(self.root, text=text, font=font)
-            t.grid(row=r, column=c, sticky=s, rowspan=rs, columnspan=cs)
+            tmp.grid(
+                row        =label[2][0],
+                column     =label[2][1],
+                rowspan    =label[3][0],
+                columnspan =label[3][1],
+                sticky     =label[4]
+            )
 
 
     def _BuildGui(self):
@@ -129,104 +140,465 @@ class MyGui():
         self._AddStaticFrames()
         self._AddStaticLabels()
 
+
+        #----------------------------------------------------------------------
         # Logo
-        tkLogo = ImageTk.PhotoImage(Image.open('tree.png'))
-        temp = tk.Label(root, image=tkLogo)
-        temp.image = tkLogo     # This is the only way to make image work properly
-        temp.grid(row=1, column=2, sticky='nesw', padx=0, pady=0, rowspan=5, columnspan=4)
+        #----------------------------------------------------------------------
+        self.logo = ImageTk.PhotoImage(Image.open('tree.png'))
+        tmp = tk.Label(root, image=self.logo)
+        tmp.grid(row=1, column=1, sticky='nesw', rowspan=5, columnspan=4)
 
-        # Dynamic Labels
-        lableTextTransCount = tk.StringVar(value='(Transaction 0 of 0 in spreadsheet.csv)')
-        temp = tk.Label(root, textvariable=lableTextTransCount, font=('Calibri', 9))
-        temp.grid(row=12, column=2, sticky='w', padx=0, pady=0, rowspan=1, columnspan=24)
-        # lableTextTransCount.set('NEW TEXT')
 
-        # Data display boxes
-        self.displayDate = tk.StringVar(value='12/12/2025')
-        temp = tk.Entry(root, textvariable=self.displayDate, font=('Calibri', 11), width=12, justify='center', state='readonly')
-        temp.grid(row=10, column=2, sticky='w', padx=0, pady=0, rowspan=1, columnspan=3)
-
-        self.displayDescription = tk.StringVar(value='  COMPANY INC PAYROLL')
-        temp = tk.Entry(root, textvariable=self.displayDescription, font=('Calibri', 11), width=64, justify='left', state='readonly')
-        temp.grid(row=10, column=6, sticky='w', padx=0, pady=0, rowspan=1, columnspan=15)
-
-        self.displayAmount = tk.StringVar(value='420.69')
-        temp = tk.Entry(root, textvariable=self.displayAmount, font=('Calibri', 11), width=12, justify='center', state='readonly')
-        temp.grid(row=10, column=22, sticky='w', padx=0, pady=0, rowspan=1, columnspan=3)
-
-        # Selection boxes
-        self.selectionExpenses = tk.StringVar()
-        self.expensesDropdown = ttk.Combobox(root, textvariable=self.selectionExpenses, font=('Calibri', 11), width=80)
-        self.expensesDropdown.grid(row=16, column=5, sticky='w', rowspan=1, columnspan=20)
-
-        self.selectionLiability = tk.StringVar()
-        self.liabilityDropdown = ttk.Combobox(root, textvariable=self.selectionLiability, font=('Calibri', 11), width=80)
-        self.liabilityDropdown.grid(row=18, column=5, sticky='w', rowspan=1, columnspan=20)
-
-        self.selectionIncome = tk.StringVar()
-        self.incomeDropdown = ttk.Combobox(root, textvariable=self.selectionIncome, font=('Calibri', 11), width=80)
-        self.incomeDropdown.grid(row=20, column=5, sticky='w', rowspan=1, columnspan=20)
-
-        self.selectionAsset = tk.StringVar()
-        self.assetDropdown = ttk.Combobox(root, textvariable=self.selectionAsset, font=('Calibri', 11), width=80)
-        self.assetDropdown.grid(row=22, column=5, sticky='w', rowspan=1, columnspan=20)
-
+        #----------------------------------------------------------------------
+        # Setup Frame
+        #----------------------------------------------------------------------
+        # Import Dropdown
         self.selectedImportFile = tk.StringVar()
-        self.importDropdown = ttk.Combobox(root, textvariable=self.selectedImportFile, font=('Calibri', 11), width=60)
-        self.importDropdown.grid(row=2, column=29, sticky='w', rowspan=1, columnspan=14)
+        self.importDropdown = ttk.Combobox(
+            root,
+            textvariable    =self.selectedImportFile,
+            font            =FONT_BOXES,
+            width           =60
+        )
+        self.importDropdown.grid(
+            row             =2,
+            column          =29,
+            sticky          ='w',
+            rowspan         =1,
+            columnspan      =14
+        )
 
+        # Associated Account Dropdown
         self.selectedAssAcct = tk.StringVar()
-        self.assAcctDropdown = ttk.Combobox(root, textvariable=self.selectedAssAcct, font=('Calibri', 11), width=60)
-        self.assAcctDropdown.grid(row=4, column=29, sticky='w', rowspan=1, columnspan=14)
+        self.assAcctDropdown = ttk.Combobox(
+            root,
+            textvariable    =self.selectedAssAcct,
+            font            =FONT_BOXES,
+            width           =60
+        )
+        self.assAcctDropdown.grid(
+            row             =4,
+            column          =29,
+            sticky          ='w',
+            rowspan         =1,
+            columnspan      =14
+        )
 
-        selectionJournal = tk.StringVar()
-        temp = ttk.Combobox(root, textvariable=selectionJournal, font=('Calibri', 11), width=72)
-        temp.grid(row=10, column=31, sticky='w', rowspan=1, columnspan=18)
+        # Start Button
+        self.startButton = tk.Button(
+            root,
+            text        ='Start',
+            font        =FONT_LABEL
+        )
+        self.startButton.grid(
+            row         =2,
+            column      =43,
+            sticky      ='nesw',
+            padx        =20,
+            pady        =20,
+            rowspan     =3,
+            columnspan  =6
+        )
 
-        # Input boxes
-        self.memo = tk.StringVar(value='')
-        temp = tk.Entry(root, textvariable=self.memo, font=('Calibri', 11), width=82, justify='left')
-        temp.grid(row=24, column=5, sticky='w', padx=0, pady=0, rowspan=1, columnspan=20)
 
-        inputMemo = tk.StringVar(value='')
-        temp = tk.Entry(root, textvariable=inputMemo, font=('Calibri', 11), width=74, justify='left')
-        temp.grid(row=12, column=31, sticky='w', padx=0, pady=0, rowspan=1, columnspan=18)
+        #----------------------------------------------------------------------
+        # Data Frame
+        #----------------------------------------------------------------------
+        # Date Box
+        self.displayDate = tk.StringVar(value=' ')
+        tmp = tk.Entry(
+            root,
+            textvariable    =self.displayDate,
+            font            =FONT_BOXES,
+            width           =12,
+            justify         ='center',
+            state           ='readonly'
+        )
+        tmp.grid(
+            row             =10,
+            column          =2,
+            sticky          ='w',
+            rowspan         =1,
+            columnspan      =3
+        )
 
-        inputAmount = tk.StringVar(value='')
-        temp = tk.Entry(root, textvariable=inputAmount, font=('Calibri', 11), width=16, justify='left')
-        temp.grid(row=14, column=31, sticky='w', padx=0, pady=0, rowspan=1, columnspan=4)
+        # Description Box
+        self.displayDescription = tk.StringVar(value=' ')
+        tmp = tk.Entry(
+            root,
+            textvariable    =self.displayDescription,
+            font            =FONT_BOXES,
+            width           =64,
+            justify         ='left',
+            state           ='readonly'
+        )
+        tmp.grid(
+            row             =10,
+            column          =6,
+            sticky          ='w',
+            rowspan         =1,
+            columnspan      =15
+        )
 
+        # Amount Box
+        self.displayAmount = tk.StringVar(value=' ')
+        tmp = tk.Entry(
+            root,
+            textvariable    =self.displayAmount,
+            font            =FONT_BOXES,
+            width           =12,
+            justify         ='center',
+            state           ='readonly'
+        )
+        tmp.grid(
+            row             =10,
+            column          =22,
+            sticky          ='w',
+            rowspan         =1,
+            columnspan      =3
+        )
+
+        # Transaction Counter Label
+        self.transCount = tk.StringVar(value=' ')
+        tmp = tk.Label(
+            root,
+            textvariable    =self.transCount,
+            font            =FONT_NOTES
+        )
+        tmp.grid(
+            row             =12,
+            column          =2,
+            sticky          ='w',
+            rowspan         =1,
+            columnspan      =24
+        )
+
+        #----------------------------------------------------------------------
+        # Account Frame
+        #----------------------------------------------------------------------
+        # Expenses Dropdown
+        self.selectedExpense = tk.StringVar()
+        self.expenseDropdown = ttk.Combobox(
+            root,
+            textvariable    =self.selectedExpense,
+            font            =FONT_BOXES,
+            width           =80
+        )
+        self.expenseDropdown.grid(
+            row             =16,
+            column          =5,
+            sticky          ='w',
+            rowspan         =1,
+            columnspan      =20
+        )
+
+        # Liability Dropdown
+        self.selectedLiability = tk.StringVar()
+        self.liabilityDropdown = ttk.Combobox(
+            root,
+            textvariable    =self.selectedLiability,
+            font            =FONT_BOXES,
+            width           =80
+        )
+        self.liabilityDropdown.grid(
+            row             =18,
+            column          =5,
+            sticky          ='w',
+            rowspan         =1,
+            columnspan      =20
+        )
+
+        # Income Dropdown
+        self.selectedIncome = tk.StringVar()
+        self.incomeDropdown = ttk.Combobox(
+            root,
+            textvariable    =self.selectedIncome,
+            font            =FONT_BOXES,
+            width           =80
+        )
+        self.incomeDropdown.grid(
+            row             =20,
+            column          =5,
+            sticky          ='w',
+            rowspan         =1,
+            columnspan      =20
+        )
+
+        # Asset Dropdown
+        self.selectedAsset = tk.StringVar()
+        self.assetDropdown = ttk.Combobox(
+            root,
+            textvariable    =self.selectedAsset,
+            font            =FONT_BOXES,
+            width           =80
+        )
+        self.assetDropdown.grid(
+            row             =22,
+            column          =5,
+            sticky          ='w',
+            rowspan         =1,
+            columnspan      =20
+        )
+
+        # Memo Box
+        self.memo = tk.StringVar(value=' ')
+        tmp = tk.Entry(
+            root,
+            textvariable    =self.memo,
+            font            =FONT_NOTES,
+            width           =95,
+            justify         ='left'
+        )
+        tmp.grid(
+            row             =24,
+            column          =5,
+            sticky          ='w',
+            rowspan         =1,
+            columnspan      =20
+        )
+
+
+        #----------------------------------------------------------------------
+        # Split Frame
+        #----------------------------------------------------------------------
+        # Split Account Dropdown
+        self.selectedSplitAcct = tk.StringVar()
+        self.splitAcctDropdown = ttk.Combobox(
+            root,
+            textvariable    =self.selectedSplitAcct,
+            font            =FONT_BOXES,
+            width           =74
+        )
+        self.splitAcctDropdown.grid(
+            row             =10,
+            column          =31,
+            sticky          ='w',
+            rowspan         =1,
+            columnspan      =18
+        )
+
+        # Split Memo Box
+        self.splitMemo = tk.StringVar(value=' ')
+        tmp = tk.Entry(
+            root,
+            textvariable    =self.splitMemo,
+            font            =FONT_NOTES,
+            width           =87,
+            justify         ='left'
+        )
+        tmp.grid(
+            row             =12,
+            column          =31,
+            sticky          ='w',
+            rowspan         =1,
+            columnspan      =18
+        )
+
+        # Split Amount Box
+        self.splitAmnt = tk.StringVar(value=' ')
+        tmp = tk.Entry(
+            root,
+            textvariable    =self.splitAmnt,
+            font            =FONT_NOTES,
+            width           =16,
+            justify         ='left'
+        )
+        tmp.grid(
+            row             =14,
+            column          =31,
+            sticky          ='w',
+            rowspan         =1,
+            columnspan      =48
+        )
+
+        # Add Split Button
+        self.addSplitButton = tk.Button(
+            root,
+            text        ='Add Split',
+            font        =FONT_LABEL
+        )
+        self.addSplitButton.grid(
+            row         =16,
+            column      =32,
+            sticky      ='nesw',
+            padx        =20,
+            pady        =0,
+            rowspan     =2,
+            columnspan  =5
+        )
+
+        # Undo Split Button
+        self.undoSplitButton = tk.Button(
+            root,
+            text        ='Undo',
+            font        =FONT_LABEL
+        )
+        self.undoSplitButton.grid(
+            row         =16,
+            column      =40,
+            sticky      ='nesw',
+            padx        =20,
+            pady        =0,
+            rowspan     =2,
+            columnspan  =5
+        )
+
+
+        #----------------------------------------------------------------------
+        # Opening Balance Frame
+        #----------------------------------------------------------------------
+        # Opening Balance Account Dropdown
+        self.selectedOpenAcct = tk.StringVar()
+        self.openAcctDropdown = ttk.Combobox(
+            root,
+            textvariable    =self.selectedOpenAcct,
+            font            =FONT_BOXES,
+            width           =74
+        )
+        self.openAcctDropdown.grid(
+            row             =22,
+            column          =31,
+            sticky          ='w',
+            rowspan         =1,
+            columnspan      =18
+        )
+
+        # Opening Balance Amount Box
+        self.openAmnt = tk.StringVar(value=' ')
+        tmp = tk.Entry(
+            root,
+            textvariable    =self.openAmnt,
+            font            =FONT_NOTES,
+            width           =16,
+            justify         ='left'
+        )
+        tmp.grid(
+            row             =24,
+            column          =31,
+            sticky          ='w',
+            rowspan         =1,
+            columnspan      =48
+        )
+
+        # Opening Balance Date Box
+        self.openDate = tk.StringVar(value=' ')
+        tmp = tk.Entry(
+            root,
+            textvariable    =self.openDate,
+            font            =FONT_NOTES,
+            width           =16,
+            justify         ='left'
+        )
+        tmp.grid(
+            row             =24,
+            column          =39,
+            sticky          ='w',
+            rowspan         =1,
+            columnspan      =48
+        )
+
+        # Add Opening Balance Button
+        self.undoSplitButton = tk.Button(
+            root,
+            text        ='Add',
+            font        =FONT_LABEL
+        )
+        self.undoSplitButton.grid(
+            row         =23,
+            column      =44,
+            sticky      ='nesw',
+            padx        =20,
+            pady        =20,
+            rowspan     =3,
+            columnspan  =5
+        )
+
+
+        #----------------------------------------------------------------------
+        # Log Frame
+        #----------------------------------------------------------------------
         # Log box
-        self.logBox = tk.Text(root, font=('Consolas', 9), width=170, height=15)
-        self.logBox.grid(row=29, column=13, sticky='nsew', padx=0, pady=0, rowspan=8, columnspan=36)
+        self.logBox = tk.Text(
+            root,
+            font        =FONT_NOTES,
+            width       =170,
+            height      =15
+        )
+        self.logBox.grid(
+            row         =29,
+            column      =13,
+            sticky      ='nsew',
+            rowspan     =8,
+            columnspan  =36
+        )
 
         # Scroll bar for log box
-        logScroll = tk.Scrollbar(root, orient='vertical', command=self.logBox.yview)
+        logScroll = tk.Scrollbar(
+            root,
+            orient      ='vertical',
+            command     =self.logBox.yview
+        )
         self.logBox.configure(yscrollcommand=logScroll.set)
-        logScroll.grid(row=29, column=49, sticky='wns', padx=0, pady=0, rowspan=8)
+        logScroll.grid(
+            row         =29,
+            column      =49,
+            sticky      ='wns',
+            padx        =0,
+            pady        =0,
+            rowspan=8
+        )
 
-        # Tags for different text types
-        self.logBox.tag_configure('header', background='white', foreground='black', font=('consolas', 10, 'bold'))
-        self.logBox.tag_configure('default', background='white', foreground='black', font=('consolas', 10))
-        self.logBox.tag_configure('error', background='white', foreground='red', font=('consolas', 10))
+        # Tags for different text types for log box
+        self.logBox.tag_configure(
+            'header',
+            background  ='white',
+            foreground  ='black',
+            font        =('consolas', 10, 'bold')
+        )
+        self.logBox.tag_configure(
+            'default',
+            background  ='white',
+            foreground  ='black',
+            font        =('consolas', 10)
+        )
+        self.logBox.tag_configure(
+            'error',
+            background  ='white',
+            foreground  ='red',
+            font        =('consolas', 10)
+        )
 
+        # Add Entry Button
+        self.addEntryButton = tk.Button(
+            root,
+            text        ='Add to Journal',
+            font        =FONT_LABEL
+        )
+        self.addEntryButton.grid(
+            row         =27,
+            column      =2,
+            sticky      ='nesw',
+            padx        =20,
+            pady        =20,
+            rowspan     =6,
+            columnspan  =8
+        )
 
-
-        # Buttons
-        self.startButton = tk.Button(root, text='Start', font=('Calibri', 14, 'bold'))
-        self.startButton.grid(row=2, column=43, sticky='nesw', padx=20, pady=20, rowspan=3, columnspan=6)
-
-        self.addSplitButton = tk.Button(root, text='Add Split', font=('Calibri', 14, 'bold'))
-        self.addSplitButton.grid(row=16, column=32, sticky='nesw', padx=20, pady=0, rowspan=2, columnspan=5)
-
-        self.undoSplitButton = tk.Button(root, text='Undo', font=('Calibri', 14, 'bold'))
-        self.undoSplitButton.grid(row=16, column=40, sticky='nesw', padx=20, pady=0, rowspan=2, columnspan=5)
-
-        self.addEntryButton = tk.Button(root, text='Add to Ledger', font=('Calibri', 14, 'bold'))
-        self.addEntryButton.grid(row=27, column=2, sticky='nesw', padx=20, pady=20, rowspan=6, columnspan=8)
-
-        self.redoEntryButton = tk.Button(root, text='Redo Last Entry', font=('Calibri', 14, 'bold'))
-        self.redoEntryButton.grid(row=34, column=3, sticky='nesw', padx=20, pady=20, rowspan=2, columnspan=6)
+        # Redo Entry Button
+        self.addEntryButton = tk.Button(
+            root,
+            text        ='Redo Last Entry',
+            font        =FONT_LABEL
+        )
+        self.addEntryButton.grid(
+            row         =34,
+            column      =3,
+            sticky      ='nesw',
+            padx        =20,
+            pady        =20,
+            rowspan     =2,
+            columnspan  =6
+        )
 
 
     def LoadImportDropdown(self, list):
