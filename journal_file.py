@@ -97,10 +97,10 @@ class JournalFile():
     def FindLatest(self, dateD, descD, amntD):
         ''' Find latest transaction which doesn't already exist in journal '''
 
-        df = pd.read_csv('Journal.csv')
-        sorted_df = df.sort_values(by=['Date']) 
-        sorted_df.to_csv('JournalTest.csv', index=False)
-        self.latestIndex = 0
+        # df = pd.read_csv('Journal.csv')
+        # sorted_df = df.sort_values(by=['Date']) 
+        # sorted_df.to_csv('JournalTest.csv', index=False)
+        self.latestIndex = self.latestIndex + 1
 
         # Reorder Journal data by date (oldest to newest) and Transaction ID (second precedence)
 
@@ -116,17 +116,49 @@ class JournalFile():
         return c.GOOD, log
 
 
-    def FindLast(self, date, desc, amnt):
-        ''' TODO '''
+    def FindSuggestedAccount(self, iDesc, iAmnt):
+        '''
+        Find the last account used that matches the given description and
+        amount.
 
-        # Check to see if the transaction was accounted for previously
-        # Start with identical description AND amount
-        # Next try full description match
-        # Next try partial description match
-        # Update "suggested account" variable
+        If description and amount match, use that account but if no account
+        found for exact amount and description, used description match only.
 
-        self.suggestedAcct = 'Expenses:Shared:Entertainment:Streaming'
+        Note: The Journal is reordered by date/description everytime this
+        function executes.
+        '''
 
+        try:
+            # Create dataframe using import file data
+            df = pd.read_csv('Journal.csv')
+
+            # Create new df that is ordered by date and description
+            newDf = df.sort_values(by=['Date', 'Description'])
+
+            # Write back reordered data to Journal
+            newDf.to_csv('Journal.csv', index=False)
+
+        except FileNotFoundError:
+            log = 'Selected Journal csv file does not exist', 'error'
+            return c.BAD, log
+
+        except:
+            log = 'Something bad happened', 'error'
+            raise
+
+        self.suggestedAcct = ' '
+
+        for index, row in newDf.iterrows():
+            jDesc = row['Description']
+            jAmnt = row['Amount Num.']
+            jAcct = row['Full Account Name']
+
+            if (jDesc == iDesc) and (jAmnt == iAmnt):
+                self.suggestedAcct = jAcct
+            elif (self.suggestedAcct == ' ') and (jDesc == iDesc):
+                self.suggestedAcct = jAcct
+
+            print(self.suggestedAcct)
 
         log = 'All good', 'default'
         return c.GOOD, log
