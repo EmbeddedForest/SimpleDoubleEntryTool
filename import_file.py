@@ -15,6 +15,8 @@
 
 import os
 import csv
+import hashlib
+import pandas as pd
 import constants as c
 
 
@@ -25,6 +27,7 @@ class ImportFile():
     dateCol = ' '
     descCol = ' '
     amntCol = ' '
+    hashCol = ' '
     dateCur = ' '
     descCur = ' '
     amntCur = ' '
@@ -42,6 +45,7 @@ class ImportFile():
         self.dateCol = ' '
         self.descCol = ' '
         self.amntCol = ' '
+        self.hashCol = ' '
         self.dateCur = ' '
         self.descCur = ' '
         self.amntCur = ' '
@@ -63,6 +67,11 @@ class ImportFile():
 
         # Map and update column headers
         retVal, log = self._UpdateColumnHeaders()
+        if (retVal == c.BAD):
+            return c.BAD, log
+
+        # Create new temp csv
+        retVal, log = self._CreateTempFile()
         if (retVal == c.BAD):
             return c.BAD, log
 
@@ -145,6 +154,7 @@ class ImportFile():
         self.dateCol = ' '
         self.descCol = ' '
         self.amntCol = ' '
+        self.hashCol = ' '
 
         try:
             with open(self.filePath, newline="", encoding="utf-8-sig") as f:
@@ -186,8 +196,74 @@ class ImportFile():
             log = 'Bad amount column in import file', 'error'
             return c.BAD, log
 
+        self.hashCol = 'TransactionID'
+
         # Looks good
         log = 'Import columns updated successfully'
+        return c.GOOD, log
+
+
+    def _CreateTempFile(self):
+        '''
+        Creates a temp csv file will all transactions from import file. Adds a
+        hash for each transaction to more easily compare against entries in
+        Journal.csv.
+
+        Go row by row, create a hash using date, desc, amnt, and count.
+        If previous hash is same as new hash, increment count and rehash.
+        If above line is not same as current line, make count = 0.
+        Add hashes to TransactionID column (inserted into temp csv file).
+        '''
+
+        try:
+            # Create dataframe using import file data
+            df = pd.read_csv(self.filePath)
+
+            # Create new df that is ordered by date and description
+            newDf = df.sort_values(by=[self.dateCol, self.descCol])
+
+            # Create temp file with ordered data
+            newDf.to_csv('ImportTemp.csv', index=False)
+
+        except FileNotFoundError:
+            log = 'Selected Import csv file does not exist', 'error'
+            return c.BAD, log
+
+        except:
+            log = 'Something bad happened', 'error'
+            raise
+
+        # Give each transaction unique hash
+        count = 0
+        prevId = ' '
+        idList = []
+
+        for index, row in newDf.iterrows():
+            date = row[self.dateCol]
+            desc = row[self.descCol]
+            amnt = row[self.amntCol]
+
+            idString = date + desc + str(amnt) + str(count)
+            encodedString = idString.encode('utf-8')
+            fullHash = hashlib.md5(encodedString).hexdigest()
+
+            if (fullHash == prevId):
+                count = count + 1
+                idString = date + desc + str(amnt) + str(count)
+                encodedString = idString.encode('utf-8')
+                fullHash = hashlib.md5(encodedString).hexdigest()
+            else:
+                count = 0
+
+            idList.append(fullHash)
+            prevId = fullHash
+
+        # Insert hashes into temp file
+        newDf[self.hashCol] = idList
+        newDf.to_csv('ImportTemp.csv', index=False)
+
+        # Looks good
+        log = 'Hashes created successfully successfully'
         return c.GOOD, log
 
 
