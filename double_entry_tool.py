@@ -28,7 +28,7 @@ def LoadNewTransaction(gui, iFile, aFile, jFile):
     ''' TODO '''
 
     # Place new data into GUI
-    i = jFile.latestIndex
+    i = jFile.importIndex
     date = iFile.dateData[i]
     desc = iFile.descData[i]
     amnt = iFile.amntData[i]
@@ -79,7 +79,38 @@ def AddToLedger(gui, iFile, aFile, jFile):
         gui.Log(msg)
         return
 
-    # Check that valid account selected
+    # Make sure to check if transaction list already completed
+    if (jFile.importIndex >= iFile.numTrans):
+        msg = 'All transactions accounted for already', 'default'
+        gui.Log(msg)
+        return
+
+    # Check that a valid account was selected
+    valid = False
+    acct = gui.selectedExpense.get()
+    if (acct != ' '):
+        if (acct in aFile.allAcctsFullName):
+            valid = True
+
+    acct = gui.selectedAsset.get()
+    if (acct != ' '):
+        if (acct in aFile.allAcctsFullName):
+            valid = True
+
+    acct = gui.selectedIncome.get()
+    if (acct != ' '):
+        if (acct in aFile.allAcctsFullName):
+            valid = True
+
+    acct = gui.selectedLiability.get()
+    if (acct != ' '):
+        if (acct in aFile.allAcctsFullName):
+            valid = True
+
+    if (valid != True):
+        msg = 'Selected account does not exist', 'error'
+        gui.Log(msg)
+        return
 
 
 def ToolStart(gui, iFile, aFile, jFile):
@@ -98,14 +129,18 @@ def ToolStart(gui, iFile, aFile, jFile):
         gui.Log(msg)
         return
 
-    # Find latest transaction which doesn't already exist in journal
-    retVal, msg = jFile.FindLatest(iFile.dateData, iFile.descData, iFile.amntData)
-    if (retVal == c.BAD):
-        gui.Log(msg)
-        return
+    # Find starting transaction from import list
+    flag = False
+    iFile.importIndex = 0
+    for id in iFile.hashData:
+        flag = jFile.DoesTransactionExist(id)
+        if (flag == False):
+            break
+        else:
+            iFile.importIndex = iFile.importIndex + 1
 
     # Check to see if all transactions accounted for already
-    if (jFile.latestIndex >= iFile.numTrans):
+    if (jFile.importIndex >= iFile.numTrans):
         msg = 'All transactions accounted for already', 'default'
         gui.Log(msg)
         return

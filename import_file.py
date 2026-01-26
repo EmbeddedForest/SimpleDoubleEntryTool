@@ -34,7 +34,9 @@ class ImportFile():
     dateData = []
     descData = []
     amntData = []
+    hashData = []
     numTrans = 0
+    importIndex = 0
     active = False
 
     def SetupFile(self, filePath):
@@ -52,7 +54,9 @@ class ImportFile():
         self.dateData = []
         self.descData = []
         self.amntData = []
+        self.hashData = []
         self.numTrans = 0
+        self.importIndex = 0
         self.active = False
 
         # Check if the file actually exists
@@ -279,15 +283,17 @@ class ImportFile():
         self.dateData = []
         self.descData = []
         self.amntData = []
+        self.hashData = []
         self.numTrans = 0
 
         try:
-            with open(self.filePath, newline="", encoding="utf-8-sig") as f:
+            with open('ImportTemp.csv', newline="", encoding="utf-8-sig") as f:
                 reader = csv.DictReader(f)
                 for row in reader:
                     self.dateData.append(row[self.dateCol])
                     self.descData.append(row[self.descCol])
                     self.amntData.append(row[self.amntCol])
+                    self.hashData.append(row[self.hashCol])
                     self.numTrans = self.numTrans + 1
 
         except FileNotFoundError:

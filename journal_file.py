@@ -22,7 +22,7 @@ import constants as c
 class JournalFile():
 
     # Object data
-    latestIndex = 0
+    importIndex = 0
     suggestedAcct = ' '
     active = False
 
@@ -30,7 +30,7 @@ class JournalFile():
         ''' Setup Journal.csv file object '''
 
         # Cleanup previous data
-        self.latestIndex = 0
+        self.importIndex = 0
         self.suggestedAcct = ' '
         self.active = False
 
@@ -94,26 +94,31 @@ class JournalFile():
         return c.GOOD, log
 
 
-    def FindLatest(self, dateD, descD, amntD):
-        ''' Find latest transaction which doesn't already exist in journal '''
+    def DoesTransactionExist(self, hash):
+        ''' Check if given hash already exists in journal '''
 
-        # df = pd.read_csv('Journal.csv')
-        # sorted_df = df.sort_values(by=['Date']) 
-        # sorted_df.to_csv('JournalTest.csv', index=False)
-        self.latestIndex = self.latestIndex + 1
+        try:
+            # Create dataframe using import file data
+            df = pd.read_csv('Journal.csv')
 
-        # Reorder Journal data by date (oldest to newest) and Transaction ID (second precedence)
+            # Create new df that is ordered by date and description
+            newDf = df.sort_values(by=['Date', 'Description'])
 
-        # Use hash comparisons
+            # Write back reordered data to Journal
+            newDf.to_csv('Journal.csv', index=False)
 
-        # # Simple first, use date only
-        # for i in dateD:
-        #     if ()
+        except FileNotFoundError:
+            log = 'Selected Journal csv file does not exist', 'error'
+            return c.BAD, log
 
+        except:
+            log = 'Something bad happened', 'error'
+            raise
 
-
-        log = 'All good', 'default'
-        return c.GOOD, log
+        if (hash in newDf['TransactionID'].values):
+            return True
+        else:
+            return False
 
 
     def FindSuggestedAccount(self, iDesc, iAmnt):
@@ -157,8 +162,6 @@ class JournalFile():
                 self.suggestedAcct = jAcct
             elif (self.suggestedAcct == ' ') and (jDesc == iDesc):
                 self.suggestedAcct = jAcct
-
-            print(self.suggestedAcct)
 
         log = 'All good', 'default'
         return c.GOOD, log
