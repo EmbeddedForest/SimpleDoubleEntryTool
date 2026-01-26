@@ -585,12 +585,12 @@ class MyGui():
         )
 
         # Redo Entry Button
-        self.addEntryButton = tk.Button(
+        self.redoButton = tk.Button(
             root,
             text        ='Redo Last Entry',
             font        =FONT_LABEL
         )
-        self.addEntryButton.grid(
+        self.redoButton.grid(
             row         =34,
             column      =3,
             sticky      ='nesw',
