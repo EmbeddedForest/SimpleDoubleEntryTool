@@ -42,8 +42,8 @@ ACCT_TAX_INFO    = 'Tax Info'
 ACCT_PLACEHOLDER = 'Placeholder'
 
 ACCT_HEADERS =                                                          \
-    [ACCT_TYPE,      ACCT_NAME_FULL, ACCT_NAME,     ACCT_CODE,          \
-     ACCT_DSCRP,     ACCT_COLOR,     ACCT_NOTES,    ACCT_SYMBOL,        \
+    [ACCT_TYPE,      ACCT_NAME_FULL, ACCT_NAME,     ACCT_CODE,
+     ACCT_DSCRP,     ACCT_COLOR,     ACCT_NOTES,    ACCT_SYMBOL,
      ACCT_NAMESPACE, ACCT_HIDDEN,    ACCT_TAX_INFO, ACCT_PLACEHOLDER]
 
 # Journal.csv column headers
@@ -54,10 +54,11 @@ JRNL_MEMO        = 'Memo'
 JRNL_ACCT_NAME_F = 'Full Account Name'
 JRNL_ACCT_NAME   = 'Account Name'
 JRNL_AMOUNT      = 'Amount Num.'
+JRNL_INITIATOR   = 'Initiator'
 
 JRNL_HEADERS =                                                          \
-    [JRNL_DATE, JRNL_ID, JRNL_DSCRP, JRNL_MEMO,                         \
-     JRNL_ACCT_NAME_F, JRNL_ACCT_NAME, JRNL_AMOUNT]
+    [JRNL_DATE, JRNL_ID, JRNL_DSCRP, JRNL_MEMO,
+     JRNL_ACCT_NAME_F, JRNL_ACCT_NAME, JRNL_AMOUNT, JRNL_INITIATOR]
 
 # Account Types
 EXPENSES = 'Expenses'
