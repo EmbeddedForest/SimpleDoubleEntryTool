@@ -156,3 +156,21 @@ class AccountFile():
         index = self.allAcctsFullName.index(fullAcctName)
 
         return self.allAcctsShortName[index]
+
+    def CheckIfValid(self, fullAcctName):
+        ''' Checks whether or not given account is valid or not '''
+
+        try:
+            index = self.allAcctsFullName.index(fullAcctName)
+
+        except ValueError:
+            log = 'Associated account does not exist.', 'error'
+            return c.BAD, log
+
+        except:
+            log = 'Something bad happened', 'error'
+            raise
+
+        # All Good
+        log = 'Associated account exists', 'default'
+        return c.GOOD, log
