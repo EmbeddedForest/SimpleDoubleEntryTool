@@ -13,12 +13,12 @@
 #   GUI and associated csv files to help categorize and balance financial
 #   transactions and accounts using double entry bookkeeping.
 #
-# TODO - Add ability to add opening balances from GUI
-# TODO - Add memo box for normal simple transactions
+# TODO - Add checkbox to setup box to flip amount sign
 #------------------------------------------------------------------------------
 
 import constants as c
 from gui import MyGui
+from journal_file import Line
 from import_file import ImportFile
 from account_file import AccountFile
 from journal_file import JournalFile
@@ -27,17 +27,29 @@ from journal_file import JournalFile
 def LoadNewTransaction(gui, iFile, aFile, jFile):
     ''' TODO '''
 
+    l = Line()
+
     # Place new data into GUI
     i = jFile.importIndex
     date = iFile.dateData[i]
     desc = iFile.descData[i]
     amnt = iFile.amntData[i]
+    hash = iFile.hashData[i]
     gui.displayDate.set(date)
     gui.displayDescription.set(desc)
     gui.displayAmount.set(amnt)
 
-    # Find suggested account
-    jFile.FindSuggestedAccount(desc, amnt)
+    # Create initial line in entry
+    l.date = date
+    l.hash = hash
+    l.desc = desc
+    l.memo = ' '
+    l.acctF = gui.selectedAssAcct.get()
+    l.acctS = aFile.GetShortHand(gui.selectedAssAcct.get())
+    l.amnt = amnt
+
+    # Find suggested entry based on first line
+    jFile.FindSuggestedEntry(l)
 
     # Clear all accounts
     gui.selectedAsset.set(' ')
@@ -45,17 +57,18 @@ def LoadNewTransaction(gui, iFile, aFile, jFile):
     gui.selectedExpense.set(' ')
     gui.selectedLiability.set(' ')
 
-    # Load suggested account
-    if ('Assets' in jFile.suggestedAcct):
-        gui.selectedAsset.set(jFile.suggestedAcct)
-    if ('Income' in jFile.suggestedAcct):
-        gui.selectedIncome.set(jFile.suggestedAcct)
-    if ('Expenses' in jFile.suggestedAcct):
-        gui.selectedExpense.set(jFile.suggestedAcct)
-    if ('Liabilities' in jFile.suggestedAcct):
-        gui.selectedLiability.set(jFile.suggestedAcct)
+    # Load suggested account (for simple entries only)
+    if ('Assets' in jFile.entry[1].acctF):
+        gui.selectedAsset.set(jFile.entry[1].acctF)
+    if ('Income' in jFile.entry[1].acctF):
+        gui.selectedIncome.set(jFile.entry[1].acctF)
+    if ('Expenses' in jFile.entry[1].acctF):
+        gui.selectedExpense.set(jFile.entry[1].acctF)
+    if ('Liabilities' in jFile.entry[1].acctF):
+        gui.selectedLiability.set(jFile.entry[1].acctF)
 
-    # Update preview box with journal entry inputs
+    # # Update preview box with journal entry inputs
+    # UpdatePreview(gui, entry)
 
 
 def AddToLedger(gui, iFile, aFile, jFile):
@@ -112,6 +125,7 @@ def AddToLedger(gui, iFile, aFile, jFile):
         gui.Log(msg)
         return
 
+    # jFile.AddTransactionToJournal()
 
 def ToolStart(gui, iFile, aFile, jFile):
     ''' TODO '''
@@ -125,6 +139,12 @@ def ToolStart(gui, iFile, aFile, jFile):
 
     # Setup the new import file
     retVal, msg = iFile.SetupFile(filePath)
+    if (retVal == c.BAD):
+        gui.Log(msg)
+        return
+
+    # Check that associated account is valid
+    retVal, msg = aFile.CheckIfValid(gui.selectedAssAcct.get())
     if (retVal == c.BAD):
         gui.Log(msg)
         return
@@ -149,25 +169,25 @@ def ToolStart(gui, iFile, aFile, jFile):
     LoadNewTransaction(gui, iFile, aFile, jFile)
 
 
-def UpdatePreview(gui, iFile, aFile, jFile, selectedAcct):
+def UpdatePreview(gui):
     ''' TODO '''
 
-    # Clear log
-    msg = ' ', 'default'
-    gui.Log(msg)
+    # # Clear log
+    # msg = ' ', 'default'
+    # gui.Log(msg)
 
-    payload = []
-    date = gui.displayDate.get()
-    desc = gui.displayDescription.get()
-    amnt = gui.displayAmount.get()
-    fullAcct = selectedAcct
-    shortAcct = aFile.GetShortHand(selectedAcct) 
+    # payload = []
+    # date = gui.displayDate.get()
+    # desc = gui.displayDescription.get()
+    # amnt = gui.displayAmount.get()
+    # fullAcct = selectedAcct
+    # shortAcct = aFile.GetShortHand(selectedAcct) 
 
-    msg =       'Date:    Description:    Amount:    Account: \n'
-    msg = msg + date + '      ' + desc + '      ' + amnt + '      ' + fullAcct + '      ' + shortAcct
+    # msg =       'Date:    Description:    Amount:    Account: \n'
+    # msg = msg + date + '      ' + desc + '      ' + amnt + '      ' + fullAcct + '      ' + shortAcct
 
-    payload = msg, 'default'
-    gui.Log(payload)
+    # payload = msg, 'default'
+    # gui.Log(payload)
 
 
 def UpdateAccounts(event, gui, iFile, aFile, jFile, who):
@@ -200,7 +220,7 @@ def UpdateAccounts(event, gui, iFile, aFile, jFile, who):
     if (selectedAcct == ' '):
         return
 
-    UpdatePreview(gui, iFile, aFile, jFile, selectedAcct)
+    # UpdatePreview(gui, iFile, aFile, jFile, selectedAcct)
 
 
 def Main():

@@ -137,8 +137,11 @@ class JournalFile():
             # Create dataframe using import file data
             df = pd.read_csv('Journal.csv')
 
+            # Make sure date is in correct format before sorting
+            # df['Date'] = pd.to_datetime(df['Date'], format='%m/%d/%Y')
+
             # Create new df that is ordered by date and description
-            newDf = df.sort_values(by=['Date', 'Description'])
+            newDf = df.sort_values(by=['Date', 'Description', 'TransactionID', 'Initiator'])
 
             # Write back reordered data to Journal
             newDf.to_csv('Journal.csv', index=False)
@@ -158,12 +161,140 @@ class JournalFile():
             jAmnt = row['Amount Num.']
             jAcct = row['Full Account Name']
 
-            if (jDesc == iDesc) and (jAmnt == iAmnt):
+            jAmnt = round(jAmnt, 2)
+
+            if (jDesc == iDesc) and (str(jAmnt) == iAmnt):
                 self.suggestedAcct = jAcct
             elif (self.suggestedAcct == ' ') and (jDesc == iDesc):
                 self.suggestedAcct = jAcct
 
         log = 'All good', 'default'
+        return c.GOOD, log
+
+
+    def FindSuggestedEntry(self, l):
+        '''
+        Find the last entry that matches the given desc / amnt / acct.
+
+        Iterate through dataframe in reverse. If match on desc, amnt, and acct,
+        load suggested entry with entire entry found.
+
+        If only match on desc and acct, load suggested entry as a simple entry
+        (one line) with reversed amount and suggested account in second line.
+
+        If no match on desc and acct, don't load any more lines to suggested
+        entry.
+
+        Note: The Journal is reordered by date/description everytime this
+        function executes.
+        '''
+
+        # Clear current entry
+        self.entry = []
+
+        try:
+            # Create dataframe using import file data
+            df = pd.read_csv('Journal.csv')
+
+            # Create new df that is ordered
+            newDf = df.sort_values(by=['Date', 'Description', 'TransactionID', 'Initiator'])
+
+            # Write back reordered data to Journal
+            newDf.to_csv('Journal.csv', index=False)
+
+        except FileNotFoundError:
+            log = 'Selected Journal csv file does not exist', 'error'
+            return c.BAD, log
+
+        except:
+            log = 'Something bad happened', 'error'
+            raise
+
+        # Load 0th line to entry
+        self.entry.append(l)
+
+        # pd.set_option("display.max_rows", None)
+        # pd.set_option("display.max_columns", None)
+        # pd.set_option("display.width", None) 
+        # print(newDf)
+
+        # Have a go at exact match first
+        for index, row in newDf.iloc[::-1].iterrows():
+            jDesc = row['Description']
+            jAmnt = row['Amount Num.']
+            jAcct = row['Full Account Name']
+            jHash = row['TransactionID']
+
+            jAmnt = str(round(jAmnt, 2))
+
+            if (jDesc == l.desc) and (jAcct == l.acctF) and (jAmnt == l.amnt):
+                # Exact match found, load entry data
+                tmpHash = jHash
+                i = 1
+                while (jHash == tmpHash):
+                    # print(index+i)
+                    newLine = Line()
+                    newLine.date = l.date
+                    newLine.hash = l.hash
+                    newLine.desc = l.desc
+                    newLine.memo = newDf.loc[index+i, 'Memo']
+                    newLine.acctF = newDf.loc[index+i, 'Full Account Name']
+                    newLine.acctS = newDf.loc[index+i, 'Account Name']
+                    newLine.amnt = newDf.loc[index+i, 'Amount Num.']
+                    tmpHash = newDf.loc[index+i+1, 'TransactionID']
+                    self.entry.append(newLine)
+                    i = i + 1
+
+        for i in self.entry:
+            print(i.date, i.desc, i.hash, i.memo, i.acctF, i.acctS, i.amnt)
+
+        if (len(self.entry) > 1):
+            print('exact')
+            log = 'Exact match found', 'default'
+            return c.GOOD, log
+
+        # Go for partial match
+        for index, row in newDf.iloc[::-1].iterrows():
+            jDesc = row['Description']
+            jAmnt = row['Amount Num.']
+            jAcct = row['Full Account Name']
+            jHash = row['TransactionID']
+
+            jAmnt = str(round(jAmnt, 2))
+
+            if (jDesc == l.desc) and (jAcct == l.acctF):
+                # Partial match found, load reversed amount and suggested acct
+                newLine = Line()
+                newLine.date = l.date
+                newLine.hash = l.hash
+                newLine.desc = l.desc
+
+                # Suggested Account
+                newLine.acctF = newDf.loc[index+1, 'Full Account Name']
+                newLine.acctS = newDf.loc[index+1, 'Account Name']
+
+                # Reversed Amount
+                if ('-' in l.amnt):
+                    newLine.amnt = l.amnt.replace('-', '')
+                else:
+                    newLine.amnt = '-' + l.amnt
+
+                # Append to entry
+                self.entry.append(newLine)
+
+        for i in self.entry:
+            print(i.date, i.desc, i.hash, i.memo, i.acctF, i.acctS, i.amnt)
+
+        if (len(self.entry) > 1):
+            print('partial')
+            log = 'Partial match found', 'default'
+            return c.GOOD, log
+
+        for i in self.entry:
+            print(i.date, i.desc, i.hash, i.memo, i.acctF, i.acctS, i.amnt)
+
+        print('none')
+        log = 'No match found', 'default'
         return c.GOOD, log
 
 
@@ -245,3 +376,71 @@ class JournalFile():
         # Insert hashes into temp file
         newDf['TransactionID'] = hashList
         newDf.to_csv('JournalTemp.csv', index=False)
+
+
+
+class Line():
+    ''' Represents a single line of an entry in the journal '''
+
+    date = ' '
+    hash = ' '
+    desc = ' '
+    memo = ' '
+    acctF = ' '
+    acctS = ' '
+    amnt = ' '
+    initiator = ' '
+
+
+    def Clear(self):
+        self.date = []
+        self.hash = []
+        self.desc = []
+        self.memo = []
+        self.acct = []
+        self.acctShort = []
+        self.amnt = []
+        self.initiator = []
+
+
+class Entry():
+    ''' Represents a full entry in the journal '''
+
+    lines = []
+    sum = 0
+    index = 0
+
+    def Clear(self):
+        self.lines = []
+        self.sum = 0
+        self.index = 0
+
+    def AddFirstLine(self, line):
+        self.lines.insert(0, line)
+        self.index = 1
+        self.sum = float(line.amnt)
+
+        # print(self.lines[0].date, self.lines[0].hash, self.lines[0].desc, self.lines[0].memo, self.lines[0].acctF, self.lines[0].acctS, self.lines[0].amnt, self.sum)
+
+    def AddSimpleLine(self, line):
+        # Remove existing splits
+        for i in range(self.index, 0, -1):
+            self.lines.pop(self.index)
+
+        # Add in simple line
+        self.index = 1
+        self.lines.insert(self.index, line)
+
+        # Reset sum
+        self.sum = 0
+        self.sum = float(self.lines[0].amnt) + float(self.lines[1].amnt)
+
+    def AddSplitLine(self, line):
+        self.lines.insert(self.index, line)
+        self.index = self.index + 1
+        self.sum = self.sum + float(line.amnt)
+
+    def RemoveSplitLine(self):
+        self.sum = self.sum - float(self.lines[self.index].amnt)
+        self.lines.pop(self.index)
+        self.index = self.index - 1
