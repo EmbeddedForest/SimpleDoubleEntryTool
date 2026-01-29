@@ -498,12 +498,12 @@ class MyGui():
         )
 
         # Add Opening Balance Button
-        self.undoSplitButton = tk.Button(
+        self.addBalanceButton = tk.Button(
             root,
             text        ='Add',
             font        =FONT_LABEL
         )
-        self.undoSplitButton.grid(
+        self.addBalanceButton.grid(
             row         =23,
             column      =44,
             sticky      ='nesw',
