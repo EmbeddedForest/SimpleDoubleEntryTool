@@ -47,6 +47,7 @@ def LoadNewTransaction(gui, iFile, aFile, jFile):
     l.acctF = gui.selectedAssAcct.get()
     l.acctS = aFile.GetShortHand(gui.selectedAssAcct.get())
     l.amnt = amnt
+    l.initiator = '1'
 
     # Find suggested entry based on first line
     jFile.FindSuggestedEntry(l)
@@ -125,7 +126,10 @@ def AddToLedger(gui, iFile, aFile, jFile):
         gui.Log(msg)
         return
 
-    # jFile.AddTransactionToJournal()
+    retVal = jFile.AddEntryToJournal()
+    if (retVal == c.BAD):
+        gui.Log(msg)
+        return
 
 def ToolStart(gui, iFile, aFile, jFile):
     ''' TODO '''
@@ -299,7 +303,7 @@ def Main():
     # Bind buttons
     gui.startButton.configure(command=lambda:ToolStart(gui, iFile, aFile, jFile))
     gui.addEntryButton.configure(command=lambda:AddToLedger(gui, iFile, aFile, jFile))
-    gui.expenseDropdown.bind('<<ComboboxSelected>>', lambda event: UpdateAccounts(event, gui, iFile, aFile, jFile, c.EXPENSES))
+    gui.expenseDropdown.bind('<<ComboboxSelected>>', lambda event:UpdateAccounts(event, gui, iFile, aFile, jFile, c.EXPENSES))
     gui.liabilityDropdown.bind('<<ComboboxSelected>>', lambda event: UpdateAccounts(event, gui, iFile, aFile, jFile, c.LIABILITIES))
     gui.incomeDropdown.bind('<<ComboboxSelected>>', lambda event: UpdateAccounts(event, gui, iFile, aFile, jFile, c.INCOME))
     gui.assetDropdown.bind('<<ComboboxSelected>>', lambda event: UpdateAccounts(event, gui, iFile, aFile, jFile, c.ASSETS))

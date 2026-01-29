@@ -286,6 +286,32 @@ class JournalFile():
         return c.GOOD, log
 
 
+    def AddEntryToJournal(self):
+        ''' Add current entry to journal '''
+
+        try:
+            # Create dataframe using import file data
+            df = pd.read_csv('Journal.csv')
+
+        except FileNotFoundError:
+            log = 'Selected Journal csv file does not exist', 'error'
+            return c.BAD, log
+
+        except:
+            log = 'Something bad happened', 'error'
+            raise
+
+        for l in self.entry:
+            newData = [str(l.date), str(l.hash), str(l.desc), str(l.memo),  \
+                       str(l.acctF), str(l.acctS), str(l.amnt), str(l.initiator)]
+            
+            df.loc[len(df)] = newData
+
+        df.to_csv('Journal.csv', index=False)
+        log = 'Added to journal successfully', 'default'
+        return c.GOOD, log
+
+
     def _AddHashes(self):
         '''
         ONE TIME USE
