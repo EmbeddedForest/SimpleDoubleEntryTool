@@ -341,7 +341,7 @@ class MyGui():
         )
 
         # Memo Box
-        self.memo = tk.StringVar(value=' ')
+        self.memo = tk.StringVar(value='')
         tmp = tk.Entry(
             root,
             textvariable    =self.memo,

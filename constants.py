@@ -66,6 +66,9 @@ ASSETS = 'Assets'
 INCOME = 'Income'
 LIABILITIES = 'Liabilities'
 
+MEMO = 'Memo Update Only'
+
+
 # Size of columns in preview
 SIZE_DATE_COL   = 12
 SIZE_ID_COL     = 34

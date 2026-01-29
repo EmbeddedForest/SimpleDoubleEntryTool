@@ -233,9 +233,21 @@ def UpdatePreview(gui, iFile, aFile, jFile):
 def UpdateAccounts(event, gui, iFile, aFile, jFile, who):
     ''' TODO '''
 
-    selectedAcct = ' '
+    # Memo update
+    if (who == c.MEMO):
+        try:
+            if (jFile.simple == True):
+                jFile.entry[1].memo = gui.memo.get()
+        except IndexError:
+            return
+        except AttributeError:
+            return
 
-    # Clear out account boxes that weren't selected - Brute force for now
+        UpdatePreview(gui, iFile, aFile, jFile)
+        return
+
+    # Account update
+    selectedAcct = ' '
     if (who == c.EXPENSES):
         gui.selectedAsset.set(' ')
         gui.selectedIncome.set(' ')
@@ -307,6 +319,7 @@ def Main():
     gui.liabilityDropdown.bind('<<ComboboxSelected>>', lambda event: UpdateAccounts(event, gui, iFile, aFile, jFile, c.LIABILITIES))
     gui.incomeDropdown.bind('<<ComboboxSelected>>', lambda event: UpdateAccounts(event, gui, iFile, aFile, jFile, c.INCOME))
     gui.assetDropdown.bind('<<ComboboxSelected>>', lambda event: UpdateAccounts(event, gui, iFile, aFile, jFile, c.ASSETS))
+    gui.root.bind('<Return>', lambda event: UpdateAccounts(event, gui, iFile, aFile, jFile, c.MEMO))
 
     # Begin main thread
     gui.root.mainloop()
