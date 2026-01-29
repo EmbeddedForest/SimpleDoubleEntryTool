@@ -378,7 +378,7 @@ class MyGui():
         )
 
         # Split Memo Box
-        self.splitMemo = tk.StringVar(value=' ')
+        self.splitMemo = tk.StringVar(value='')
         tmp = tk.Entry(
             root,
             textvariable    =self.splitMemo,
@@ -395,7 +395,7 @@ class MyGui():
         )
 
         # Split Amount Box
-        self.splitAmnt = tk.StringVar(value=' ')
+        self.splitAmnt = tk.StringVar(value='')
         tmp = tk.Entry(
             root,
             textvariable    =self.splitAmnt,

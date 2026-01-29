@@ -173,6 +173,41 @@ def ToolStart(gui, iFile, aFile, jFile):
     LoadNewTransaction(gui, iFile, aFile, jFile)
 
 
+def AddSplit(gui, iFile, aFile, jFile):
+    ''' TODO '''
+
+    # If it was previously a simple transaction, it isn't now
+    jFile.simple = False
+
+    # Create new line item for entry
+    l = Line()
+
+    try:
+        l.date = jFile.entry[0].date
+        l.hash = jFile.entry[0].hash
+        l.desc = jFile.entry[0].desc
+    except IndexError:
+        msg = 'Entry not valid', 'default'
+        gui.Log(msg)
+        return
+    except AttributeError:
+        msg = 'Entry not valid', 'default'
+        gui.Log(msg)
+        return
+
+    l.acctF = gui.selectedSplitAcct.get()
+    l.acctS = aFile.GetShortHand(gui.selectedSplitAcct.get())
+    l.memo = gui.splitMemo.get()
+    l.amnt = str(gui.splitAmnt.get())
+
+    # Load line to entry
+    jFile.entry.append(l)
+
+    UpdatePreview(gui, iFile, aFile, jFile)
+
+    return
+
+
 def UpdatePreview(gui, iFile, aFile, jFile):
     ''' TODO '''
 
@@ -307,6 +342,7 @@ def Main():
 
     # Load account dropdowns
     gui.assAcctDropdown['values'] = aFile.allAcctsFullName
+    gui.splitAcctDropdown['values'] = aFile.allAcctsFullName
     gui.expenseDropdown['values'] = aFile.expenseAcctList
     gui.liabilityDropdown['values'] = aFile.liabilityAcctList
     gui.incomeDropdown['values'] = aFile.incomeAcctList
@@ -315,6 +351,7 @@ def Main():
     # Bind buttons
     gui.startButton.configure(command=lambda:ToolStart(gui, iFile, aFile, jFile))
     gui.addEntryButton.configure(command=lambda:AddToLedger(gui, iFile, aFile, jFile))
+    gui.addSplitButton.configure(command=lambda:AddSplit(gui, iFile, aFile, jFile))
     gui.expenseDropdown.bind('<<ComboboxSelected>>', lambda event:UpdateAccounts(event, gui, iFile, aFile, jFile, c.EXPENSES))
     gui.liabilityDropdown.bind('<<ComboboxSelected>>', lambda event: UpdateAccounts(event, gui, iFile, aFile, jFile, c.LIABILITIES))
     gui.incomeDropdown.bind('<<ComboboxSelected>>', lambda event: UpdateAccounts(event, gui, iFile, aFile, jFile, c.INCOME))
