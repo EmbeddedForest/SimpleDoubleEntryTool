@@ -35,7 +35,7 @@ FRAMES = \
     ('Date',            FONT_FRAME, (8,   1), (5,  25), 'nesw'),
     ('Split',           FONT_FRAME, (8,  27), (11, 23), 'nesw'),
     ('Select Account',  FONT_FRAME, (14,  1), (13, 25), 'nesw'),
-    ('Log Box',         FONT_FRAME, (28, 12), (10, 38), 'nesw'),
+    ('Log Box',         FONT_FRAME, (28,  7), (10, 43), 'nesw'),
     ('Opening Balance', FONT_FRAME, (20, 27), (7,  23), 'nesw')
 ]
 
@@ -521,15 +521,15 @@ class MyGui():
         self.logBox = tk.Text(
             root,
             font        =FONT_NOTES,
-            width       =170,
+            width       =200,
             height      =15
         )
         self.logBox.grid(
             row         =29,
-            column      =13,
+            column      =8,
             sticky      ='nsew',
             rowspan     =8,
-            columnspan  =36
+            columnspan  =41
         )
 
         # Scroll bar for log box
@@ -553,19 +553,19 @@ class MyGui():
             'header',
             background  ='white',
             foreground  ='black',
-            font        =('consolas', 10, 'bold')
+            font        =('consolas', 8, 'bold')
         )
         self.logBox.tag_configure(
             'default',
             background  ='white',
             foreground  ='black',
-            font        =('consolas', 10)
+            font        =('consolas', 8)
         )
         self.logBox.tag_configure(
             'error',
             background  ='white',
             foreground  ='red',
-            font        =('consolas', 10)
+            font        =('consolas', 8)
         )
 
         # Add Entry Button
@@ -575,13 +575,13 @@ class MyGui():
             font        =FONT_LABEL
         )
         self.addEntryButton.grid(
-            row         =27,
-            column      =2,
+            row         =28,
+            column      =1,
             sticky      ='nesw',
             padx        =20,
             pady        =20,
-            rowspan     =6,
-            columnspan  =8
+            rowspan     =5,
+            columnspan  =5
         )
 
         # Redo Entry Button
@@ -592,12 +592,12 @@ class MyGui():
         )
         self.redoButton.grid(
             row         =34,
-            column      =3,
+            column      =1,
             sticky      ='nesw',
             padx        =20,
             pady        =20,
-            rowspan     =2,
-            columnspan  =6
+            rowspan     =3,
+            columnspan  =5
         )
 
 
