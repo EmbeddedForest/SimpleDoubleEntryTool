@@ -25,6 +25,7 @@ class JournalFile():
     importIndex = 0
     suggestedAcct = ' '
     active = False
+    simple = True
 
     def SetupFile(self):
         ''' Setup Journal.csv file object '''
@@ -33,6 +34,7 @@ class JournalFile():
         self.importIndex = 0
         self.suggestedAcct = ' '
         self.active = False
+        self.simple = True
 
         # Check if the file actually exists
         retVal, log = self._CheckIfFileExists()
@@ -191,6 +193,7 @@ class JournalFile():
 
         # Clear current entry
         self.entry = []
+        self.simple = True
 
         try:
             # Create dataframe using import file data
@@ -213,11 +216,6 @@ class JournalFile():
         # Load 0th line to entry
         self.entry.append(l)
 
-        # pd.set_option("display.max_rows", None)
-        # pd.set_option("display.max_columns", None)
-        # pd.set_option("display.width", None) 
-        # print(newDf)
-
         # Have a go at exact match first
         for index, row in newDf.iloc[::-1].iterrows():
             jDesc = row['Description']
@@ -232,7 +230,6 @@ class JournalFile():
                 tmpHash = jHash
                 i = 1
                 while (jHash == tmpHash):
-                    # print(index+i)
                     newLine = Line()
                     newLine.date = l.date
                     newLine.hash = l.hash
@@ -245,11 +242,10 @@ class JournalFile():
                     self.entry.append(newLine)
                     i = i + 1
 
-        for i in self.entry:
-            print(i.date, i.desc, i.hash, i.memo, i.acctF, i.acctS, i.amnt)
-
         if (len(self.entry) > 1):
-            print('exact')
+            if (len(self.entry) > 2):
+                self.simple = False
+
             log = 'Exact match found', 'default'
             return c.GOOD, log
 
@@ -282,18 +278,10 @@ class JournalFile():
                 # Append to entry
                 self.entry.append(newLine)
 
-        for i in self.entry:
-            print(i.date, i.desc, i.hash, i.memo, i.acctF, i.acctS, i.amnt)
-
         if (len(self.entry) > 1):
-            print('partial')
             log = 'Partial match found', 'default'
             return c.GOOD, log
 
-        for i in self.entry:
-            print(i.date, i.desc, i.hash, i.memo, i.acctF, i.acctS, i.amnt)
-
-        print('none')
         log = 'No match found', 'default'
         return c.GOOD, log
 

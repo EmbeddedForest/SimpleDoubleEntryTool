@@ -67,8 +67,8 @@ def LoadNewTransaction(gui, iFile, aFile, jFile):
     if ('Liabilities' in jFile.entry[1].acctF):
         gui.selectedLiability.set(jFile.entry[1].acctF)
 
-    # # Update preview box with journal entry inputs
-    # UpdatePreview(gui, entry)
+    # Update preview box with current entry info
+    UpdatePreview(gui, iFile, aFile, jFile)
 
 
 def AddToLedger(gui, iFile, aFile, jFile):
@@ -169,25 +169,61 @@ def ToolStart(gui, iFile, aFile, jFile):
     LoadNewTransaction(gui, iFile, aFile, jFile)
 
 
-def UpdatePreview(gui):
+def UpdatePreview(gui, iFile, aFile, jFile):
     ''' TODO '''
 
-    # # Clear log
-    # msg = ' ', 'default'
-    # gui.Log(msg)
+    # Clear log
+    log = ' ', 'default'
+    gui.Log(log)
 
-    # payload = []
-    # date = gui.displayDate.get()
-    # desc = gui.displayDescription.get()
-    # amnt = gui.displayAmount.get()
-    # fullAcct = selectedAcct
-    # shortAcct = aFile.GetShortHand(selectedAcct) 
+    # Build Header
+    msg = c.JRNL_DATE
+    for i in range(c.SIZE_DATE_COL-len(c.JRNL_DATE)):
+        msg = msg + ' '
+    msg = msg + c.JRNL_ID
+    for i in range(c.SIZE_ID_COL-len(c.JRNL_ID)):
+        msg = msg + ' '
+    msg = msg + c.JRNL_DSCRP
+    for i in range(c.SIZE_DESC_COL-len(c.JRNL_DSCRP)):
+        msg = msg + ' '
+    msg = msg + c.JRNL_MEMO
+    for i in range(c.SIZE_MEMO_COL-len(c.JRNL_MEMO)):
+        msg = msg + ' '
+    msg = msg + c.JRNL_ACCT_NAME_F
+    for i in range(c.SIZE_ACCTF_COL-len(c.JRNL_ACCT_NAME_F)):
+        msg = msg + ' '
+    msg = msg + c.JRNL_AMOUNT
+    for i in range(c.SIZE_AMNT_COL-len(c.JRNL_AMOUNT)):
+        msg = msg + ' '
 
-    # msg =       'Date:    Description:    Amount:    Account: \n'
-    # msg = msg + date + '      ' + desc + '      ' + amnt + '      ' + fullAcct + '      ' + shortAcct
+    log = msg, 'header'
+    gui.Log(log)
 
-    # payload = msg, 'default'
-    # gui.Log(payload)
+    # Build entry
+    msg = ''
+    for j in jFile.entry:
+        msg = msg + str(j.date)
+        for i in range(c.SIZE_DATE_COL-len(str(j.date))):
+            msg = msg + ' '
+        msg = msg + str(j.hash)
+        for i in range(c.SIZE_ID_COL-len(str(j.hash))):
+            msg = msg + ' '
+        msg = msg + str(j.desc)
+        for i in range(c.SIZE_DESC_COL-len(str(j.desc))):
+            msg = msg + ' '
+        msg = msg + str(j.memo)
+        for i in range(c.SIZE_MEMO_COL-len(str(j.memo))):
+            msg = msg + ' '
+        msg = msg + str(j.acctF)
+        for i in range(c.SIZE_ACCTF_COL-len(str(j.acctF))):
+            msg = msg + ' '
+        msg = msg + str(j.amnt)
+        for i in range(c.SIZE_AMNT_COL-len(str(j.amnt))):
+            msg = msg + ' '
+        msg = msg + '\n'
+
+    log = msg, 'default'
+    gui.Log(log)
 
 
 def UpdateAccounts(event, gui, iFile, aFile, jFile, who):
@@ -220,7 +256,15 @@ def UpdateAccounts(event, gui, iFile, aFile, jFile, who):
     if (selectedAcct == ' '):
         return
 
-    # UpdatePreview(gui, iFile, aFile, jFile, selectedAcct)
+    try:
+        if (jFile.simple == True):
+            jFile.entry[1].acctF = selectedAcct
+    except IndexError:
+        return
+    except AttributeError:
+        return
+
+    UpdatePreview(gui, iFile, aFile, jFile)
 
 
 def Main():

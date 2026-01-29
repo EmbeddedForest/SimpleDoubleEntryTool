@@ -65,3 +65,13 @@ EXPENSES = 'Expenses'
 ASSETS = 'Assets'
 INCOME = 'Income'
 LIABILITIES = 'Liabilities'
+
+# Size of columns in preview
+SIZE_DATE_COL   = 12
+SIZE_ID_COL     = 34
+SIZE_DESC_COL   = 64
+SIZE_MEMO_COL   = 30
+SIZE_ACCTF_COL  = 44
+SIZE_ACCTS_COL  = 20
+SIZE_AMNT_COL   = 12
+SIZE_INIT_COL   = 10
