@@ -208,6 +208,26 @@ def AddSplit(gui, iFile, aFile, jFile):
     return
 
 
+def UndoSplit(gui, iFile, aFile, jFile):
+    ''' TODO '''
+
+    # If it is a simple transaction, ignore
+    if (jFile.simple == True):
+        return
+
+    # If there is only 2 items in list, ignore
+    if (len(jFile.entry) < 2):
+        return
+
+    # Remove last line from entry
+    index = len(jFile.entry) - 1
+    jFile.entry.pop(index)
+
+    UpdatePreview(gui, iFile, aFile, jFile)
+
+    return
+
+
 def UpdatePreview(gui, iFile, aFile, jFile):
     ''' TODO '''
 
@@ -352,6 +372,7 @@ def Main():
     gui.startButton.configure(command=lambda:ToolStart(gui, iFile, aFile, jFile))
     gui.addEntryButton.configure(command=lambda:AddToLedger(gui, iFile, aFile, jFile))
     gui.addSplitButton.configure(command=lambda:AddSplit(gui, iFile, aFile, jFile))
+    gui.undoSplitButton.configure(command=lambda:UndoSplit(gui, iFile, aFile, jFile))
     gui.expenseDropdown.bind('<<ComboboxSelected>>', lambda event:UpdateAccounts(event, gui, iFile, aFile, jFile, c.EXPENSES))
     gui.liabilityDropdown.bind('<<ComboboxSelected>>', lambda event: UpdateAccounts(event, gui, iFile, aFile, jFile, c.LIABILITIES))
     gui.incomeDropdown.bind('<<ComboboxSelected>>', lambda event: UpdateAccounts(event, gui, iFile, aFile, jFile, c.INCOME))
