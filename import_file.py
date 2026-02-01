@@ -80,6 +80,8 @@ class ImportFile():
             dateC = styleCfg.get('DateColName')
             descC = styleCfg.get('DescColName')
             amntC = styleCfg.get('AmntColName')
+            amntNeg = styleCfg.get('AmntNegate')
+            assAcct = styleCfg.get('AssAcct')
 
             if (dateC in cols) and (descC in cols) and (amntC in cols):
                 style = styleName
@@ -89,39 +91,38 @@ class ImportFile():
             log = 'Import file does not match any known styles', 'error'
             return c.BAD, log
 
+        #----------------------------------------------------------------------
+        # Negate amount if style says to
+        #----------------------------------------------------------------------
+        tmpAmnts = []
+        df = pd.read_csv(filePath)
 
+        if (amntNeg == True):
+            for value in df[amntC]:
+                newVal = -1 * value
+                tmpAmnts.append(newVal)
+
+            df[amntC] = tmpAmnts
 
         #----------------------------------------------------------------------
         # Normalize data
         #----------------------------------------------------------------------
-        try:
-            df = pd.read_csv(filePath)
+        # Date data (yyyy-mm-dd)
+        df[dateC] =pd.to_datetime(df[dateC]).dt.date
 
-        except FileNotFoundError:
-            log = 'Selected Import csv file does not exist', 'error'
-            return c.BAD, log
+        # Amount data (decimal to 2 places)
+        tmpAmnts = []
+        for value in df[amntC]:
+            dec = Decimal(str(value)).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+            tmpAmnts.append(dec)
 
-        try:
-            # Normalize date data (yyyy-mm-dd)
-            df[dateC] =pd.to_datetime(df[dateC]).dt.date
+        df[amntC] = tmpAmnts
 
-            # Normalize amount data (decimal to 2 places)
-            tmpAmnts = []
-            for value in df[amntC]:
-                dec = Decimal(str(value)).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
-                tmpAmnts.append(dec)
+        # Description data (only take first 50 characters)
+        df[descC] = df[descC].str.strip().str[:50]
 
-            df[amntC] = tmpAmnts
-
-            # Normalize description data (only take first 50 characters)
-            df[descC] = df[descC].str.strip().str[:50]
-
-            # Create new df that is ordered by date and description
-            df = df.sort_values(by=[dateC, descC])
-
-        except FileNotFoundError:
-            log = 'Selected Import csv file does not exist', 'error'
-            return c.BAD, log
+        # Order by date and description
+        df = df.sort_values(by=[dateC, descC])
 
         #----------------------------------------------------------------------
         # Create temporary file to hold new df
@@ -177,6 +178,7 @@ class ImportFile():
         self.hashData = df['TransactionID'].tolist()
         self.numTrans = len(df)
         self.active = True
+        self.assAcct = assAcct
 
         log = 'Import setup is complete', 'default'
         return c.GOOD, log
