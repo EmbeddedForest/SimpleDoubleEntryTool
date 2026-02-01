@@ -108,15 +108,17 @@ class ImportFile():
         # Normalize data
         #----------------------------------------------------------------------
         # Date data (yyyy-mm-dd)
-        df[dateC] =pd.to_datetime(df[dateC]).dt.date
+        df[dateC] =pd.to_datetime(df[dateC], format='%m/%d/%Y')
+        df[dateC] = df[dateC].dt.strftime('%Y-%m-%d')
 
-        # Amount data (decimal to 2 places)
+        # Amount data (decimal to 2 places then convert to string)
         tmpAmnts = []
         for value in df[amntC]:
             dec = Decimal(str(value)).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
             tmpAmnts.append(dec)
 
         df[amntC] = tmpAmnts
+        df[amntC] = df[amntC].astype(str)
 
         # Description data (only take first 50 characters)
         df[descC] = df[descC].str.strip().str[:50]
