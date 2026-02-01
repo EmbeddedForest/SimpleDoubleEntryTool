@@ -15,77 +15,170 @@
 
 import os
 import csv
+import yaml
 import hashlib
 import pandas as pd
 import constants as c
+from decimal import Decimal, ROUND_HALF_UP
 
 
 class ImportFile():
 
     # Object data
-    filePath = ' '
-    dateCol = ' '
-    descCol = ' '
-    amntCol = ' '
-    hashCol = ' '
-    dateCur = ' '
-    descCur = ' '
-    amntCur = ' '
     dateData = []
     descData = []
     amntData = []
     hashData = []
     numTrans = 0
-    importIndex = 0
     active = False
 
     def SetupFile(self, filePath):
         ''' Set up specified import file '''
 
+        #----------------------------------------------------------------------
         # Cleanup previous data
-        self.filePath = ' '
-        self.dateCol = ' '
-        self.descCol = ' '
-        self.amntCol = ' '
-        self.hashCol = ' '
-        self.dateCur = ' '
-        self.descCur = ' '
-        self.amntCur = ' '
+        #----------------------------------------------------------------------
         self.dateData = []
         self.descData = []
         self.amntData = []
         self.hashData = []
         self.numTrans = 0
-        self.importIndex = 0
         self.active = False
 
-        # Check if the file actually exists
-        retVal, log = self._CheckIfFileExists(filePath)
-        if (retVal == c.BAD):
+        #----------------------------------------------------------------------
+        # Make sure config is present
+        #----------------------------------------------------------------------
+        try:
+            with open(c.CONFIG_FILE) as f:
+                config = yaml.safe_load(f)
+
+        except FileNotFoundError:
+            log = 'Config file does not exist', 'error'
             return c.BAD, log
 
-        # Check that csv file has necessary column headers
-        retVal, log = self._CheckIfColumnsExists(filePath)
-        if (retVal == c.BAD):
+        #----------------------------------------------------------------------
+        # Make sure import file exists
+        #----------------------------------------------------------------------
+        try:
+            with open(filePath, newline="", encoding="utf-8-sig") as f:
+                reader = csv.DictReader(f)
+                cols = list(next(reader).keys())
+
+        except FileNotFoundError:
+            log = 'Selected Import csv file does not exist', 'error'
             return c.BAD, log
 
-        # Map and update column headers
-        retVal, log = self._UpdateColumnHeaders()
-        if (retVal == c.BAD):
+        except PermissionError:
+            log = 'Selected import csv needs to be closed', 'error'
             return c.BAD, log
 
-        # Create new temp csv
-        retVal, log = self._CreateTempFile()
-        if (retVal == c.BAD):
+        #----------------------------------------------------------------------
+        # Determine import file style
+        #----------------------------------------------------------------------
+        style = ''
+        for styleName, styleCfg in config['ImportFileStyles'].items():
+            dateC = styleCfg.get('DateColName')
+            descC = styleCfg.get('DescColName')
+            amntC = styleCfg.get('AmntColName')
+
+            if (dateC in cols) and (descC in cols) and (amntC in cols):
+                style = styleName
+                break
+
+        if (style == ''):
+            log = 'Import file does not match any known styles', 'error'
             return c.BAD, log
 
-        # Update transaction data lists
-        retVal, log = self._UpdateDataLists()
-        if (retVal == c.BAD):
+
+
+        #----------------------------------------------------------------------
+        # Normalize data
+        #----------------------------------------------------------------------
+        try:
+            df = pd.read_csv(filePath)
+
+        except FileNotFoundError:
+            log = 'Selected Import csv file does not exist', 'error'
             return c.BAD, log
 
+        try:
+            # Normalize date data (yyyy-mm-dd)
+            df[dateC] =pd.to_datetime(df[dateC]).dt.date
+
+            # Normalize amount data (decimal to 2 places)
+            tmpAmnts = []
+            for value in df[amntC]:
+                dec = Decimal(str(value)).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+                tmpAmnts.append(dec)
+
+            df[amntC] = tmpAmnts
+
+            # Normalize description data (only take first 50 characters)
+            df[descC] = df[descC].str.strip().str[:50]
+
+            # Create new df that is ordered by date and description
+            df = df.sort_values(by=[dateC, descC])
+
+        except FileNotFoundError:
+            log = 'Selected Import csv file does not exist', 'error'
+            return c.BAD, log
+
+        #----------------------------------------------------------------------
+        # Create temporary file to hold new df
+        #----------------------------------------------------------------------
+        try:
+            df.to_csv(c.TEMP_FILE, index=False)
+
+        except PermissionError:
+            log = 'ImportTemp.csv needs to be closed', 'error'
+            return c.BAD, log
+
+        #----------------------------------------------------------------------
+        # Give each transaction unique hash
+        #----------------------------------------------------------------------
+        count = 0
+        prevId = ''
+        hashes = []
+
+        for index, row in df.iterrows():
+            date = row[dateC]
+            desc = row[descC]
+            amnt = row[amntC]
+
+            stringToHash = str(date) + desc + str(amnt) + str(count)
+            encodedString = stringToHash.encode('utf-8')
+            fullHash = hashlib.md5(encodedString).hexdigest()
+
+            if (fullHash == prevId):
+                # This accounts for multiple identical transactions in a row
+                count = count + 1
+                stringToHash = str(date) + desc + str(amnt) + str(count)
+                encodedString = stringToHash.encode('utf-8')
+                fullHash = hashlib.md5(encodedString).hexdigest()
+            else:
+                count = 0
+                stringToHash = str(date) + desc + str(amnt) + str(count)
+                encodedString = stringToHash.encode('utf-8')
+                fullHash = hashlib.md5(encodedString).hexdigest()
+
+            hashes.append(fullHash)
+            prevId = fullHash
+
+        # Insert hashes into temp file
+        df['TransactionID'] = hashes
+        df.to_csv('ImportTemp.csv', index=False)
+
+        #----------------------------------------------------------------------
+        # Update data for other objects to use
+        #----------------------------------------------------------------------
+        self.dateData = df[dateC].tolist()
+        self.descData = df[descC].tolist()
+        self.amntData = df[amntC].tolist()
+        self.hashData = df['TransactionID'].tolist()
+        self.numTrans = len(df)
         self.active = True
-        log = 'Import file setup is successful', 'default'
+
+        log = 'Import setup is complete', 'default'
         return c.GOOD, log
 
 
@@ -319,4 +412,3 @@ class ImportFile():
 
         log = 'Import data files captured successfully'
         return c.GOOD, log
-

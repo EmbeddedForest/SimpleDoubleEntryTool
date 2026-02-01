@@ -78,3 +78,7 @@ SIZE_ACCTF_COL  = 44
 SIZE_ACCTS_COL  = 20
 SIZE_AMNT_COL   = 12
 SIZE_INIT_COL   = 10
+
+# File Names
+TEMP_FILE = 'ImportTemp.csv'
+CONFIG_FILE = 'config.yaml'
