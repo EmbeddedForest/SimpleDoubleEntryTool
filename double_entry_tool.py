@@ -46,11 +46,12 @@ def LoadNewTransaction(gui, iFile, aFile, jFile):
     l.memo = ' '
     l.acctF = gui.selectedAssAcct.get()
     l.acctS = aFile.GetShortHand(gui.selectedAssAcct.get())
-    l.amnt = amnt
+    l.amnt = str(amnt)
     l.initiator = '1'
 
     # Find suggested entry based on first line
-    jFile.FindSuggestedEntry(l)
+    retVal, msg = jFile.FindSuggestedEntry(l)
+    gui.Log(msg)
 
     # Clear all accounts
     gui.selectedAsset.set(' ')
@@ -59,14 +60,15 @@ def LoadNewTransaction(gui, iFile, aFile, jFile):
     gui.selectedLiability.set(' ')
 
     # Load suggested account (for simple entries only)
-    if ('Assets' in jFile.entry[1].acctF):
-        gui.selectedAsset.set(jFile.entry[1].acctF)
-    if ('Income' in jFile.entry[1].acctF):
-        gui.selectedIncome.set(jFile.entry[1].acctF)
-    if ('Expenses' in jFile.entry[1].acctF):
-        gui.selectedExpense.set(jFile.entry[1].acctF)
-    if ('Liabilities' in jFile.entry[1].acctF):
-        gui.selectedLiability.set(jFile.entry[1].acctF)
+    if (len(jFile.entry) >= 2):
+        if ('Assets' in jFile.entry[1].acctF):
+            gui.selectedAsset.set(jFile.entry[1].acctF)
+        if ('Income' in jFile.entry[1].acctF):
+            gui.selectedIncome.set(jFile.entry[1].acctF)
+        if ('Expenses' in jFile.entry[1].acctF):
+            gui.selectedExpense.set(jFile.entry[1].acctF)
+        if ('Liabilities' in jFile.entry[1].acctF):
+            gui.selectedLiability.set(jFile.entry[1].acctF)
 
     # Update preview box with current entry info
     UpdatePreview(gui, iFile, aFile, jFile)
@@ -131,7 +133,7 @@ def AddToLedger(gui, iFile, aFile, jFile):
         gui.Log(msg)
         return
 
-def ToolStart(gui, iFile, aFile, jFile):
+def ToolStart(gui, iFile, aFile, jFile, full):
     ''' TODO '''
 
     # Clear log
@@ -145,6 +147,15 @@ def ToolStart(gui, iFile, aFile, jFile):
     retVal, msg = iFile.SetupFile(filePath)
     if (retVal == c.BAD):
         gui.Log(msg)
+        return
+
+    # Load associated account box with options
+    gui.assAcctDropdown['values'] = iFile.assAccts
+
+    # Load first option automatically
+    gui.selectedAssAcct.set(iFile.assAccts[0])
+
+    if(full != True):
         return
 
     # Check that associated account is valid
@@ -324,6 +335,7 @@ def UpdateAccounts(event, gui, iFile, aFile, jFile, who):
         gui.selectedLiability.set(' ')
         selectedAcct = gui.selectedAssets.get()
 
+    print(selectedAcct)
     if (selectedAcct == ' '):
         return
 
@@ -335,6 +347,7 @@ def UpdateAccounts(event, gui, iFile, aFile, jFile, who):
     except AttributeError:
         return
 
+    print(selectedAcct)
     UpdatePreview(gui, iFile, aFile, jFile)
 
 
@@ -369,7 +382,7 @@ def Main():
     gui.assetDropdown['values'] = aFile.assetAcctList
 
     # Bind buttons
-    gui.startButton.configure(command=lambda:ToolStart(gui, iFile, aFile, jFile))
+    gui.startButton.configure(command=lambda:ToolStart(gui, iFile, aFile, jFile, True))
     gui.addEntryButton.configure(command=lambda:AddToLedger(gui, iFile, aFile, jFile))
     gui.addSplitButton.configure(command=lambda:AddSplit(gui, iFile, aFile, jFile))
     gui.undoSplitButton.configure(command=lambda:UndoSplit(gui, iFile, aFile, jFile))
@@ -377,6 +390,7 @@ def Main():
     gui.liabilityDropdown.bind('<<ComboboxSelected>>', lambda event: UpdateAccounts(event, gui, iFile, aFile, jFile, c.LIABILITIES))
     gui.incomeDropdown.bind('<<ComboboxSelected>>', lambda event: UpdateAccounts(event, gui, iFile, aFile, jFile, c.INCOME))
     gui.assetDropdown.bind('<<ComboboxSelected>>', lambda event: UpdateAccounts(event, gui, iFile, aFile, jFile, c.ASSETS))
+    gui.importDropdown.bind('<<ComboboxSelected>>', lambda event: ToolStart(gui, iFile, aFile, jFile, False))
     gui.root.bind('<Return>', lambda event: UpdateAccounts(event, gui, iFile, aFile, jFile, c.MEMO))
 
     # Begin main thread

@@ -17,7 +17,7 @@ import csv
 import hashlib
 import pandas as pd
 import constants as c
-
+from decimal import Decimal, ROUND_HALF_UP
 
 class JournalFile():
 
@@ -30,21 +30,59 @@ class JournalFile():
     def SetupFile(self):
         ''' Setup Journal.csv file object '''
 
+        #----------------------------------------------------------------------
         # Cleanup previous data
+        #----------------------------------------------------------------------
         self.importIndex = 0
         self.suggestedAcct = ' '
         self.active = False
         self.simple = True
 
-        # Check if the file actually exists
-        retVal, log = self._CheckIfFileExists()
-        if (retVal == c.BAD):
+        #----------------------------------------------------------------------
+        # Make sure journal file exists
+        #----------------------------------------------------------------------
+        try:
+            with open(c.JOURNAL_FP, newline="", encoding="utf-8-sig") as f:
+                reader = csv.DictReader(f)
+                cols = list(next(reader).keys())
+
+        except FileNotFoundError:
+            log = 'Journal.csv does not exist in current directory', 'error'
             return c.BAD, log
 
-        # Check that file has necessary column headers
-        retVal, log = self._CheckIfColumnsExists()
-        if (retVal == c.BAD):
+        except PermissionError:
+            log = 'Journal.csv needs to be closed', 'error'
             return c.BAD, log
+
+        #----------------------------------------------------------------------
+        # Normalize data
+        #----------------------------------------------------------------------
+        dateC = c.JRNL_DATE
+        descC = c.JRNL_DSCRP
+        amntC = c.JRNL_AMOUNT
+        hashC = c.JRNL_ID
+        initC = c.JRNL_INITIATOR
+ 
+        df = pd.read_csv(c.JOURNAL_FP)
+
+        # Date data (yyyy-mm-dd)
+        df[dateC] =pd.to_datetime(df[dateC], format='%m/%d/%Y')
+        df[dateC] = df[dateC].dt.strftime('%Y-%m-%d')
+
+        # Amount data (decimal to 2 places then convert to string)
+        tmpAmnts = []
+        for value in df[amntC]:
+            dec = Decimal(str(value)).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+            tmpAmnts.append(dec)
+
+        df[amntC] = tmpAmnts
+        df[amntC] = df[amntC].astype(str)
+
+        # Description data (only take first 50 characters)
+        df[descC] = df[descC].str.strip().str[:50]
+
+        # Order by date and description
+        df = df.sort_values(by=[dateC, descC, hashC, initC])
 
         # Looks good
         self.active = True
@@ -199,11 +237,11 @@ class JournalFile():
             # Create dataframe using import file data
             df = pd.read_csv('Journal.csv')
 
-            # Create new df that is ordered
-            newDf = df.sort_values(by=['Date', 'Description', 'TransactionID', 'Initiator'])
+            # # Create new df that is ordered
+            # newDf = df.sort_values(by=['Date', 'Description', 'TransactionID', 'Initiator'])
 
-            # Write back reordered data to Journal
-            newDf.to_csv('Journal.csv', index=False)
+            # # Write back reordered data to Journal
+            # newDf.to_csv('Journal.csv', index=False)
 
         except FileNotFoundError:
             log = 'Selected Journal csv file does not exist', 'error'
@@ -217,7 +255,7 @@ class JournalFile():
         self.entry.append(l)
 
         # Have a go at exact match first
-        for index, row in newDf.iloc[::-1].iterrows():
+        for index, row in df.iloc[::-1].iterrows():
             jDesc = row['Description']
             jAmnt = row['Amount Num.']
             jAcct = row['Full Account Name']
@@ -234,11 +272,11 @@ class JournalFile():
                     newLine.date = l.date
                     newLine.hash = l.hash
                     newLine.desc = l.desc
-                    newLine.memo = newDf.loc[index+i, 'Memo']
-                    newLine.acctF = newDf.loc[index+i, 'Full Account Name']
-                    newLine.acctS = newDf.loc[index+i, 'Account Name']
-                    newLine.amnt = newDf.loc[index+i, 'Amount Num.']
-                    tmpHash = newDf.loc[index+i+1, 'TransactionID']
+                    newLine.memo = df.loc[index+i, 'Memo']
+                    newLine.acctF = df.loc[index+i, 'Full Account Name']
+                    newLine.acctS = df.loc[index+i, 'Account Name']
+                    newLine.amnt = df.loc[index+i, 'Amount Num.']
+                    tmpHash = df.loc[index+i+1, 'TransactionID']
                     self.entry.append(newLine)
                     i = i + 1
 
@@ -250,7 +288,7 @@ class JournalFile():
             return c.GOOD, log
 
         # Go for partial match
-        for index, row in newDf.iloc[::-1].iterrows():
+        for index, row in df.iloc[::-1].iterrows():
             jDesc = row['Description']
             jAmnt = row['Amount Num.']
             jAcct = row['Full Account Name']
@@ -266,8 +304,8 @@ class JournalFile():
                 newLine.desc = l.desc
 
                 # Suggested Account
-                newLine.acctF = newDf.loc[index+1, 'Full Account Name']
-                newLine.acctS = newDf.loc[index+1, 'Account Name']
+                newLine.acctF = df.loc[index+1, 'Full Account Name']
+                newLine.acctS = df.loc[index+1, 'Account Name']
 
                 # Reversed Amount
                 if ('-' in l.amnt):
@@ -405,6 +443,11 @@ class Line():
     amnt = ' '
     initiator = ' '
 
+    def __str__(self):
+        return "date=%s, hash=%s, desc=%s, memo=%s, acctF=%s, acctS=%s, "   \
+            "amnt=%s, initiator=%s" % (self.date, self.hash, self.desc,     \
+                                      self.memo, self.acctF, self.acctS,    \
+                                      self.amnt, self.initiator)
 
     def Clear(self):
         self.date = []

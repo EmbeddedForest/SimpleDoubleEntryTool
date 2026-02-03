@@ -81,7 +81,7 @@ class ImportFile():
             descC = styleCfg.get('DescColName')
             amntC = styleCfg.get('AmntColName')
             amntNeg = styleCfg.get('AmntNegate')
-            assAcct = styleCfg.get('AssAcct')
+            assAccts = styleCfg.get('AssAccts')
 
             if (dateC in cols) and (descC in cols) and (amntC in cols):
                 style = styleName
@@ -180,7 +180,7 @@ class ImportFile():
         self.hashData = df['TransactionID'].tolist()
         self.numTrans = len(df)
         self.active = True
-        self.assAcct = assAcct
+        self.assAccts = assAccts
 
         log = 'Import setup is complete', 'default'
         return c.GOOD, log
