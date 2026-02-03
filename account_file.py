@@ -14,6 +14,7 @@
 #------------------------------------------------------------------------------
 
 import csv
+import yaml
 import constants as c
 
 
@@ -29,9 +30,11 @@ class AccountFile():
     active = False
 
     def SetupFile(self):
-        ''' Setup Account.csv file object '''
+        ''' Setup Accounts from config.yaml '''
 
+        #----------------------------------------------------------------------
         # Cleanup previous data
+        #----------------------------------------------------------------------
         self.allAcctsFullName = []
         self.allAcctsShortName = []
         self.assetAcctList = []
@@ -40,20 +43,73 @@ class AccountFile():
         self.liabilityAcctList = []
         self.active = False
 
-        # Check if the file actually exists
-        retVal, log = self._CheckIfFileExists()
-        if (retVal == c.BAD):
+        #----------------------------------------------------------------------
+        # Make sure config is present
+        #----------------------------------------------------------------------
+        try:
+            with open(c.CONFIG_FILE) as f:
+                config = yaml.safe_load(f)
+
+        except FileNotFoundError:
+            log = 'Config file does not exist', 'error'
             return c.BAD, log
 
-        # Check that file has necessary column headers
-        retVal, log = self._CheckIfColumnsExists()
-        if (retVal == c.BAD):
-            return c.BAD, log
 
-        # Update account lists
-        retVal, log = self._UpdateAccountLists()
-        if (retVal == c.BAD):
-            return c.BAD, log
+        #----------------------------------------------------------------------
+        # Update object data
+        #----------------------------------------------------------------------
+        aAccts = config['Accounts']['Assets']
+        lAccts = config['Accounts']['Liabilities']
+        iAccts = config['Accounts']['Income']
+        eAccts = config['Accounts']['Expenses']
+
+        fullList = []
+        fullList.extend(aAccts)
+        fullList.extend(lAccts)
+        fullList.extend(iAccts)
+        fullList.extend(eAccts)
+
+        for acctF in fullList:
+            if (acctF.count(':') != 2):
+                # Don't count placeholder accounts
+                continue
+
+            acctS = acctF.rpartition(':')[-1]
+
+            self.allAcctsFullName.append(acctF)
+            self.allAcctsShortName.append(acctS)
+
+            if ('Assets' in acctF):
+                self.assetAcctList.append(acctF)
+            if ('Liabilities' in acctF):
+                self.liabilityAcctList.append(acctF)
+            if ('Income' in acctF):
+                self.incomeAcctList.append(acctF)
+            if ('Expenses' in acctF):
+                self.expenseAcctList.append(acctF)
+
+
+        # print(self.allAcctsFullName)
+        # print(self.allAcctsShortName)
+        # print(self.assetAcctList)
+        # print(self.liabilityAcctList)
+        # print(self.incomeAcctList)
+        # print(self.expenseAcctList)
+
+        # # Check if the file actually exists
+        # retVal, log = self._CheckIfFileExists()
+        # if (retVal == c.BAD):
+        #     return c.BAD, log
+
+        # # Check that file has necessary column headers
+        # retVal, log = self._CheckIfColumnsExists()
+        # if (retVal == c.BAD):
+        #     return c.BAD, log
+
+        # # Update account lists
+        # retVal, log = self._UpdateAccountLists()
+        # if (retVal == c.BAD):
+        #     return c.BAD, log
 
         # Looks good
         self.active = True
@@ -153,7 +209,11 @@ class AccountFile():
     def GetShortHand(self, fullAcctName):
         ''' Returns short hand account name of given full account name '''
 
-        index = self.allAcctsFullName.index(fullAcctName)
+        try:
+            index = self.allAcctsFullName.index(fullAcctName)
+
+        except ValueError:
+            return ''
 
         return self.allAcctsShortName[index]
 
