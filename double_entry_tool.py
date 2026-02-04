@@ -47,7 +47,6 @@ def LoadNewTransaction(gui, iFile, aFile, jFile):
     l.acctF = gui.selectedAssAcct.get()
     l.acctS = aFile.GetShortHand(gui.selectedAssAcct.get())
     l.amnt = str(amnt)
-    l.initiator = '1'
 
     # Find suggested entry based on first line
     retVal, msg = jFile.FindSuggestedEntry(l)

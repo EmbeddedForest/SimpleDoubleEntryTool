@@ -343,9 +343,11 @@ class JournalFile():
             log = 'Something bad happened', 'error'
             raise
 
+        lineNum = 0
         for l in self.entry:
-            newData = [str(l.date), str(l.hash), str(l.desc), str(l.memo),  \
-                       str(l.acctF), str(l.acctS), str(l.amnt), str(l.initiator)]
+            newData = [lineNum, str(l.date), str(l.hash), str(l.desc), str(l.memo),  \
+                       str(l.acctF), str(l.acctS), str(l.amnt)]
+            lineNum = lineNum + 1
             
             df.loc[len(df)] = newData
 
@@ -445,23 +447,11 @@ class Line():
     acctF = ' '
     acctS = ' '
     amnt = ' '
-    initiator = ' '
 
     def __str__(self):
         return "date=%s, hash=%s, desc=%s, memo=%s, acctF=%s, acctS=%s, "   \
-            "amnt=%s, initiator=%s" % (self.date, self.hash, self.desc,     \
-                                      self.memo, self.acctF, self.acctS,    \
-                                      self.amnt, self.initiator)
-
-    def Clear(self):
-        self.date = []
-        self.hash = []
-        self.desc = []
-        self.memo = []
-        self.acct = []
-        self.acctShort = []
-        self.amnt = []
-        self.initiator = []
+            "amnt=%s" % (self.date, self.hash, self.desc, self.memo,        \
+                         self.acctF, self.acctS, self.amnt)
 
 
 class Entry():
