@@ -20,7 +20,7 @@ import constants as c
 from gui import MyGui
 from journal_file import Line
 from import_file import ImportFile
-from account_file import AccountFile
+from account_file import Accounts
 from journal_file import JournalFile
 
 
@@ -53,10 +53,11 @@ def LoadNewTransaction(gui, iFile, aFile, jFile):
     gui.Log(msg)
 
     # Clear all accounts
-    gui.selectedAsset.set(' ')
-    gui.selectedIncome.set(' ')
-    gui.selectedExpense.set(' ')
-    gui.selectedLiability.set(' ')
+    gui.selectedAsset.set('')
+    gui.selectedIncome.set('')
+    gui.selectedExpense.set('')
+    gui.selectedLiability.set('')
+    gui.memo.set('')
 
     # Load suggested account (for simple entries only)
     if (len(jFile.entry) >= 2):
@@ -100,32 +101,32 @@ def AddToLedger(gui, iFile, aFile, jFile):
         gui.Log(msg)
         return
 
-    # Check that a valid account was selected
-    valid = False
-    acct = gui.selectedExpense.get()
-    if (acct != ' '):
-        if (acct in aFile.allAcctsFullName):
-            valid = True
+    # # Check that a valid account was selected
+    # valid = False
+    # acct = gui.selectedExpense.get()
+    # if (acct != ' '):
+    #     if (acct in aFile.allAcctsFullName):
+    #         valid = True
 
-    acct = gui.selectedAsset.get()
-    if (acct != ' '):
-        if (acct in aFile.allAcctsFullName):
-            valid = True
+    # acct = gui.selectedAsset.get()
+    # if (acct != ' '):
+    #     if (acct in aFile.allAcctsFullName):
+    #         valid = True
 
-    acct = gui.selectedIncome.get()
-    if (acct != ' '):
-        if (acct in aFile.allAcctsFullName):
-            valid = True
+    # acct = gui.selectedIncome.get()
+    # if (acct != ' '):
+    #     if (acct in aFile.allAcctsFullName):
+    #         valid = True
 
-    acct = gui.selectedLiability.get()
-    if (acct != ' '):
-        if (acct in aFile.allAcctsFullName):
-            valid = True
+    # acct = gui.selectedLiability.get()
+    # if (acct != ' '):
+    #     if (acct in aFile.allAcctsFullName):
+    #         valid = True
 
-    if (valid != True):
-        msg = 'Selected account does not exist', 'error'
-        gui.Log(msg)
-        return
+    # if (valid != True):
+    #     msg = 'Selected account does not exist', 'error'
+    #     gui.Log(msg)
+    #     return
 
     retVal = jFile.AddEntryToJournal()
     if (retVal == c.BAD):
@@ -177,7 +178,7 @@ def ToolStart(gui, iFile, aFile, jFile, full):
         return
 
     # Check that associated account is valid
-    retVal, msg = aFile.CheckIfValid(gui.selectedAssAcct.get())
+    retVal, msg = aFile.IsValid(gui.selectedAssAcct.get())
     if (retVal == c.BAD):
         gui.Log(msg)
         return
@@ -384,11 +385,11 @@ def Main():
     # Initialization
     gui = MyGui()
     iFile = ImportFile()
-    aFile = AccountFile()
+    aFile = Accounts()
     jFile = JournalFile()
 
     # Setup Account.csv file
-    retVal, msg = aFile.SetupFile()
+    retVal, msg = aFile.Setup()
     if (retVal == c.BAD):
         gui.Log(msg)
 
