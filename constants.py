@@ -47,6 +47,7 @@ ACCT_HEADERS =                                                          \
      ACCT_NAMESPACE, ACCT_HIDDEN,    ACCT_TAX_INFO, ACCT_PLACEHOLDER]
 
 # Journal.csv column headers
+JRNL_LINE        = 'Line'
 JRNL_DATE        = 'Date'
 JRNL_ID          = 'TransactionID'
 JRNL_DSCRP       = 'Description'
@@ -54,11 +55,10 @@ JRNL_MEMO        = 'Memo'
 JRNL_ACCT_NAME_F = 'Full Account Name'
 JRNL_ACCT_NAME   = 'Account Name'
 JRNL_AMOUNT      = 'Amount Num.'
-JRNL_INITIATOR   = 'Initiator'
 
 JRNL_HEADERS =                                                          \
     [JRNL_DATE, JRNL_ID, JRNL_DSCRP, JRNL_MEMO,
-     JRNL_ACCT_NAME_F, JRNL_ACCT_NAME, JRNL_AMOUNT, JRNL_INITIATOR]
+     JRNL_ACCT_NAME_F, JRNL_ACCT_NAME, JRNL_AMOUNT]
 
 # Account Types
 EXPENSES = 'Expenses'
@@ -70,6 +70,7 @@ MEMO = 'Memo Update Only'
 
 
 # Size of columns in preview
+SIZE_LINE_COL   = 6
 SIZE_DATE_COL   = 12
 SIZE_ID_COL     = 34
 SIZE_DESC_COL   = 64

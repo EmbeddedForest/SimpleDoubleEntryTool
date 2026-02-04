@@ -132,6 +132,25 @@ def AddToLedger(gui, iFile, aFile, jFile):
     if (retVal == c.BAD):
         gui.Log(msg)
         return
+    
+    # Find starting transaction from import list
+    flag = False
+    jFile.importIndex = 0
+    for id in iFile.hashData:
+        flag = jFile.DoesTransactionExist(id)
+        if (flag == False):
+            break
+        else:
+            jFile.importIndex = jFile.importIndex + 1
+
+    # Check to see if all transactions accounted for already
+    if (jFile.importIndex >= iFile.numTrans):
+        msg = 'All transactions accounted for already', 'default'
+        gui.Log(msg)
+        return
+
+    # Load new transaction to GUI
+    LoadNewTransaction(gui, iFile, aFile, jFile)
 
 def ToolStart(gui, iFile, aFile, jFile, full):
     ''' TODO '''
@@ -166,13 +185,16 @@ def ToolStart(gui, iFile, aFile, jFile, full):
 
     # Find starting transaction from import list
     flag = False
-    iFile.importIndex = 0
+    jFile.importIndex = 0
     for id in iFile.hashData:
+        print(id)
         flag = jFile.DoesTransactionExist(id)
         if (flag == False):
             break
         else:
-            iFile.importIndex = iFile.importIndex + 1
+            jFile.importIndex = jFile.importIndex + 1
+
+    print(jFile.importIndex)
 
     # Check to see if all transactions accounted for already
     if (jFile.importIndex >= iFile.numTrans):
@@ -247,7 +269,10 @@ def UpdatePreview(gui, iFile, aFile, jFile):
     gui.Log(log)
 
     # Build Header
-    msg = c.JRNL_DATE
+    msg = c.JRNL_LINE
+    for i in range(c.SIZE_LINE_COL-len(c.JRNL_LINE)):
+        msg = msg + ' '
+    msg = msg + c.JRNL_DATE
     for i in range(c.SIZE_DATE_COL-len(c.JRNL_DATE)):
         msg = msg + ' '
     msg = msg + c.JRNL_ID
@@ -271,7 +296,11 @@ def UpdatePreview(gui, iFile, aFile, jFile):
 
     # Build entry
     msg = ''
+    lineNum = 0
     for j in jFile.entry:
+        msg = msg + str(lineNum)
+        for i in range(c.SIZE_LINE_COL-len(str(lineNum))):
+            msg = msg + ' '
         msg = msg + str(j.date)
         for i in range(c.SIZE_DATE_COL-len(str(j.date))):
             msg = msg + ' '
@@ -291,6 +320,7 @@ def UpdatePreview(gui, iFile, aFile, jFile):
         for i in range(c.SIZE_AMNT_COL-len(str(j.amnt))):
             msg = msg + ' '
         msg = msg + '\n'
+        lineNum = lineNum + 1
 
     log = msg, 'default'
     gui.Log(log)
@@ -335,19 +365,18 @@ def UpdateAccounts(event, gui, iFile, aFile, jFile, who):
         gui.selectedLiability.set(' ')
         selectedAcct = gui.selectedAssets.get()
 
-    print(selectedAcct)
     if (selectedAcct == ' '):
         return
 
     try:
         if (jFile.simple == True):
             jFile.entry[1].acctF = selectedAcct
+            jFile.entry[1].acctS = aFile.GetShortHand(selectedAcct)
     except IndexError:
         return
     except AttributeError:
         return
 
-    print(selectedAcct)
     UpdatePreview(gui, iFile, aFile, jFile)
 
 

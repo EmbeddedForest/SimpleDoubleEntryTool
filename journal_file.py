@@ -57,16 +57,17 @@ class JournalFile():
         #----------------------------------------------------------------------
         # Normalize data
         #----------------------------------------------------------------------
+        lineC = c.JRNL_LINE
         dateC = c.JRNL_DATE
         descC = c.JRNL_DSCRP
         amntC = c.JRNL_AMOUNT
         hashC = c.JRNL_ID
-        initC = c.JRNL_INITIATOR
  
         df = pd.read_csv(c.JOURNAL_FP)
 
         # Date data (yyyy-mm-dd)
-        df[dateC] =pd.to_datetime(df[dateC], format='%m/%d/%Y')
+        df[dateC] = pd.to_datetime(df[dateC], format='%Y-%m-%d')
+        # df[dateC] = pd.to_datetime(df[dateC], format='%d/%m/%Y')
         df[dateC] = df[dateC].dt.strftime('%Y-%m-%d')
 
         # Amount data (decimal to 2 places then convert to string)
@@ -82,7 +83,10 @@ class JournalFile():
         df[descC] = df[descC].str.strip().str[:50]
 
         # Order by date and description
-        df = df.sort_values(by=[dateC, descC, hashC, initC])
+        df = df.sort_values(by=[dateC, descC, hashC, lineC])
+
+        # Write back normalized data
+        df.to_csv(c.JOURNAL_FP, index=False)
 
         # Looks good
         self.active = True
@@ -257,7 +261,7 @@ class JournalFile():
         # Have a go at exact match first
         for index, row in df.iloc[::-1].iterrows():
             jDesc = row['Description']
-            jAmnt = row['Amount Num.']
+            jAmnt = float(row['Amount Num.'])
             jAcct = row['Full Account Name']
             jHash = row['TransactionID']
 
@@ -265,17 +269,18 @@ class JournalFile():
 
             if (jDesc == l.desc) and (jAcct == l.acctF) and (jAmnt == l.amnt):
                 # Exact match found, load entry data
-                tmpHash = jHash
+                count = row['Line']
                 i = 1
-                while (jHash == tmpHash):
+                for i in range(count,0,-1):
+                    print(index-i)
                     newLine = Line()
                     newLine.date = l.date
                     newLine.hash = l.hash
                     newLine.desc = l.desc
-                    newLine.memo = df.loc[index+i, 'Memo']
-                    newLine.acctF = df.loc[index+i, 'Full Account Name']
-                    newLine.acctS = df.loc[index+i, 'Account Name']
-                    newLine.amnt = df.loc[index+i, 'Amount Num.']
+                    newLine.memo = df.loc[index-i, 'Memo']
+                    newLine.acctF = df.loc[index-i, 'Full Account Name']
+                    newLine.acctS = df.loc[index-i, 'Account Name']
+                    newLine.amnt = df.loc[index-i, 'Amount Num.']
                     tmpHash = df.loc[index+i+1, 'TransactionID']
                     self.entry.append(newLine)
                     i = i + 1
@@ -288,6 +293,17 @@ class JournalFile():
             return c.GOOD, log
 
         # Go for partial match
+        newLine = Line()
+        newLine.date = l.date
+        newLine.hash = l.hash
+        newLine.desc = l.desc
+
+        # Reversed Amount
+        if ('-' in l.amnt):
+            newLine.amnt = l.amnt.replace('-', '')
+        else:
+            newLine.amnt = '-' + l.amnt
+
         for index, row in df.iloc[::-1].iterrows():
             jDesc = row['Description']
             jAmnt = row['Amount Num.']
@@ -298,23 +314,11 @@ class JournalFile():
 
             if (jDesc == l.desc) and (jAcct == l.acctF):
                 # Partial match found, load reversed amount and suggested acct
-                newLine = Line()
-                newLine.date = l.date
-                newLine.hash = l.hash
-                newLine.desc = l.desc
-
-                # Suggested Account
                 newLine.acctF = df.loc[index+1, 'Full Account Name']
                 newLine.acctS = df.loc[index+1, 'Account Name']
 
-                # Reversed Amount
-                if ('-' in l.amnt):
-                    newLine.amnt = l.amnt.replace('-', '')
-                else:
-                    newLine.amnt = '-' + l.amnt
-
-                # Append to entry
-                self.entry.append(newLine)
+        # Append to entry
+        self.entry.append(newLine)
 
         if (len(self.entry) > 1):
             log = 'Partial match found', 'default'
