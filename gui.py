@@ -158,7 +158,8 @@ class MyGui():
             root,
             textvariable    =self.selectedImportFile,
             font            =FONT_BOXES,
-            width           =60
+            width           =60,
+            state           ='readonly'
         )
         self.importDropdown.grid(
             row             =2,
@@ -174,7 +175,8 @@ class MyGui():
             root,
             textvariable    =self.selectedAssAcct,
             font            =FONT_BOXES,
-            width           =60
+            width           =60,
+            state           ='readonly'
         )
         self.assAcctDropdown.grid(
             row             =4,
@@ -282,7 +284,8 @@ class MyGui():
             root,
             textvariable    =self.selectedExpense,
             font            =FONT_BOXES,
-            width           =80
+            width           =80,
+            state           ='readonly'
         )
         self.expenseDropdown.grid(
             row             =16,
@@ -298,7 +301,8 @@ class MyGui():
             root,
             textvariable    =self.selectedLiability,
             font            =FONT_BOXES,
-            width           =80
+            width           =80,
+            state           ='readonly'
         )
         self.liabilityDropdown.grid(
             row             =18,
@@ -314,7 +318,8 @@ class MyGui():
             root,
             textvariable    =self.selectedIncome,
             font            =FONT_BOXES,
-            width           =80
+            width           =80,
+            state           ='readonly'
         )
         self.incomeDropdown.grid(
             row             =20,
@@ -330,7 +335,8 @@ class MyGui():
             root,
             textvariable    =self.selectedAsset,
             font            =FONT_BOXES,
-            width           =80
+            width           =80,
+            state           ='readonly'
         )
         self.assetDropdown.grid(
             row             =22,
@@ -367,7 +373,8 @@ class MyGui():
             root,
             textvariable    =self.selectedSplitAcct,
             font            =FONT_BOXES,
-            width           =74
+            width           =74,
+            state           ='readonly'
         )
         self.splitAcctDropdown.grid(
             row             =10,
@@ -453,7 +460,8 @@ class MyGui():
             root,
             textvariable    =self.selectedOpenAcct,
             font            =FONT_BOXES,
-            width           =74
+            width           =74,
+            state           ='readonly'
         )
         self.openAcctDropdown.grid(
             row             =22,
