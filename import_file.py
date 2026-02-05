@@ -29,8 +29,12 @@ class ImportFile():
     descData = []
     amntData = []
     hashData = []
+    importFileList = []
     numTrans = 0
     active = False
+
+    def __init__(self):
+        self._LoadDataFileNames()
 
     def Setup(self, filePath):
         ''' Set up specified transaction import file '''
@@ -177,20 +181,17 @@ class ImportFile():
         return c.GOOD, log
 
     def _ResetData(self):
+        ''' Note - not resetting csv file name list, that stays const '''
         self.dateData = []
         self.descData = []
         self.amntData = []
         self.hashData = []
         self.numTrans = 0
 
-    def LoadAllDataFileNames(self):
+    def _LoadDataFileNames(self):
         ''' Load all csv file names from Data folder into list '''
-
         self.importFileList = []
 
         for file in os.listdir(c.DATA_FOLDER):
             if (file.lower().endswith(".csv")):
                 self.importFileList.append(file)
-
-        log = 'Import data files captured successfully'
-        return c.GOOD, log
