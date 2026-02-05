@@ -29,9 +29,11 @@ class ImportFile():
     descData = []
     amntData = []
     hashData = []
-    importFileList = []
+    assAccts = []
     numTrans = 0
+    importIndex = 0
     active = False
+    importFileList = []
 
     def __init__(self):
         self._LoadDataFileNames()
@@ -167,7 +169,7 @@ class ImportFile():
         df.to_csv('ImportTemp.csv', index=False)
 
         #----------------------------------------------------------------------
-        # Update data for other objects to use
+        # Update object data
         #----------------------------------------------------------------------
         self.dateData = df[dateC].tolist()
         self.descData = df[descC].tolist()
@@ -186,7 +188,10 @@ class ImportFile():
         self.descData = []
         self.amntData = []
         self.hashData = []
+        self.assAccts = []
         self.numTrans = 0
+        self.importIndex = 0
+        self.active = False
 
     def _LoadDataFileNames(self):
         ''' Load all csv file names from Data folder into list '''

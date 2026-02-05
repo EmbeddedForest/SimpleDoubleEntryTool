@@ -20,17 +20,20 @@ import constants as c
 from gui import MyGui
 from journal_file import Line
 from import_file import ImportFile
-from account_file import Accounts
+from accounts import Accounts
 from journal_file import JournalFile
 
 
 def LoadNewTransaction(gui, iFile, accts, jFile):
-    ''' TODO '''
-
+    '''
+    Loads and displays the latest transaction info from import file into GUI.
+    Creates new entry and loads it with known data. Runs the "FindSuggestedAcct"
+    algorithm and loads GUI with suggested acct if it is "simple".
+    '''
     l = Line()
 
     # Place new data into GUI
-    i = jFile.importIndex
+    i = iFile.importIndex
     date = iFile.dateData[i]
     desc = iFile.descData[i]
     amnt = iFile.amntData[i]
@@ -43,7 +46,7 @@ def LoadNewTransaction(gui, iFile, accts, jFile):
     l.date = date
     l.hash = hash
     l.desc = desc
-    l.memo = ' '
+    l.memo = ''
     l.acctF = gui.selectedAssAcct.get()
     l.acctS = accts.GetShortHand(gui.selectedAssAcct.get())
     l.amnt = str(amnt)
@@ -60,7 +63,7 @@ def LoadNewTransaction(gui, iFile, accts, jFile):
     gui.memo.set('')
 
     # Load suggested account (for simple entries only)
-    if (len(jFile.entry) >= 2):
+    if (jFile.simple == True):
         if ('Assets' in jFile.entry[1].acctF):
             gui.selectedAsset.set(jFile.entry[1].acctF)
         if ('Income' in jFile.entry[1].acctF):
@@ -70,12 +73,11 @@ def LoadNewTransaction(gui, iFile, accts, jFile):
         if ('Liabilities' in jFile.entry[1].acctF):
             gui.selectedLiability.set(jFile.entry[1].acctF)
 
-    # Update preview box with current entry info
-    UpdatePreview(gui, iFile, accts, jFile)
-
-
-def AddToLedger(gui, iFile, accts, jFile):
-    ''' TODO '''
+def AddToJournal(gui, iFile, accts, jFile):
+    '''
+    Does a bunch of checks. If all checks pass, the entry is added to the
+    journal and the next transaction is loaded.
+    '''
 
     # Make sure import file is active
     if (iFile.active != True):
@@ -89,44 +91,23 @@ def AddToLedger(gui, iFile, accts, jFile):
         gui.Log(msg)
         return
 
-    # Make sure account file is active
+    # Make sure accounts are loaded
     if (accts.active != True):
-        msg = 'Account file is not active', 'error'
+        msg = 'Accounts not loaded', 'error'
         gui.Log(msg)
         return
 
     # Make sure to check if transaction list already completed
-    if (jFile.importIndex >= iFile.numTrans):
+    if (iFile.importIndex >= iFile.numTrans):
         msg = 'All transactions accounted for already', 'default'
         gui.Log(msg)
         return
 
-    # # Check that a valid account was selected
-    # valid = False
-    # acct = gui.selectedExpense.get()
-    # if (acct != ' '):
-    #     if (acct in accts.allAcctsFullName):
-    #         valid = True
-
-    # acct = gui.selectedAsset.get()
-    # if (acct != ' '):
-    #     if (acct in accts.allAcctsFullName):
-    #         valid = True
-
-    # acct = gui.selectedIncome.get()
-    # if (acct != ' '):
-    #     if (acct in accts.allAcctsFullName):
-    #         valid = True
-
-    # acct = gui.selectedLiability.get()
-    # if (acct != ' '):
-    #     if (acct in accts.allAcctsFullName):
-    #         valid = True
-
-    # if (valid != True):
-    #     msg = 'Selected account does not exist', 'error'
-    #     gui.Log(msg)
-    #     return
+    # If simple transaction, check that selected account is valid
+    retVal, msg = accts.IsValid(jFile.entry[1].acctF)
+    if (retVal == c.BAD):
+        gui.Log(msg)
+        return
 
     retVal = jFile.AddEntryToJournal()
     if (retVal == c.BAD):
@@ -135,16 +116,16 @@ def AddToLedger(gui, iFile, accts, jFile):
     
     # Find starting transaction from import list
     flag = False
-    jFile.importIndex = 0
+    iFile.importIndex = 0
     for id in iFile.hashData:
         flag = jFile.DoesTransactionExist(id)
         if (flag == False):
             break
         else:
-            jFile.importIndex = jFile.importIndex + 1
+            iFile.importIndex = iFile.importIndex + 1
 
     # Check to see if all transactions accounted for already
-    if (jFile.importIndex >= iFile.numTrans):
+    if (iFile.importIndex >= iFile.numTrans):
         msg = 'All transactions accounted for already', 'default'
         gui.Log(msg)
         return
@@ -152,9 +133,14 @@ def AddToLedger(gui, iFile, accts, jFile):
     # Load new transaction to GUI
     LoadNewTransaction(gui, iFile, accts, jFile)
 
-def ToolStart(gui, iFile, accts, jFile, full):
-    ''' TODO '''
+    # Update preview box with current entry info
+    UpdatePreview(gui, iFile, accts, jFile)
 
+def UpdateImportFile(gui, iFile):
+    '''
+    When new import file is selected, setup the selected import file
+    and update the associated account dropdown list.
+    '''
     # Clear log
     msg = ' ', 'default'
     gui.Log(msg)
@@ -163,7 +149,7 @@ def ToolStart(gui, iFile, accts, jFile, full):
     filePath = c.DATA_FOLDER + gui.selectedImportFile.get()
 
     # Setup the new import file
-    retVal, msg = iFile.SetupFile(filePath)
+    retVal, msg = iFile.Setup(filePath)
     if (retVal == c.BAD):
         gui.Log(msg)
         return
@@ -174,7 +160,20 @@ def ToolStart(gui, iFile, accts, jFile, full):
     # Load first option automatically
     gui.selectedAssAcct.set(iFile.assAccts[0])
 
-    if(full != True):
+def ToolStart(gui, iFile, accts, jFile):
+    '''
+    Finds the starting transaction from import file and loads it into
+    the GUI. Then updates the log box preview window.
+    '''
+
+    # Clear log
+    msg = ' ', 'default'
+    gui.Log(msg)
+
+    # Check that import file is ready
+    if (iFile.active != True):
+        msg = 'No valid import file selected', 'error'
+        gui.Log(msg)
         return
 
     # Check that associated account is valid
@@ -185,19 +184,16 @@ def ToolStart(gui, iFile, accts, jFile, full):
 
     # Find starting transaction from import list
     flag = False
-    jFile.importIndex = 0
+    iFile.importIndex = 0
     for id in iFile.hashData:
-        print(id)
         flag = jFile.DoesTransactionExist(id)
         if (flag == False):
             break
         else:
-            jFile.importIndex = jFile.importIndex + 1
-
-    print(jFile.importIndex)
+            iFile.importIndex = iFile.importIndex + 1
 
     # Check to see if all transactions accounted for already
-    if (jFile.importIndex >= iFile.numTrans):
+    if (iFile.importIndex >= iFile.numTrans):
         msg = 'All transactions accounted for already', 'default'
         gui.Log(msg)
         return
@@ -205,6 +201,8 @@ def ToolStart(gui, iFile, accts, jFile, full):
     # Load new transaction to GUI
     LoadNewTransaction(gui, iFile, accts, jFile)
 
+    # Update preview box with current entry info
+    UpdatePreview(gui, iFile, accts, jFile)
 
 def AddSplit(gui, iFile, accts, jFile):
     ''' TODO '''
@@ -240,7 +238,6 @@ def AddSplit(gui, iFile, accts, jFile):
 
     return
 
-
 def UndoSplit(gui, iFile, accts, jFile):
     ''' TODO '''
 
@@ -260,10 +257,11 @@ def UndoSplit(gui, iFile, accts, jFile):
 
     return
 
-
 def UpdatePreview(gui, iFile, accts, jFile):
-    ''' TODO '''
-
+    '''
+    Updates the log box preview with latest information collected from user.
+    Displays data in a way which reflects actual entry into journal.
+    '''
     # Clear log
     log = ' ', 'default'
     gui.Log(log)
@@ -325,70 +323,60 @@ def UpdatePreview(gui, iFile, accts, jFile):
     log = msg, 'default'
     gui.Log(log)
 
-
 def UpdateAccounts(event, gui, iFile, accts, jFile, who):
-    ''' TODO '''
-
-    # Memo update
+    '''
+    When an account box is changed, we want to zero out the others. When
+    a memo is input, we want to load it into the entry.
+    '''
+    # Memo update for simple transaction
     if (who == c.MEMO):
-        try:
-            if (jFile.simple == True):
-                jFile.entry[1].memo = gui.memo.get()
-        except IndexError:
-            return
-        except AttributeError:
-            return
+        if (jFile.simple == True):
+            jFile.entry[1].memo = gui.memo.get()
 
         UpdatePreview(gui, iFile, accts, jFile)
         return
 
     # Account update
-    selectedAcct = ' '
+    selectedAcct = ''
     if (who == c.EXPENSES):
-        gui.selectedAsset.set(' ')
-        gui.selectedIncome.set(' ')
-        gui.selectedLiability.set(' ')
+        gui.selectedAsset.set('')
+        gui.selectedIncome.set('')
+        gui.selectedLiability.set('')
         selectedAcct = gui.selectedExpense.get()
     if (who == c.LIABILITIES):
-        gui.selectedAsset.set(' ')
-        gui.selectedIncome.set(' ')
-        gui.selectedExpense.set(' ')
+        gui.selectedAsset.set('')
+        gui.selectedIncome.set('')
+        gui.selectedExpense.set('')
         selectedAcct = gui.selectedLiability.get()
     if (who == c.INCOME):
-        gui.selectedAsset.set(' ')
-        gui.selectedExpense.set(' ')
-        gui.selectedLiability.set(' ')
+        gui.selectedAsset.set('')
+        gui.selectedExpense.set('')
+        gui.selectedLiability.set('')
         selectedAcct = gui.selectedIncome.get()
     if (who == c.ASSETS):
-        gui.selectedIncome.set(' ')
-        gui.selectedExpense.set(' ')
-        gui.selectedLiability.set(' ')
+        gui.selectedIncome.set('')
+        gui.selectedExpense.set('')
+        gui.selectedLiability.set('')
         selectedAcct = gui.selectedAssets.get()
 
-    if (selectedAcct == ' '):
+    if (selectedAcct == ''):
         return
 
-    try:
-        if (jFile.simple == True):
-            jFile.entry[1].acctF = selectedAcct
-            jFile.entry[1].acctS = accts.GetShortHand(selectedAcct)
-    except IndexError:
-        return
-    except AttributeError:
-        return
+    # Update account info in entry for simple transaction
+    if (jFile.simple == True):
+        jFile.entry[1].acctF = selectedAcct
+        jFile.entry[1].acctS = accts.GetShortHand(selectedAcct)
 
     UpdatePreview(gui, iFile, accts, jFile)
 
-
 def Main():
-
     # Initialization
     gui = MyGui()
-    iFile = ImportFile()
     accts = Accounts()
+    iFile = ImportFile()
     jFile = JournalFile()
 
-    # Setup Account.csv file
+    # Setup Accounts
     retVal, msg = accts.Setup()
     if (retVal == c.BAD):
         gui.Log(msg)
@@ -398,11 +386,8 @@ def Main():
     if (retVal == c.BAD):
         gui.Log(msg)
 
-    # Load import dropdown
-    iFile.LoadAllDataFileNames()
-    gui.LoadImportDropdown(iFile.importFileList)
-
-    # Load account dropdowns
+    # Load dropdowns
+    gui.importDropdown['values'] = iFile.importFileList
     gui.assAcctDropdown['values'] = accts.allAcctsFullName
     gui.splitAcctDropdown['values'] = accts.allAcctsFullName
     gui.expenseDropdown['values'] = accts.expenseAcctList
@@ -411,15 +396,17 @@ def Main():
     gui.assetDropdown['values'] = accts.assetAcctList
 
     # Bind buttons
-    gui.startButton.configure(command=lambda:ToolStart(gui, iFile, accts, jFile, True))
-    gui.addEntryButton.configure(command=lambda:AddToLedger(gui, iFile, accts, jFile))
+    gui.startButton.configure(command=lambda:ToolStart(gui, iFile, accts, jFile))
+    gui.addEntryButton.configure(command=lambda:AddToJournal(gui, iFile, accts, jFile))
     gui.addSplitButton.configure(command=lambda:AddSplit(gui, iFile, accts, jFile))
     gui.undoSplitButton.configure(command=lambda:UndoSplit(gui, iFile, accts, jFile))
+
+    # Setup events
     gui.expenseDropdown.bind('<<ComboboxSelected>>', lambda event:UpdateAccounts(event, gui, iFile, accts, jFile, c.EXPENSES))
     gui.liabilityDropdown.bind('<<ComboboxSelected>>', lambda event: UpdateAccounts(event, gui, iFile, accts, jFile, c.LIABILITIES))
     gui.incomeDropdown.bind('<<ComboboxSelected>>', lambda event: UpdateAccounts(event, gui, iFile, accts, jFile, c.INCOME))
     gui.assetDropdown.bind('<<ComboboxSelected>>', lambda event: UpdateAccounts(event, gui, iFile, accts, jFile, c.ASSETS))
-    gui.importDropdown.bind('<<ComboboxSelected>>', lambda event: ToolStart(gui, iFile, accts, jFile, False))
+    gui.importDropdown.bind('<<ComboboxSelected>>', lambda event: UpdateImportFile(gui, iFile))
     gui.root.bind('<Return>', lambda event: UpdateAccounts(event, gui, iFile, accts, jFile, c.MEMO))
 
     # Begin main thread

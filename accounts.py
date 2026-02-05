@@ -18,6 +18,7 @@ import constants as c
 
 
 class Accounts():
+    ''' Class which manages the account information from config.yaml '''
 
     allAcctsFullName = []
     allAcctsShortName = []

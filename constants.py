@@ -81,5 +81,5 @@ SIZE_AMNT_COL   = 12
 SIZE_INIT_COL   = 10
 
 # File Names
-TEMP_FILE = 'ImportTemp.csv'
+TEMP_FILE = 'tmp.csv'
 CONFIG_FILE = 'config.yaml'
