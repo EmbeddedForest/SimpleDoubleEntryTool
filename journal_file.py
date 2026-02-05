@@ -66,8 +66,7 @@ class JournalFile():
         df = pd.read_csv(c.JOURNAL_FP)
 
         # Date data (yyyy-mm-dd)
-        df[dateC] = pd.to_datetime(df[dateC], format='%Y-%m-%d')
-        # df[dateC] = pd.to_datetime(df[dateC], format='%d/%m/%Y')
+        df[dateC] = pd.to_datetime(df[dateC], format='mixed', dayfirst=False)
         df[dateC] = df[dateC].dt.strftime('%Y-%m-%d')
 
         # Amount data (decimal to 2 places then convert to string)
