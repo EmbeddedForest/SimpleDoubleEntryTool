@@ -382,7 +382,7 @@ def Main():
         gui.Log(msg)
 
     # Setup Journal.csv file
-    retVal, msg = jFile.SetupFile()
+    retVal, msg = jFile.Setup()
     if (retVal == c.BAD):
         gui.Log(msg)
 
