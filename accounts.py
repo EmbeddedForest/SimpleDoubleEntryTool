@@ -1,6 +1,6 @@
 #------------------------------------------------------------------------------
 # File:
-#   account_file.py
+#   accounts.py
 #
 # Author:
 #   EmbeddedForest

@@ -24,7 +24,7 @@ from account_file import Accounts
 from journal_file import JournalFile
 
 
-def LoadNewTransaction(gui, iFile, aFile, jFile):
+def LoadNewTransaction(gui, iFile, accts, jFile):
     ''' TODO '''
 
     l = Line()
@@ -45,7 +45,7 @@ def LoadNewTransaction(gui, iFile, aFile, jFile):
     l.desc = desc
     l.memo = ' '
     l.acctF = gui.selectedAssAcct.get()
-    l.acctS = aFile.GetShortHand(gui.selectedAssAcct.get())
+    l.acctS = accts.GetShortHand(gui.selectedAssAcct.get())
     l.amnt = str(amnt)
 
     # Find suggested entry based on first line
@@ -71,10 +71,10 @@ def LoadNewTransaction(gui, iFile, aFile, jFile):
             gui.selectedLiability.set(jFile.entry[1].acctF)
 
     # Update preview box with current entry info
-    UpdatePreview(gui, iFile, aFile, jFile)
+    UpdatePreview(gui, iFile, accts, jFile)
 
 
-def AddToLedger(gui, iFile, aFile, jFile):
+def AddToLedger(gui, iFile, accts, jFile):
     ''' TODO '''
 
     # Make sure import file is active
@@ -90,7 +90,7 @@ def AddToLedger(gui, iFile, aFile, jFile):
         return
 
     # Make sure account file is active
-    if (aFile.active != True):
+    if (accts.active != True):
         msg = 'Account file is not active', 'error'
         gui.Log(msg)
         return
@@ -105,22 +105,22 @@ def AddToLedger(gui, iFile, aFile, jFile):
     # valid = False
     # acct = gui.selectedExpense.get()
     # if (acct != ' '):
-    #     if (acct in aFile.allAcctsFullName):
+    #     if (acct in accts.allAcctsFullName):
     #         valid = True
 
     # acct = gui.selectedAsset.get()
     # if (acct != ' '):
-    #     if (acct in aFile.allAcctsFullName):
+    #     if (acct in accts.allAcctsFullName):
     #         valid = True
 
     # acct = gui.selectedIncome.get()
     # if (acct != ' '):
-    #     if (acct in aFile.allAcctsFullName):
+    #     if (acct in accts.allAcctsFullName):
     #         valid = True
 
     # acct = gui.selectedLiability.get()
     # if (acct != ' '):
-    #     if (acct in aFile.allAcctsFullName):
+    #     if (acct in accts.allAcctsFullName):
     #         valid = True
 
     # if (valid != True):
@@ -150,9 +150,9 @@ def AddToLedger(gui, iFile, aFile, jFile):
         return
 
     # Load new transaction to GUI
-    LoadNewTransaction(gui, iFile, aFile, jFile)
+    LoadNewTransaction(gui, iFile, accts, jFile)
 
-def ToolStart(gui, iFile, aFile, jFile, full):
+def ToolStart(gui, iFile, accts, jFile, full):
     ''' TODO '''
 
     # Clear log
@@ -178,7 +178,7 @@ def ToolStart(gui, iFile, aFile, jFile, full):
         return
 
     # Check that associated account is valid
-    retVal, msg = aFile.IsValid(gui.selectedAssAcct.get())
+    retVal, msg = accts.IsValid(gui.selectedAssAcct.get())
     if (retVal == c.BAD):
         gui.Log(msg)
         return
@@ -203,10 +203,10 @@ def ToolStart(gui, iFile, aFile, jFile, full):
         return
 
     # Load new transaction to GUI
-    LoadNewTransaction(gui, iFile, aFile, jFile)
+    LoadNewTransaction(gui, iFile, accts, jFile)
 
 
-def AddSplit(gui, iFile, aFile, jFile):
+def AddSplit(gui, iFile, accts, jFile):
     ''' TODO '''
 
     # If it was previously a simple transaction, it isn't now
@@ -229,19 +229,19 @@ def AddSplit(gui, iFile, aFile, jFile):
         return
 
     l.acctF = gui.selectedSplitAcct.get()
-    l.acctS = aFile.GetShortHand(gui.selectedSplitAcct.get())
+    l.acctS = accts.GetShortHand(gui.selectedSplitAcct.get())
     l.memo = gui.splitMemo.get()
     l.amnt = str(gui.splitAmnt.get())
 
     # Load line to entry
     jFile.entry.append(l)
 
-    UpdatePreview(gui, iFile, aFile, jFile)
+    UpdatePreview(gui, iFile, accts, jFile)
 
     return
 
 
-def UndoSplit(gui, iFile, aFile, jFile):
+def UndoSplit(gui, iFile, accts, jFile):
     ''' TODO '''
 
     # If it is a simple transaction, ignore
@@ -256,12 +256,12 @@ def UndoSplit(gui, iFile, aFile, jFile):
     index = len(jFile.entry) - 1
     jFile.entry.pop(index)
 
-    UpdatePreview(gui, iFile, aFile, jFile)
+    UpdatePreview(gui, iFile, accts, jFile)
 
     return
 
 
-def UpdatePreview(gui, iFile, aFile, jFile):
+def UpdatePreview(gui, iFile, accts, jFile):
     ''' TODO '''
 
     # Clear log
@@ -326,7 +326,7 @@ def UpdatePreview(gui, iFile, aFile, jFile):
     gui.Log(log)
 
 
-def UpdateAccounts(event, gui, iFile, aFile, jFile, who):
+def UpdateAccounts(event, gui, iFile, accts, jFile, who):
     ''' TODO '''
 
     # Memo update
@@ -339,7 +339,7 @@ def UpdateAccounts(event, gui, iFile, aFile, jFile, who):
         except AttributeError:
             return
 
-        UpdatePreview(gui, iFile, aFile, jFile)
+        UpdatePreview(gui, iFile, accts, jFile)
         return
 
     # Account update
@@ -371,13 +371,13 @@ def UpdateAccounts(event, gui, iFile, aFile, jFile, who):
     try:
         if (jFile.simple == True):
             jFile.entry[1].acctF = selectedAcct
-            jFile.entry[1].acctS = aFile.GetShortHand(selectedAcct)
+            jFile.entry[1].acctS = accts.GetShortHand(selectedAcct)
     except IndexError:
         return
     except AttributeError:
         return
 
-    UpdatePreview(gui, iFile, aFile, jFile)
+    UpdatePreview(gui, iFile, accts, jFile)
 
 
 def Main():
@@ -385,11 +385,11 @@ def Main():
     # Initialization
     gui = MyGui()
     iFile = ImportFile()
-    aFile = Accounts()
+    accts = Accounts()
     jFile = JournalFile()
 
     # Setup Account.csv file
-    retVal, msg = aFile.Setup()
+    retVal, msg = accts.Setup()
     if (retVal == c.BAD):
         gui.Log(msg)
 
@@ -403,24 +403,24 @@ def Main():
     gui.LoadImportDropdown(iFile.importFileList)
 
     # Load account dropdowns
-    gui.assAcctDropdown['values'] = aFile.allAcctsFullName
-    gui.splitAcctDropdown['values'] = aFile.allAcctsFullName
-    gui.expenseDropdown['values'] = aFile.expenseAcctList
-    gui.liabilityDropdown['values'] = aFile.liabilityAcctList
-    gui.incomeDropdown['values'] = aFile.incomeAcctList
-    gui.assetDropdown['values'] = aFile.assetAcctList
+    gui.assAcctDropdown['values'] = accts.allAcctsFullName
+    gui.splitAcctDropdown['values'] = accts.allAcctsFullName
+    gui.expenseDropdown['values'] = accts.expenseAcctList
+    gui.liabilityDropdown['values'] = accts.liabilityAcctList
+    gui.incomeDropdown['values'] = accts.incomeAcctList
+    gui.assetDropdown['values'] = accts.assetAcctList
 
     # Bind buttons
-    gui.startButton.configure(command=lambda:ToolStart(gui, iFile, aFile, jFile, True))
-    gui.addEntryButton.configure(command=lambda:AddToLedger(gui, iFile, aFile, jFile))
-    gui.addSplitButton.configure(command=lambda:AddSplit(gui, iFile, aFile, jFile))
-    gui.undoSplitButton.configure(command=lambda:UndoSplit(gui, iFile, aFile, jFile))
-    gui.expenseDropdown.bind('<<ComboboxSelected>>', lambda event:UpdateAccounts(event, gui, iFile, aFile, jFile, c.EXPENSES))
-    gui.liabilityDropdown.bind('<<ComboboxSelected>>', lambda event: UpdateAccounts(event, gui, iFile, aFile, jFile, c.LIABILITIES))
-    gui.incomeDropdown.bind('<<ComboboxSelected>>', lambda event: UpdateAccounts(event, gui, iFile, aFile, jFile, c.INCOME))
-    gui.assetDropdown.bind('<<ComboboxSelected>>', lambda event: UpdateAccounts(event, gui, iFile, aFile, jFile, c.ASSETS))
-    gui.importDropdown.bind('<<ComboboxSelected>>', lambda event: ToolStart(gui, iFile, aFile, jFile, False))
-    gui.root.bind('<Return>', lambda event: UpdateAccounts(event, gui, iFile, aFile, jFile, c.MEMO))
+    gui.startButton.configure(command=lambda:ToolStart(gui, iFile, accts, jFile, True))
+    gui.addEntryButton.configure(command=lambda:AddToLedger(gui, iFile, accts, jFile))
+    gui.addSplitButton.configure(command=lambda:AddSplit(gui, iFile, accts, jFile))
+    gui.undoSplitButton.configure(command=lambda:UndoSplit(gui, iFile, accts, jFile))
+    gui.expenseDropdown.bind('<<ComboboxSelected>>', lambda event:UpdateAccounts(event, gui, iFile, accts, jFile, c.EXPENSES))
+    gui.liabilityDropdown.bind('<<ComboboxSelected>>', lambda event: UpdateAccounts(event, gui, iFile, accts, jFile, c.LIABILITIES))
+    gui.incomeDropdown.bind('<<ComboboxSelected>>', lambda event: UpdateAccounts(event, gui, iFile, accts, jFile, c.INCOME))
+    gui.assetDropdown.bind('<<ComboboxSelected>>', lambda event: UpdateAccounts(event, gui, iFile, accts, jFile, c.ASSETS))
+    gui.importDropdown.bind('<<ComboboxSelected>>', lambda event: ToolStart(gui, iFile, accts, jFile, False))
+    gui.root.bind('<Return>', lambda event: UpdateAccounts(event, gui, iFile, accts, jFile, c.MEMO))
 
     # Begin main thread
     gui.root.mainloop()
