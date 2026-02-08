@@ -285,6 +285,7 @@ class MyGui():
             textvariable    =self.selectedExpense,
             font            =FONT_BOXES,
             width           =80,
+            height          =35,
             state           ='readonly'
         )
         self.expenseDropdown.grid(
