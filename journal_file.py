@@ -205,6 +205,7 @@ class JournalFile():
             log = 'Selected Journal csv file does not exist', 'error'
             return c.BAD, log
 
+        # Add entry
         lineNum = 0
         for l in self.entry:
             newData = [lineNum, str(l.date), str(l.hash), str(l.desc), str(l.memo),  \
@@ -212,6 +213,13 @@ class JournalFile():
             lineNum = lineNum + 1
             
             df.loc[len(df)] = newData
+
+        # Reorder journal
+        lineC = c.JRNL_LINE
+        dateC = c.JRNL_DATE
+        descC = c.JRNL_DSCRP
+        hashC = c.JRNL_ID
+        df = df.sort_values(by=[dateC, descC, hashC, lineC])
 
         df.to_csv(c.JOURNAL_FP, index=False)
         log = 'Added to journal successfully', 'default'
