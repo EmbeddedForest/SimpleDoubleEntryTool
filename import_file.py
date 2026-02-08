@@ -92,7 +92,7 @@ class ImportFile():
         # Negate amount if style says to
         #----------------------------------------------------------------------
         tmpAmnts = []
-        df = pd.read_csv(filePath)
+        df = pd.read_csv(filePath, index_col=False)
 
         if (amntNeg == True):
             for value in df[amntC]:

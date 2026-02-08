@@ -357,7 +357,7 @@ def UpdateAccounts(event, gui, iFile, accts, jFile, who):
         gui.selectedIncome.set('')
         gui.selectedExpense.set('')
         gui.selectedLiability.set('')
-        selectedAcct = gui.selectedAssets.get()
+        selectedAcct = gui.selectedAsset.get()
 
     if (selectedAcct == ''):
         return

@@ -52,7 +52,7 @@ class JournalFile():
         amntC = c.JRNL_AMOUNT
         hashC = c.JRNL_ID
  
-        df = pd.read_csv(c.JOURNAL_FP)
+        df = pd.read_csv(c.JOURNAL_FP, index_col=False)
 
         # Date data (yyyy-mm-dd)
         df[dateC] = pd.to_datetime(df[dateC], format='mixed', dayfirst=False)
