@@ -79,6 +79,7 @@ class ImportFile():
             amntC = styleCfg.get('AmntColName')
             amntNeg = styleCfg.get('AmntNegate')
             assAccts = styleCfg.get('AssAccts')
+            skipList = styleCfg.get('SkipStrings')
 
             if (dateC in cols) and (descC in cols) and (amntC in cols):
                 style = styleName
@@ -100,6 +101,12 @@ class ImportFile():
                 tmpAmnts.append(newVal)
 
             df[amntC] = tmpAmnts
+
+        #----------------------------------------------------------------------
+        # Remove any transactions whose description matches any SkipStrings
+        #----------------------------------------------------------------------
+        for desc in skipList:
+            df = df[~df[descC].str.contains(desc, na=False, case=False)]
 
         #----------------------------------------------------------------------
         # Normalize data
