@@ -32,7 +32,6 @@ FONT_NOTES = ('Calibri', 9)
 FRAMES = \
 [
     ('Setup',           FONT_FRAME, (1,  24), (5,  26), 'nesw'),
-    ('Date',            FONT_FRAME, (8,   1), (5,  25), 'nesw'),
     ('Split',           FONT_FRAME, (8,  27), (11, 23), 'nesw'),
     ('Select Account',  FONT_FRAME, (14,  1), (13, 25), 'nesw'),
     ('Log Box',         FONT_FRAME, (28,  7), (10, 43), 'nesw'),
@@ -206,6 +205,24 @@ class MyGui():
         #----------------------------------------------------------------------
         # Data Frame
         #----------------------------------------------------------------------
+        # Frame
+        tmp = tk.LabelFrame(
+            self.root,
+            text        ='Transaction Data',
+            font        =FONT_FRAME,
+            borderwidth =5
+        )
+
+        tmp.grid(
+            row        =8,
+            column     =1,
+            rowspan    =5,
+            columnspan =25,
+            sticky     ='nesw'
+        )
+
+        tmp.lower()
+
         # Date Box
         self.displayDate = tk.StringVar(value=' ')
         tmp = tk.Entry(
