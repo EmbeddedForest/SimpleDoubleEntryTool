@@ -54,24 +54,14 @@ def LoadNewTransaction(gui, iFile, accts, jFile):
     # Find suggested entry based on first line
     retVal, msg = jFile.FindSuggestedEntry(l)
     gui.Log(msg)
+    print(jFile.entry[1].acctF)
 
-    # Clear all accounts
-    gui.selectedAsset.set('')
-    gui.selectedIncome.set('')
-    gui.selectedExpense.set('')
-    gui.selectedLiability.set('')
-    gui.memo.set('')
-
-    # Load suggested account (for simple entries only)
+    # Prep GUI to display suggested entry
     if (jFile.simple == True):
-        if ('Assets' in jFile.entry[1].acctF):
-            gui.selectedAsset.set(jFile.entry[1].acctF)
-        if ('Income' in jFile.entry[1].acctF):
-            gui.selectedIncome.set(jFile.entry[1].acctF)
-        if ('Expenses' in jFile.entry[1].acctF):
-            gui.selectedExpense.set(jFile.entry[1].acctF)
-        if ('Liabilities' in jFile.entry[1].acctF):
-            gui.selectedLiability.set(jFile.entry[1].acctF)
+        gui.UpdateSimple(jFile.entry[1].acctF)
+    # else:
+    #     gui.UpdateSplit(jFile.entry[1].acctF)
+
 
 def AddToJournal(gui, iFile, accts, jFile):
     '''
@@ -323,49 +313,16 @@ def UpdatePreview(gui, iFile, accts, jFile):
     log = msg, 'default'
     gui.Log(log)
 
-def UpdateAccounts(event, gui, iFile, accts, jFile, who):
+def UpdateSimple(event, gui, iFile, accts, jFile):
     '''
-    When an account box is changed, we want to zero out the others. When
-    a memo is input, we want to load it into the entry.
+    Handler to update memo and account for simple transaction
     '''
-    # Memo update for simple transaction
-    if (who == c.MEMO):
-        if (jFile.simple == True):
-            jFile.entry[1].memo = gui.memo.get()
+    # Update memo
+    jFile.entry[1].memo = gui.memo.get()
 
-        UpdatePreview(gui, iFile, accts, jFile)
-        return
-
-    # Account update
-    selectedAcct = ''
-    if (who == c.EXPENSES):
-        gui.selectedAsset.set('')
-        gui.selectedIncome.set('')
-        gui.selectedLiability.set('')
-        selectedAcct = gui.selectedExpense.get()
-    if (who == c.LIABILITIES):
-        gui.selectedAsset.set('')
-        gui.selectedIncome.set('')
-        gui.selectedExpense.set('')
-        selectedAcct = gui.selectedLiability.get()
-    if (who == c.INCOME):
-        gui.selectedAsset.set('')
-        gui.selectedExpense.set('')
-        gui.selectedLiability.set('')
-        selectedAcct = gui.selectedIncome.get()
-    if (who == c.ASSETS):
-        gui.selectedIncome.set('')
-        gui.selectedExpense.set('')
-        gui.selectedLiability.set('')
-        selectedAcct = gui.selectedAsset.get()
-
-    if (selectedAcct == ''):
-        return
-
-    # Update account info in entry for simple transaction
-    if (jFile.simple == True):
-        jFile.entry[1].acctF = selectedAcct
-        jFile.entry[1].acctS = accts.GetShortHand(selectedAcct)
+    # Update account info
+    jFile.entry[1].acctF = gui.selectedAcct
+    jFile.entry[1].acctS = accts.GetShortHand(gui.selectedAcct)
 
     UpdatePreview(gui, iFile, accts, jFile)
 
@@ -387,27 +344,26 @@ def Main():
         gui.Log(msg)
 
     # Load dropdowns
-    gui.importDropdown['values'] = iFile.importFileList
-    gui.assAcctDropdown['values'] = accts.allAcctsFullName
-    gui.splitAcctDropdown['values'] = accts.allAcctsFullName
-    gui.expenseDropdown['values'] = accts.expenseAcctList
-    gui.liabilityDropdown['values'] = accts.liabilityAcctList
-    gui.incomeDropdown['values'] = accts.incomeAcctList
-    gui.assetDropdown['values'] = accts.assetAcctList
+    gui.LoadImportDropdown(iFile.importFileList)
+    gui.LoadAssAcctDropdown(accts.allAcctsFullName)
+
+    # Load accounts
+    gui.LoadAssets(accts.assetDic)
+    gui.LoadIncome(accts.incomeDic)
+    gui.LoadLiabilities(accts.liabilityDic)
+    gui.LoadExpenses(accts.expenseDic)
 
     # Bind buttons
     gui.startButton.configure(command=lambda:ToolStart(gui, iFile, accts, jFile))
     gui.addEntryButton.configure(command=lambda:AddToJournal(gui, iFile, accts, jFile))
-    gui.addSplitButton.configure(command=lambda:AddSplit(gui, iFile, accts, jFile))
-    gui.undoSplitButton.configure(command=lambda:UndoSplit(gui, iFile, accts, jFile))
 
     # Setup events
-    gui.expenseDropdown.bind('<<ComboboxSelected>>', lambda event:UpdateAccounts(event, gui, iFile, accts, jFile, c.EXPENSES))
-    gui.liabilityDropdown.bind('<<ComboboxSelected>>', lambda event: UpdateAccounts(event, gui, iFile, accts, jFile, c.LIABILITIES))
-    gui.incomeDropdown.bind('<<ComboboxSelected>>', lambda event: UpdateAccounts(event, gui, iFile, accts, jFile, c.INCOME))
-    gui.assetDropdown.bind('<<ComboboxSelected>>', lambda event: UpdateAccounts(event, gui, iFile, accts, jFile, c.ASSETS))
     gui.importDropdown.bind('<<ComboboxSelected>>', lambda event: UpdateImportFile(gui, iFile))
-    gui.root.bind('<Return>', lambda event: UpdateAccounts(event, gui, iFile, accts, jFile, c.MEMO))
+    gui.root.bind('<Return>', lambda event: UpdateSimple(event, gui, iFile, accts, jFile))
+    gui.assSelBox.bind('<ButtonRelease-1>', lambda event: UpdateSimple(event, gui, iFile, accts, jFile), add='+')
+    gui.incSelBox.bind('<ButtonRelease-1>', lambda event: UpdateSimple(event, gui, iFile, accts, jFile), add='+')
+    gui.liaSelBox.bind('<ButtonRelease-1>', lambda event: UpdateSimple(event, gui, iFile, accts, jFile), add='+')
+    gui.expSelBox.bind('<ButtonRelease-1>', lambda event: UpdateSimple(event, gui, iFile, accts, jFile), add='+')
 
     # Begin main thread
     gui.root.mainloop()

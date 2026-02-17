@@ -3,6 +3,7 @@ Ref/
 config.yaml
 journal.csv
 tmp.csv
+ImportTemp.csv
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

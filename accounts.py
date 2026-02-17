@@ -26,6 +26,10 @@ class Accounts():
     incomeAcctList = []
     expenseAcctList = []
     liabilityAcctList = []
+    assetDic = {}
+    incomeDic = {}
+    liabilityDic = {}
+    expenseDic = {}
     active = False
 
     def Setup(self):
@@ -49,11 +53,16 @@ class Accounts():
         fullList.extend(config['Accounts']['Expenses'])
         self.fullList = fullList
 
-        # Strip out all placeholder accounts
         for acctF in fullList:
+            # Strip out all placeholder accounts
             if (acctF.count(':') != 2):
                 continue
 
+            # Get category
+            tmp = acctF.split(':')
+            cat = tmp[1]
+
+            # Get short hand account name
             acctS = acctF.rpartition(':')[-1]
 
             self.allAcctsFullName.append(acctF)
@@ -61,12 +70,16 @@ class Accounts():
 
             if ('Assets' in acctF):
                 self.assetAcctList.append(acctF)
+                self.assetDic.setdefault(cat, []).append(acctS)
             if ('Liabilities' in acctF):
                 self.liabilityAcctList.append(acctF)
+                self.liabilityDic.setdefault(cat, []).append(acctS)
             if ('Income' in acctF):
                 self.incomeAcctList.append(acctF)
+                self.incomeDic.setdefault(cat, []).append(acctS)
             if ('Expenses' in acctF):
                 self.expenseAcctList.append(acctF)
+                self.expenseDic.setdefault(cat, []).append(acctS)
 
         # Looks good
         self.active = True
@@ -81,6 +94,10 @@ class Accounts():
         self.incomeAcctList = []
         self.expenseAcctList = []
         self.liabilityAcctList = []
+        self.assetDic = {}
+        self.incomeDic = {}
+        self.liabilityDic = {}
+        self.expenseDic = {}
         self.active = False
 
     def GetShortHand(self, fullAcctName):
