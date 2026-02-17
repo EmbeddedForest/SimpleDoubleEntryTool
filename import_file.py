@@ -173,7 +173,7 @@ class ImportFile():
 
         # Insert hashes into temp file
         df['TransactionID'] = hashes
-        df.to_csv('ImportTemp.csv', index=False)
+        df.to_csv(c.TEMP_FILE, index=False)
 
         #----------------------------------------------------------------------
         # Update object data
