@@ -105,8 +105,12 @@ class ImportFile():
         #----------------------------------------------------------------------
         # Remove any transactions whose description matches any SkipStrings
         #----------------------------------------------------------------------
-        for desc in skipList:
-            df = df[~df[descC].str.contains(desc, na=False, case=False)]
+        try:
+            for desc in skipList:
+                df = df[~df[descC].str.contains(desc, na=False, case=False)]
+        except TypeError:
+            log = 'blank skip list'
+
 
         #----------------------------------------------------------------------
         # Normalize data
