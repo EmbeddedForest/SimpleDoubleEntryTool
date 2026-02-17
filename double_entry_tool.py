@@ -13,7 +13,6 @@
 #   GUI and associated csv files to help categorize and balance financial
 #   transactions and accounts using double entry bookkeeping.
 #
-# TODO - Add checkbox to setup box to flip amount sign
 #------------------------------------------------------------------------------
 
 import constants as c
@@ -52,12 +51,10 @@ def LoadNewTransaction(gui, iFile, accts, jFile):
     l.amnt = str(amnt)
 
     # Find suggested entry based on first line
-    retVal, msg = jFile.FindSuggestedEntry(l)
-    gui.Log(msg)
-    print(jFile.entry[1].acctF)
+    jFile.FindSuggestedEntry(l)
 
-    # Prep GUI to display suggested entry
-    if (jFile.simple == True):
+    # Prep GUI to display suggested entry if one was found
+    if ((jFile.simple == True) and (jFile.entry[1].acctF != '')):
         gui.UpdateSimple(jFile.entry[1].acctF)
     # else:
     #     gui.UpdateSplit(jFile.entry[1].acctF)

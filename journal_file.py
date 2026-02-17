@@ -165,6 +165,8 @@ class JournalFile():
         newLine.date = l.date
         newLine.hash = l.hash
         newLine.desc = l.desc
+        newLine.acctF = ''
+        newLine.acctS = ''
 
         # Reversed Amount
         if ('-' in l.amnt):
@@ -188,7 +190,7 @@ class JournalFile():
         # Append to entry
         self.entry.append(newLine)
 
-        if (len(self.entry) > 1):
+        if (self.entry[1].acctF != ''):
             log = 'Partial match found', 'default'
             return c.GOOD, log
 
