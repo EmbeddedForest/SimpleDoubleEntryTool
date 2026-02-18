@@ -1075,11 +1075,9 @@ class MyGui():
         # Get category
         tmp = acctNameFull.split(':')
         selCat = tmp[1]
-        print(selCat)
 
         # Get account
         selAcct = acctNameFull.rpartition(':')[-1]
-        print(selAcct)
 
         if ('Assets:' in acctNameFull):
             who = 'ass'
@@ -1187,11 +1185,15 @@ class MyGui():
         self.previewBox.insert('end', '\n', tag)
 
     def Update(self, entry: Entry):
-        if (entry.split == False):
-            self.UpdateSimple(entry[1].acctF)
-        else:
+        if ((entry.split == False) and (entry.size == 2)):
+            acct = entry.entry[1].acctF
+            if (acct != ''):
+                self.UpdateSimple(acct)
+        elif (entry.split == True):
             self.UpdateSplit(entry)
 
+        # Update log box
+        self.Log(' ')
         txt = entry.GetHeader()
         self.Log(txt, 'header')
         txt = entry.GetDataAsText()

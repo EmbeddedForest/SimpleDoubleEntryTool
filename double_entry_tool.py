@@ -221,11 +221,18 @@ class Sdet():
             return
 
         # Update memo
-        self.curEntry[1].memo = gui.memo.get()
+        self.curEntry.entry[1].memo = gui.memo.get()
 
-        # Update account info
-        self.curEntry[1].acctF = gui.selectedAcct
-        self.curEntry[1].acctS = accts.GetShortHand(gui.selectedAcct)
+        # Validate new account info
+        acctF = gui.selectedAcct
+        retVal = accts.IsAccountValid(acctF)
+        if (retVal == c.BAD):
+            # Silent return, don't update GUI
+            return
+
+        # Update account info in entry
+        self.curEntry.entry[1].acctF = acctF
+        self.curEntry.entry[1].acctS = accts.GetShortHand(acctF)
 
         gui.Update(self.curEntry)
 
@@ -294,7 +301,8 @@ class Sdet():
 
         # If simple transaction, check that selected account is valid
         if (self.curEntry.split == False):
-            retVal = accts.IsAccountValid(self.curEntry[1].acctF)
+            acct = self.curEntry.entry[1].acctF
+            retVal = accts.IsAccountValid(acct)
             if (retVal == c.BAD):
                 gui.Log('Selected account is not valid', 'error')
                 return

@@ -147,8 +147,8 @@ class JournalFile():
                     newEntry.AddLine(newLine)
                     i = i + 1
 
-            # Exact match found
-            return 'ExactMatch', newEntry
+                # Exact match found
+                return 'ExactMatch', newEntry
 
         # Go for simple partial match
         newLine = Line()
