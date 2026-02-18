@@ -1010,6 +1010,9 @@ class MyGui():
         # Get selected category
         selCat = catBox.get("insert linestart", "insert lineend")
 
+        if (selCat == ''):
+            return
+
         # Clear both the category box and selection box
         catBox.delete('1.0', 'end')
         selBox.delete('1.0', 'end')
@@ -1041,6 +1044,9 @@ class MyGui():
     def _UpdateSelections(self, event, selBox, dic, curCat, who):
         # Get selected account
         selAcct = selBox.get("insert linestart", "insert lineend")
+
+        if (selAcct == ''):
+            return
 
         # Clear the selection box
         selBox.delete('1.0', 'end')
