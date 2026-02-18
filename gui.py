@@ -16,6 +16,8 @@
 import tkinter as tk
 from tkinter import ttk
 from PIL import Image, ImageTk
+from journal_file import Line
+from journal_file import Entry
 
 
 # Generic Fonts
@@ -1171,16 +1173,11 @@ class MyGui():
         self.expDic = dic
         self.curExpCat = firstCat
 
-    def Log(self, payload):
+    def Log(self, txt, tag='default'):
         '''
         Logs information to GUI preview box
 
-        payload = (msg, tag)
         '''
-
-        txt = payload[0]
-        tag = payload[1]
-
         if (txt == ' '):
             # Blank log means delete log
             self.previewBox.delete('1.0', 'end')
@@ -1188,3 +1185,14 @@ class MyGui():
 
         self.previewBox.insert('end', txt, tag)
         self.previewBox.insert('end', '\n', tag)
+
+    def Update(self, entry: Entry):
+        if (entry.split == False):
+            self.UpdateSimple(entry[1].acctF)
+        else:
+            self.UpdateSplit(entry)
+
+        txt = entry.GetHeader()
+        self.Log(txt, 'header')
+        txt = entry.GetDataAsText()
+        self.Log(txt, 'default')

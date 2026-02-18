@@ -99,7 +99,7 @@ class JournalFile():
         else:
             return False
 
-    def FindSuggestedEntry(self, l):
+    def FindSuggestedEntry(self, newEntry: Entry):
         '''
         Find the last entry that matches the given desc / amnt / acct.
 
@@ -112,19 +112,14 @@ class JournalFile():
         If no match on desc and acct, don't load any more lines to suggested
         entry.
         '''
-        # Reset current entry
-        self.entry = []
-        self.simple = True
-
         try:
             df = pd.read_csv(c.JOURNAL_FP)
 
         except FileNotFoundError:
-            log = 'Journal.csv does not exist', 'error'
-            return c.BAD, log
+            return c.BAD, newEntry
 
-        # Load 0th line to entry
-        self.entry.append(l)
+        # Grab first line from entry
+        l = newEntry.entry[0]
 
         # Have a go at exact match first
         for index, row in df.iloc[::-1].iterrows():
@@ -136,11 +131,10 @@ class JournalFile():
             jAmnt = str(round(jAmnt, 2))
 
             if (jDesc == l.desc) and (jAcct == l.acctF) and (jAmnt == l.amnt):
-                # Exact match found, load entry data
+                # Exact match found, load entry with data
                 count = row[c.JRNL_LINE]
                 i = 1
                 for i in range(count,0,-1):
-                    print(index-i)
                     newLine = Line()
                     newLine.date = l.date
                     newLine.hash = l.hash
@@ -150,17 +144,13 @@ class JournalFile():
                     newLine.acctS = df.loc[index-i, c.JRNL_ACCT_NAME]
                     newLine.amnt = df.loc[index-i, c.JRNL_AMOUNT]
                     tmpHash = df.loc[index+i+1, c.JRNL_ID]
-                    self.entry.append(newLine)
+                    newEntry.AddLine(newLine)
                     i = i + 1
 
-        if (len(self.entry) > 1):
-            if (len(self.entry) > 2):
-                self.simple = False
+            # Exact match found
+            return 'ExactMatch', newEntry
 
-            log = 'Exact match found', 'default'
-            return c.GOOD, log
-
-        # Go for partial match
+        # Go for simple partial match
         newLine = Line()
         newLine.date = l.date
         newLine.hash = l.hash
@@ -168,7 +158,7 @@ class JournalFile():
         newLine.acctF = ''
         newLine.acctS = ''
 
-        # Reversed Amount
+        # Reverse Amount
         if ('-' in l.amnt):
             newLine.amnt = l.amnt.replace('-', '')
         else:
@@ -183,33 +173,30 @@ class JournalFile():
             jAmnt = str(round(jAmnt, 2))
 
             if (jDesc == l.desc) and (jAcct == l.acctF):
-                # Partial match found, load reversed amount and suggested acct
+                # Partial match found, suggested acct
                 newLine.acctF = df.loc[index+1, c.JRNL_ACCT_NAME_F]
                 newLine.acctS = df.loc[index+1, c.JRNL_ACCT_NAME]
 
-        # Append to entry
-        self.entry.append(newLine)
+                # Append to entry
+                newEntry.AddLine(newLine)
+                return 'PartialMatch', newEntry
 
-        if (self.entry[1].acctF != ''):
-            log = 'Partial match found', 'default'
-            return c.GOOD, log
+        # No matches found, append only what we know
+        newEntry.AddLine(newLine)
+        return 'NoMatch', newEntry
 
-        log = 'No match found', 'default'
-        return c.GOOD, log
-
-    def AddEntryToJournal(self):
+    def AddEntryToJournal(self, entry):
         ''' Add current entry to journal '''
         try:
             # Create dataframe using import file data
             df = pd.read_csv(c.JOURNAL_FP)
 
         except FileNotFoundError:
-            log = 'Selected Journal csv file does not exist', 'error'
-            return c.BAD, log
+            return c.BAD
 
         # Add entry
         lineNum = 0
-        for l in self.entry:
+        for l in entry:
             newData = [lineNum, str(l.date), str(l.hash), str(l.desc), str(l.memo),  \
                        str(l.acctF), str(l.acctS), str(l.amnt)]
             lineNum = lineNum + 1
@@ -224,20 +211,115 @@ class JournalFile():
         df = df.sort_values(by=[dateC, descC, hashC, lineC])
 
         df.to_csv(c.JOURNAL_FP, index=False)
-        log = 'Added to journal successfully', 'default'
-        return c.GOOD, log
+        return c.GOOD
 
+
+class Entry():
+    ''' Class to represent the entry in the Journal '''
+
+    entry = []
+    size = 0
+    split = False
+
+    def __init__(self):
+        self.entry = []
+        self.size = 0
+        self.split = False
+
+    def AddLine(self, l: Line):
+        self.entry.append(l)
+        self.size = self.size + 1
+
+        if (self.size > 2):
+            self.split = True
+        else:
+            self.split = False
+
+    def RemoveLine(self, index):
+        if (index >= self.size):
+            return
+
+        self.entry.pop(index)
+        self.size = self.size - 1
+
+        if (self.size > 2):
+            self.split = True
+        else:
+            self.split = False
+
+    def GetHeader(self):
+        # Build Header
+        msg = c.JRNL_LINE
+        for i in range(c.SIZE_LINE_COL-len(c.JRNL_LINE)):
+            msg = msg + ' '
+        msg = msg + c.JRNL_DATE
+        for i in range(c.SIZE_DATE_COL-len(c.JRNL_DATE)):
+            msg = msg + ' '
+        msg = msg + c.JRNL_ID
+        for i in range(c.SIZE_ID_COL-len(c.JRNL_ID)):
+            msg = msg + ' '
+        msg = msg + c.JRNL_DSCRP
+        for i in range(c.SIZE_DESC_COL-len(c.JRNL_DSCRP)):
+            msg = msg + ' '
+        msg = msg + c.JRNL_MEMO
+        for i in range(c.SIZE_MEMO_COL-len(c.JRNL_MEMO)):
+            msg = msg + ' '
+        msg = msg + c.JRNL_ACCT_NAME_F
+        for i in range(c.SIZE_ACCTF_COL-len(c.JRNL_ACCT_NAME_F)):
+            msg = msg + ' '
+        msg = msg + c.JRNL_AMOUNT
+        for i in range(c.SIZE_AMNT_COL-len(c.JRNL_AMOUNT)):
+            msg = msg + ' '
+
+        return msg
+
+    def GetDataAsText(self):
+        # Build entry
+        msg = ''
+        lineNum = 0
+        for j in self.entry:
+            msg = msg + str(lineNum)
+            for i in range(c.SIZE_LINE_COL-len(str(lineNum))):
+                msg = msg + ' '
+            msg = msg + str(j.date)
+            for i in range(c.SIZE_DATE_COL-len(str(j.date))):
+                msg = msg + ' '
+            msg = msg + str(j.hash)
+            for i in range(c.SIZE_ID_COL-len(str(j.hash))):
+                msg = msg + ' '
+            msg = msg + str(j.desc)
+            for i in range(c.SIZE_DESC_COL-len(str(j.desc))):
+                msg = msg + ' '
+            msg = msg + str(j.memo)
+            for i in range(c.SIZE_MEMO_COL-len(str(j.memo))):
+                msg = msg + ' '
+            msg = msg + str(j.acctF)
+            for i in range(c.SIZE_ACCTF_COL-len(str(j.acctF))):
+                msg = msg + ' '
+            msg = msg + str(j.amnt)
+            for i in range(c.SIZE_AMNT_COL-len(str(j.amnt))):
+                msg = msg + ' '
+            msg = msg + '\n'
+            lineNum = lineNum + 1
+
+        return msg
+
+    def __str__(self):
+        msg = self.GetHeader()
+        msg = msg + self.GetDataAsText()
+
+        return msg
 
 class Line():
     ''' Represents a single line of an entry in the journal '''
 
-    date = ' '
-    hash = ' '
-    desc = ' '
-    memo = ' '
-    acctF = ' '
-    acctS = ' '
-    amnt = ' '
+    date  = ''
+    hash  = ''
+    desc  = ''
+    memo  = ''
+    acctF = ''
+    acctS = ''
+    amnt  = ''
 
     def __str__(self):
         return "date=%s, hash=%s, desc=%s, memo=%s, acctF=%s, acctS=%s, "   \

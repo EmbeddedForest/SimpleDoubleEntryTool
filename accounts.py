@@ -113,7 +113,7 @@ class Accounts():
 
         return self.allAcctsShortName[index]
 
-    def IsValid(self, fullAcctName):
+    def IsAccountValid(self, fullAcctName):
         '''
         Checks whether or not given account is valid or not
         Returns 'good' if valid, 'bad' if not.
@@ -122,9 +122,7 @@ class Accounts():
             index = self.allAcctsFullName.index(fullAcctName)
 
         except ValueError:
-            log = 'Associated account does not exist.', 'error'
-            return c.BAD, log
+            return c.BAD
 
         # All Good
-        log = 'Associated account exists', 'default'
-        return c.GOOD, log
+        return c.GOOD
