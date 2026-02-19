@@ -16,8 +16,8 @@
 import tkinter as tk
 from tkinter import ttk
 from PIL import Image, ImageTk
-from journal_file import Line
-from journal_file import Entry
+from entry import Line
+from entry import Entry
 
 
 # Generic Fonts

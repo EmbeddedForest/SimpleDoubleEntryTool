@@ -19,8 +19,8 @@ import constants as c
 from gui import MyGui
 from import_file import ImportFile
 from accounts import Accounts
-from journal_file import Line
-from journal_file import Entry
+from entry import Line
+from entry import Entry
 from journal_file import JournalFile
 
 
