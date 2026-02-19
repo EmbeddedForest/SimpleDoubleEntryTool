@@ -1192,7 +1192,7 @@ class MyGui():
 
     def Update(self, entry: Entry):
         if ((entry.split == False) and (entry.size == 2)):
-            acct = entry.entry[1].acctF
+            acct = entry[1].acctF
             if (acct != ''):
                 self.UpdateSimple(acct)
         elif (entry.split == True):

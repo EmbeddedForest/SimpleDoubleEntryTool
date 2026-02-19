@@ -101,7 +101,7 @@ class JournalFile():
         else:
             return False
 
-    def FindSuggestedEntry(self, newEntry: Entry):
+    def FindSuggestedEntry(self, entry: Entry):
         '''
         Find the last entry that matches the given desc / amnt / acct.
 
@@ -118,10 +118,10 @@ class JournalFile():
             df = pd.read_csv(c.JOURNAL_FP)
 
         except FileNotFoundError:
-            return c.BAD, newEntry
+            return c.BAD, entry
 
         # Grab first line from entry
-        l = newEntry.entry[0]
+        l = entry[0]
 
         # Have a go at exact match first
         for index, row in df.iloc[::-1].iterrows():
@@ -146,11 +146,11 @@ class JournalFile():
                     newLine.acctS = df.loc[index-i, c.JRNL_ACCT_NAME]
                     newLine.amnt = df.loc[index-i, c.JRNL_AMOUNT]
                     tmpHash = df.loc[index+i+1, c.JRNL_ID]
-                    newEntry.AddLine(newLine)
+                    entry.AddLine(newLine)
                     i = i + 1
 
                 # Exact match found
-                return 'ExactMatch', newEntry
+                return 'ExactMatch', entry
 
         # Go for simple partial match
         newLine = Line()
@@ -180,14 +180,14 @@ class JournalFile():
                 newLine.acctS = df.loc[index+1, c.JRNL_ACCT_NAME]
 
                 # Append to entry
-                newEntry.AddLine(newLine)
-                return 'PartialMatch', newEntry
+                entry.AddLine(newLine)
+                return 'PartialMatch', entry
 
         # No matches found, append only what we know
-        newEntry.AddLine(newLine)
-        return 'NoMatch', newEntry
+        entry.AddLine(newLine)
+        return 'NoMatch', entry
 
-    def AddEntryToJournal(self, entry):
+    def AddEntryToJournal(self, entry: Entry):
         ''' Add current entry to journal '''
         try:
             # Create dataframe using import file data
