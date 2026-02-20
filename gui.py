@@ -751,65 +751,67 @@ class MyGui():
         )
 
         # Scrollable frame
-        sf = ScrollableFrame(splitTab)
+        self.sf = ScrollableFrame(splitTab)
 
-        # Define grid
-        for i in range(37):
-            sf.canvas.columnconfigure(i, minsize=self.COL_SIZE, weight=0)
-            sf.scrollableFrame.columnconfigure(i, minsize=self.COL_SIZE, weight=0)
-        for i in range(13):
-            sf.canvas.rowconfigure(i, minsize=self.ROW_SIZE, weight=0)
-            sf.scrollableFrame.rowconfigure(i, minsize=self.ROW_SIZE, weight=0)
-
-        # I guess we have to place everything to make it work
-        sf.grid(
+        # Place sf - idk if this is necessary??
+        self.sf.grid(
             row        =1,
-            column     =0,
-            rowspan    =13,
-            columnspan =37,
+            column     =5,
+            rowspan    =11,
+            columnspan =27,
             sticky     ='nesw'
         )
-        sf.scrollableFrame.grid(
-            row        =1,
-            column     =0,
-            rowspan    =13,
-            columnspan =37,
-            sticky     ='nesw'
-        )
-        sf.canvas.grid(
+        for i in range(27):
+            self.sf.columnconfigure(i, minsize=self.COL_SIZE, weight=0)
+        for i in range(11):
+            self.sf.rowconfigure(i, minsize=self.ROW_SIZE, weight=0)
+
+        # Place canvas in sf
+        self.sf.canvas.grid(
             row        =0,
             column     =0,
-            rowspan    =13,
-            columnspan =37,
+            rowspan    =11,
+            columnspan =27,
             sticky     ='nesw'
         )
-        sf.scrollbar.grid(
+
+        # Place scrollbar in sf
+        self.sf.scrollbar.grid(
             row        =0,
-            column     =37,
-            rowspan    =13,
+            column     =27,
+            rowspan    =11,
             columnspan =1,
+            sticky     ='ens'
+        )
+
+        for i in range(27):
+            self.sf.canvas.columnconfigure(i, minsize=self.COL_SIZE, weight=0)
+        for i in range(11):
+            self.sf.canvas.rowconfigure(i, minsize=self.ROW_SIZE, weight=0)
+
+        # Place frame inside canvas
+        self.sf.scrollableFrame.grid(
+            row        =1,
+            column     =1,
+            rowspan    =9,
+            columnspan =25,
             sticky     ='nesw'
         )
+        for i in range(25):
+            self.sf.canvas.columnconfigure(i, minsize=self.COL_SIZE, weight=0)
+        for i in range(9):
+            self.sf.canvas.rowconfigure(i, minsize=self.ROW_SIZE, weight=0)
+
 
         # Memo List
-        self.memoList = []
+        self.rows = []
+
+        # Create first two rows in split tab
+        for _ in range(5):
+            self._AddSplitRow()
 
 
-        self.defaultmemo = tk.StringVar(value='')
-        tmp = tk.Entry(
-            sf.scrollableFrame,
-            textvariable    =self.defaultmemo,
-            font            =FONT_BOXES,
-            width           =49,
-            justify         ='left'
-        )
-        tmp.grid(
-            row             =0,
-            column          =3,
-            sticky          ='w',
-            rowspan         =1,
-            columnspan      =13
-        )
+        print(self.rows)
 
 
         #----------------------------------------------------------------------
@@ -1009,6 +1011,63 @@ class MyGui():
             )
 
         self.root.bind('<<NotebookTabChanged>>', self._TabChanged)
+
+    # -------------------------------------------------------------------------
+    def _AddSplitRow(self):
+        rowIndex = len(self.rows)
+
+        # Memo
+        memoStr = tk.StringVar(value='')
+        memoBox = tk.Entry(
+            self.sf.scrollableFrame,
+            textvariable    =memoStr,
+            font            =FONT_BOXES,
+            width           =32,
+            justify         ='left'
+        )
+        memoBox.grid(
+            row             =rowIndex,
+            column          =0,
+            sticky          ='w',
+            rowspan         =1,
+            columnspan      =8
+        )
+
+        # Account
+        acctStr = tk.StringVar(value='')
+        acctBox = tk.Entry(
+            self.sf.scrollableFrame,
+            textvariable    =acctStr,
+            font            =FONT_BOXES,
+            width           =52,
+            justify         ='left'
+        )
+        acctBox.grid(
+            row             =rowIndex,
+            column          =10,
+            sticky          ='w',
+            rowspan         =1,
+            columnspan      =12
+        )
+
+        # Amount
+        amntStr = tk.StringVar(value='')
+        amntBox = tk.Entry(
+            self.sf.scrollableFrame,
+            textvariable    =acctStr,
+            font            =FONT_BOXES,
+            width           =12,
+            justify         ='left'
+        )
+        amntBox.grid(
+            row             =rowIndex,
+            column          =24,
+            sticky          ='w',
+            rowspan         =1,
+            columnspan      =3
+        )
+
+        self.rows.append((memoStr, memoBox, acctStr, acctBox, amntStr, amntBox))
 
     # -------------------------------------------------------------------------
     def _TabChanged(self, event):
