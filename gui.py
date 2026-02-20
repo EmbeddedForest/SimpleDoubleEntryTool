@@ -40,11 +40,13 @@ class MyGui():
     selectedAcct = ''
     simpleEntry = True
 
+    # -------------------------------------------------------------------------
     def __init__(self):
         self.root = tk.Tk()
         self._BuildGui()
         self._BindEvents()
 
+    # -------------------------------------------------------------------------
     def _BuildGui(self):
         root = self.root
 
@@ -700,6 +702,115 @@ class MyGui():
         splitTab = tk.Frame(self.notebook)
         self.notebook.add(splitTab, text='Split Entry')
 
+        # Define grid
+        for i in range(37):
+            splitTab.columnconfigure(i, minsize=self.COL_SIZE, weight=0)
+        for i in range(13):
+            splitTab.rowconfigure(i, minsize=self.ROW_SIZE, weight=0)
+
+        # Memo Label
+        tmp = tk.Label(
+            splitTab,
+            text       ='Memo:',
+            font       =FONT_LABEL
+        )
+        tmp.grid(
+            row        =0,
+            column     =3,
+            rowspan    =1,
+            columnspan =3,
+            sticky     ='w'
+        )
+
+        # Account Label
+        tmp = tk.Label(
+            splitTab,
+            text       ='Account:',
+            font       =FONT_LABEL
+        )
+        tmp.grid(
+            row        =0,
+            column     =17,
+            rowspan    =1,
+            columnspan =3,
+            sticky     ='w'
+        )
+
+        # Amount Label
+        tmp = tk.Label(
+            splitTab,
+            text       ='Amount:',
+            font       =FONT_LABEL
+        )
+        tmp.grid(
+            row        =0,
+            column     =33,
+            rowspan    =1,
+            columnspan =3,
+            sticky     ='w'
+        )
+
+        # Scrollable frame
+        sf = ScrollableFrame(splitTab)
+
+        # Define grid
+        for i in range(37):
+            sf.canvas.columnconfigure(i, minsize=self.COL_SIZE, weight=0)
+            sf.scrollableFrame.columnconfigure(i, minsize=self.COL_SIZE, weight=0)
+        for i in range(13):
+            sf.canvas.rowconfigure(i, minsize=self.ROW_SIZE, weight=0)
+            sf.scrollableFrame.rowconfigure(i, minsize=self.ROW_SIZE, weight=0)
+
+        # I guess we have to place everything to make it work
+        sf.grid(
+            row        =1,
+            column     =0,
+            rowspan    =13,
+            columnspan =37,
+            sticky     ='nesw'
+        )
+        sf.scrollableFrame.grid(
+            row        =1,
+            column     =0,
+            rowspan    =13,
+            columnspan =37,
+            sticky     ='nesw'
+        )
+        sf.canvas.grid(
+            row        =0,
+            column     =0,
+            rowspan    =13,
+            columnspan =37,
+            sticky     ='nesw'
+        )
+        sf.scrollbar.grid(
+            row        =0,
+            column     =37,
+            rowspan    =13,
+            columnspan =1,
+            sticky     ='nesw'
+        )
+
+        # Memo List
+        self.memoList = []
+
+
+        self.defaultmemo = tk.StringVar(value='')
+        tmp = tk.Entry(
+            sf.scrollableFrame,
+            textvariable    =self.defaultmemo,
+            font            =FONT_BOXES,
+            width           =49,
+            justify         ='left'
+        )
+        tmp.grid(
+            row             =0,
+            column          =3,
+            sticky          ='w',
+            rowspan         =1,
+            columnspan      =13
+        )
+
 
         #----------------------------------------------------------------------
         # Root Buttons
@@ -815,58 +926,7 @@ class MyGui():
             font        =('consolas', 7)
         )
 
-        # #----------------------------------------------------------------------
-        # # Split Frame
-        # #----------------------------------------------------------------------
-        # # Split Amount Box
-        # self.splitAmnt = tk.StringVar(value='')
-        # tmp = tk.Entry(
-        #     root,
-        #     textvariable    =self.splitAmnt,
-        #     font            =FONT_NOTES,
-        #     width           =16,
-        #     justify         ='left'
-        # )
-        # tmp.grid(
-        #     row             =19,
-        #     column          =33,
-        #     sticky          ='w',
-        #     rowspan         =1,
-        #     columnspan      =3
-        # )
-
-        # # Add Split Button
-        # self.addSplitButton = tk.Button(
-        #     root,
-        #     text        ='Add Split',
-        #     font        =FONT_LABEL
-        # )
-        # self.addSplitButton.grid(
-        #     row         =19,
-        #     column      =36,
-        #     sticky      ='nesw',
-        #     padx        =5,
-        #     pady        =0,
-        #     rowspan     =1,
-        #     columnspan  =3
-        # )
-
-        # # Undo Split Button
-        # self.undoSplitButton = tk.Button(
-        #     root,
-        #     text        ='Undo',
-        #     font        =FONT_LABEL
-        # )
-        # self.undoSplitButton.grid(
-        #     row         =19,
-        #     column      =39,
-        #     sticky      ='nesw',
-        #     padx        =5,
-        #     pady        =0,
-        #     rowspan     =1,
-        #     columnspan  =3
-        # )
-
+    # -------------------------------------------------------------------------
     def _BindEvents(self):
         self.assCatBox.bind('<ButtonRelease-1>',
             lambda event: self._UpdateCategories(
@@ -950,7 +1010,7 @@ class MyGui():
 
         self.root.bind('<<NotebookTabChanged>>', self._TabChanged)
 
-
+    # -------------------------------------------------------------------------
     def _TabChanged(self, event):
         tabIndex = self.notebook.index('current')
         if (tabIndex == 0):
@@ -958,6 +1018,7 @@ class MyGui():
         else:
             self.simpleEntry = False
 
+    # -------------------------------------------------------------------------
     def _LoadAccounts(self, catBox: tk.Text, selBox: tk.Text, dic: dict):
         ''' Helper to load accounts into boxes for first time '''
         # Clear boxes
@@ -981,6 +1042,7 @@ class MyGui():
             item = item + '\n'
             selBox.insert('end', item)
 
+    # -------------------------------------------------------------------------
     def _ClearSelections(self, skip=''):
         if (skip != 'ass'):
             self.assSelBox.delete('1.0', 'end')
@@ -1006,6 +1068,7 @@ class MyGui():
                 self.expSelBox.insert('end', acct)
                 self.expSelBox.insert('end', '\n')
 
+    # -------------------------------------------------------------------------
     def _UpdateCategories(self, event, catBox, selBox, dic, who):
         # Get selected category
         selCat = catBox.get("insert linestart", "insert lineend")
@@ -1041,6 +1104,7 @@ class MyGui():
         if (who == 'exp'):
             self.curExpCat = selCat
 
+    # -------------------------------------------------------------------------
     def _UpdateSelections(self, event, selBox, dic, curCat, who):
         # Get selected account
         selAcct = selBox.get("insert linestart", "insert lineend")
@@ -1077,6 +1141,7 @@ class MyGui():
         acct = acct + ':' + curCat + ':' + selAcct
         self.selectedAcct = acct
 
+    # -------------------------------------------------------------------------
     def UpdateSimple(self, acctNameFull):
         # Get category
         tmp = acctNameFull.split(':')
@@ -1110,7 +1175,6 @@ class MyGui():
             dic = self.expDic
             self.curExpCat = selCat
 
-
         # Clear both the category box and selection box
         catBox.delete('1.0', 'end')
         selBox.delete('1.0', 'end')
@@ -1142,13 +1206,15 @@ class MyGui():
         # Clear memo
         self.memo.set('')
 
-
+    # -------------------------------------------------------------------------
     def LoadImportDropdown(self, list):
         self.importDropdown['values'] = list
 
+    # -------------------------------------------------------------------------
     def LoadAssAcctDropdown(self, list):
         self.assAcctDropdown['values'] = list
 
+    # -------------------------------------------------------------------------
     def LoadAssets(self, dic):
         self._LoadAccounts(self.assCatBox, self.assSelBox, dic)
 
@@ -1156,6 +1222,7 @@ class MyGui():
         self.curAssCat = firstCat
         self.assDic = dic
 
+    # -------------------------------------------------------------------------
     def LoadIncome(self, dic):
         self._LoadAccounts(self.incCatBox, self.incSelBox, dic)
 
@@ -1163,6 +1230,7 @@ class MyGui():
         self.incDic = dic
         self.curIncCat = firstCat
 
+    # -------------------------------------------------------------------------
     def LoadLiabilities(self, dic):
         self._LoadAccounts(self.liaCatBox, self.liaSelBox, dic)
 
@@ -1170,6 +1238,7 @@ class MyGui():
         self.liaDic = dic
         self.curLiaCat = firstCat
 
+    # -------------------------------------------------------------------------
     def LoadExpenses(self, dic):
         self._LoadAccounts(self.expCatBox, self.expSelBox, dic)
 
@@ -1177,6 +1246,7 @@ class MyGui():
         self.expDic = dic
         self.curExpCat = firstCat
 
+    # -------------------------------------------------------------------------
     def Log(self, txt, tag='default'):
         '''
         Logs information to GUI preview box
@@ -1190,6 +1260,7 @@ class MyGui():
         self.previewBox.insert('end', txt, tag)
         self.previewBox.insert('end', '\n', tag)
 
+    # -------------------------------------------------------------------------
     def Update(self, entry: Entry):
         if ((entry.split == False) and (entry.size == 2)):
             acct = entry[1].acctF
@@ -1204,3 +1275,62 @@ class MyGui():
         self.Log(txt, 'header')
         txt = entry.GetDataAsText()
         self.Log(txt, 'default')
+
+
+
+
+
+class ScrollableFrame(ttk.Frame):
+    ''' Class to extend a tkinter frame to be scrollable '''
+
+    # -------------------------------------------------------------------------
+    def __init__(self, container, *args, **kwargs):
+        super().__init__(container, *args, **kwargs)
+
+        # Create a canvas inside of given frame
+        self.canvas = tk.Canvas(self, borderwidth=0)
+
+        # Create scrollbar inside of given frame
+        self.scrollbar = ttk.Scrollbar(
+            self,
+            orient="vertical",
+            command=self.canvas.yview
+        )
+
+        # Create a frame inside of the canvas
+        self.scrollableFrame = ttk.Frame(self.canvas)
+
+        # Create a window on the canvas
+        id = self.canvas.create_window((0, 0))
+
+        # Place the frame onto the canvas
+        self.canvas.itemconfigure(id, window=self.scrollableFrame, anchor="nw")
+
+        # Save ID for later use
+        self.id = id
+
+        # Setup the canvas to scroll
+        self.canvas.configure(yscrollcommand=self.scrollbar.set)
+
+        # Bind events
+        self.scrollableFrame.bind('<Configure>', self._HandleConfigureEvent)
+        self.canvas.bind_all("<MouseWheel>", self._HandleMouseWheelEvent)
+
+    # -------------------------------------------------------------------------
+    def _HandleConfigureEvent(self, event):
+        self.canvas.configure(scrollregion=self.canvas.bbox("all"))
+
+    # -------------------------------------------------------------------------
+    def _HandleMouseWheelEvent(self, event):
+        self.canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
+        print('balls')
+
+
+# class SplitLine():
+
+#     memo = []
+#     account = []
+
+#     def __init__(self):
+#         pass
+
