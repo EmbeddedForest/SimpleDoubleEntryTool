@@ -41,6 +41,7 @@ class MyGui():
 
     selectedAcct = ''
     simpleEntry = True
+    stopScroll = False
 
     # -------------------------------------------------------------------------
     def __init__(self):
@@ -992,7 +993,6 @@ class MyGui():
     def _AddSplitRow(self):
         rowIndex = len(self.rows)
 
-
         tmp = tk.Label(self.scrollFrame, text=rowIndex)
         tmp.grid(
             row        =rowIndex,
@@ -1009,7 +1009,8 @@ class MyGui():
             textvariable    =acctStr,
             font            =FONT_BOXES,
             width           =37,
-            state           ='readonly'
+            state           ='readonly',
+            postcommand     =self._CanvasScrollStop
         )
         acctBox.grid(
             row             =rowIndex,
@@ -1053,7 +1054,30 @@ class MyGui():
             columnspan      =5
         )
 
+        # Prevent scrolling while hovering
+        acctBox.bind('<MouseWheel>', self._StopScrollOnHover)
+
+        # Resume scroll if acct selected
+        acctBox.bind('<<ComboboxSelected>>', self._CanvasScrollStart)
+
+        # Resume scroll if dropdown closed / arrow pressed
+        acctBox.bind('<ButtonRelease-1>', self._CanvasScrollStart)
+
+        # TODO - figure out a way to resume scroll when user clicks away
+
         self.rows.append((memoStr, memoBox, acctStr, acctBox, amntStr, amntBox))
+
+    # -------------------------------------------------------------------------
+    def _CanvasScrollStop(self):
+        self.stopScroll = True
+
+    # -------------------------------------------------------------------------
+    def _CanvasScrollStart(self, event):
+        self.stopScroll = False
+
+    # -------------------------------------------------------------------------
+    def _StopScrollOnHover(self, event):
+        return 'break'
 
     # -------------------------------------------------------------------------
     def _TabChanged(self, event):
@@ -1330,66 +1354,13 @@ class MyGui():
 
     # -------------------------------------------------------------------------
     def _HandleConfigureEvent(self, event):
+        if (self.stopScroll == True):
+            return
         self.canvas.configure(scrollregion=self.canvas.bbox(self.scrollFrameId))
 
     # -------------------------------------------------------------------------
     def _HandleMouseWheelEvent(self, event):
+        if (self.stopScroll == True):
+            return
         self.canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
-        print('balls')
-
-
-class ScrollableFrame(ttk.Frame):
-    ''' Class to extend a tkinter frame to be scrollable '''
-
-    # -------------------------------------------------------------------------
-    def __init__(self, container, *args, **kwargs):
-        super().__init__(container, *args, **kwargs)
-
-        # Create a canvas inside of given frame
-        self.canvas = tk.Canvas(self, borderwidth=5)
-
-        # Create scrollbar inside of given frame
-        self.scrollbar = ttk.Scrollbar(
-            self,
-            orient="vertical",
-            command=self.canvas.yview
-        )
-
-        # Create a frame inside of the canvas
-        self.scrollableFrame = ttk.Frame(self.canvas)
-
-        # Create a window on the canvas
-        id = self.canvas.create_window((0, 0))
-
-        # Place the frame onto the canvas
-        self.canvas.itemconfigure(id, window=self.scrollableFrame, anchor="nw")
-
-        # Save ID for later use
-        self.id = id
-
-        # Setup the canvas to scroll
-        self.canvas.configure(yscrollcommand=self.scrollbar.set)
-
-        # Bind events
-        self.scrollableFrame.bind('<Configure>', self._HandleConfigureEvent)
-        self.canvas.bind_all("<MouseWheel>", self._HandleMouseWheelEvent)
-
-    # -------------------------------------------------------------------------
-    def _HandleConfigureEvent(self, event):
-        self.canvas.configure(scrollregion=self.canvas.bbox("all"))
-
-    # -------------------------------------------------------------------------
-    def _HandleMouseWheelEvent(self, event):
-        event
-        self.canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
-        print('balls')
-
-
-# class SplitLine():
-
-#     memo = []
-#     account = []
-
-#     def __init__(self):
-#         pass
 
