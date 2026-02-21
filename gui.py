@@ -27,6 +27,8 @@ FONT_BOXES    = ('Calibri', 10)
 FONT_CHOICES  = ('Calibri', 8)
 FONT_SELECTED = ('Calibri', 8, 'bold')
 
+WSCALE = 4
+
 
 class MyGui():
     ''' Class to hold all GUI functionality '''
@@ -59,30 +61,74 @@ class MyGui():
         for i in range(self.NUM_ROWS):
             root.rowconfigure(i, minsize=self.ROW_SIZE, weight=2)
 
+        self._BuildTitleFrame()
+        self._BuildSetupFrame()
+        self._BuildDataFrame()
+        self._BuildPreviewFrame()
+
         #----------------------------------------------------------------------
-        # Title Frame
+        # Create Notebook
         #----------------------------------------------------------------------
-        # Frame
-        titleFrame = tk.LabelFrame(
+        # Notebook
+        self.notebook = ttk.Notebook(
             self.root
         )
-        titleFrame.grid(
-            row        =1,
-            column     =2,
-            rowspan    =5,
-            columnspan =13,
+        self.notebook.grid(
+            row        =14,
+            column     =1,
+            rowspan    =13,
+            columnspan =37,
             sticky     ='nesw'
         )
 
-        # Define grid
-        for i in range(13):
-            titleFrame.columnconfigure(i, minsize=self.COL_SIZE, weight=0)
-        for i in range(5):
-            titleFrame.rowconfigure(i, minsize=self.ROW_SIZE, weight=0)
+        self._BuildSimpleEntryTab()
+        self._BuildSplitEntryTab()
+
+        #----------------------------------------------------------------------
+        # Root Buttons
+        #----------------------------------------------------------------------
+        # Add Entry Button
+        self.addEntryButton = tk.Button(
+            root,
+            text        ='Add Entry',
+            font        =FONT_LABEL
+        )
+        self.addEntryButton.grid(
+            row         =28,
+            column      =12,
+            sticky      ='nesw',
+            padx        =10,
+            pady        =0,
+            rowspan     =2,
+            columnspan  =6
+        )
+
+        # Redo Entry Button
+        self.redoButton = tk.Button(
+            root,
+            text        ='Redo Entry',
+            font        =FONT_LABEL
+        )
+        self.redoButton.grid(
+            row         =28,
+            column      =21,
+            sticky      ='nesw',
+            padx        =10,
+            pady        =0,
+            rowspan     =2,
+            columnspan  =6
+        )
+
+    # -------------------------------------------------------------------------
+    # Title Frame
+    # -------------------------------------------------------------------------
+    def _BuildTitleFrame(self):
+        # Frame
+        f = self._FrameHelper(self.root, 1, 2, 5, 13)
 
         # Title 1
         tmp = tk.Label(
-            titleFrame,
+            f,
             text       ='S-DET',
             font       =('Calibri', 32, 'bold italic')
         )
@@ -96,7 +142,7 @@ class MyGui():
 
         # Title 2
         tmp = tk.Label(
-            titleFrame,
+            f,
             text       ='A Simple Double Entry Tool',
             font       =('Calibri', 12, 'italic')
         )
@@ -110,150 +156,119 @@ class MyGui():
 
         # Logo
         logo = ImageTk.PhotoImage(Image.open('tree.png'))
-        tmp = tk.Label(titleFrame, image=logo)
-        tmp.image = logo
+        tmp = tk.Label(f, image=logo)
+        tmp.image = logo    # Necessary bc of python garabge collection
         tmp.grid(row=0, column=0, sticky='nesw', rowspan=5, columnspan=4)
 
-
-        #----------------------------------------------------------------------
-        # Setup Frame
-        #----------------------------------------------------------------------
+    # -------------------------------------------------------------------------
+    # Setup Frame
+    # -------------------------------------------------------------------------
+    def _BuildSetupFrame(self):
         # Frame
-        setupFrame = tk.LabelFrame(
-            self.root,
-        )
-        setupFrame.grid(
-            row        =1,
-            column     =17,
-            rowspan    =5,
-            columnspan =21,
-            sticky     ='nesw'
-        )
-
-        # Define grid
-        for i in range(21):
-            setupFrame.columnconfigure(i, minsize=self.COL_SIZE, weight=0)
-        for i in range(5):
-            setupFrame.rowconfigure(i, minsize=self.ROW_SIZE, weight=0)
+        f = self._FrameHelper(self.root, 1, 17, 5, 21)
 
         # Setup Label
         tmp = tk.Label(
-            setupFrame,
-            text       ='Setup',
-            font       =FONT_FRAME
+            f,
+            text        ='Setup',
+            font        =FONT_FRAME
         )
         tmp.grid(
-            row        =0,
-            column     =0,
-            rowspan    =1,
-            columnspan =5,
-            sticky     ='w'
+            row         =0,
+            column      =0,
+            rowspan     =1,
+            columnspan  =5,
+            sticky      ='w'
         )
 
         # Import File Label
         tmp = tk.Label(
-            setupFrame,
-            text       ='Import File:',
-            font       =FONT_LABEL
+            f,
+            text        ='Import File:',
+            font        =FONT_LABEL
         )
         tmp.grid(
-            row        =1,
-            column     =0,
-            rowspan    =1,
-            columnspan =5,
-            sticky     ='e'
+            row         =1,
+            column      =0,
+            rowspan     =1,
+            columnspan  =5,
+            sticky      ='e'
         )
 
         # Associated Account Label
         tmp = tk.Label(
-            setupFrame,
-            text       ='Associated Account:',
-            font       =FONT_LABEL
+            f,
+            text        ='Associated Account:',
+            font        =FONT_LABEL
         )
         tmp.grid(
-            row        =3,
-            column     =0,
-            rowspan    =1,
-            columnspan =5,
-            sticky     ='e'
+            row         =3,
+            column      =0,
+            rowspan     =1,
+            columnspan  =5,
+            sticky      ='e'
         )
 
         # Import Dropdown
         self.selectedImportFile = tk.StringVar()
         self.importDropdown = ttk.Combobox(
-            setupFrame,
+            f,
             textvariable    =self.selectedImportFile,
             font            =FONT_BOXES,
-            width           =44,
+            width           =int(11*WSCALE),
             state           ='readonly'
         )
         self.importDropdown.grid(
             row             =1,
             column          =5,
-            sticky          ='w',
             rowspan         =1,
-            columnspan      =11
+            columnspan      =11,
+            sticky          ='w'
         )
 
         # Associated Account Dropdown
         self.selectedAssAcct = tk.StringVar()
         self.assAcctDropdown = ttk.Combobox(
-            setupFrame,
+            f,
             textvariable    =self.selectedAssAcct,
             font            =FONT_BOXES,
-            width           =44,
+            width           =int(11*WSCALE),
             state           ='readonly'
         )
         self.assAcctDropdown.grid(
             row             =3,
             column          =5,
-            sticky          ='w',
             rowspan         =1,
-            columnspan      =11
+            columnspan      =11,
+            sticky          ='w',
         )
 
         # Start Button
         self.startButton = tk.Button(
-            setupFrame,
+            f,
             text        ='Start',
             font        =FONT_LABEL
         )
         self.startButton.grid(
             row         =1,
             column      =16,
-            sticky      ='nesw',
+            rowspan     =3,
+            columnspan  =5,
             padx        =20,
             pady        =10,
-            rowspan     =3,
-            columnspan  =5
+            sticky      ='nesw'
         )
 
-
-        #----------------------------------------------------------------------
-        # Data Frame
-        #----------------------------------------------------------------------
+    # -------------------------------------------------------------------------
+    # Data Frame
+    # -------------------------------------------------------------------------
+    def _BuildDataFrame(self):
         # Frame
-        dataFrame = tk.LabelFrame(
-            self.root,
-            borderwidth=5
-        )
-        dataFrame.grid(
-            row        =8,
-            column     =7,
-            rowspan    =4,
-            columnspan =25,
-            sticky     ='nesw'
-        )
-
-        # Define grid
-        for i in range(25):
-            dataFrame.columnconfigure(i, minsize=self.COL_SIZE, weight=0)
-        for i in range(4):
-            dataFrame.rowconfigure(i, minsize=self.ROW_SIZE, weight=0)
+        f = self._FrameHelper(self.root, 8, 7, 4, 25)
 
         # Transaction Data Label
         tmp = tk.Label(
-            dataFrame,
+            f,
             text       ='Transaction Data',
             font       =FONT_FRAME
         )
@@ -267,7 +282,7 @@ class MyGui():
 
         # Date Label
         tmp = tk.Label(
-            dataFrame,
+            f,
             text       ='Date:',
             font       =FONT_LABEL
         )
@@ -281,7 +296,7 @@ class MyGui():
 
         # Description Label
         tmp = tk.Label(
-            dataFrame,
+            f,
             text       ='Description:',
             font       =FONT_LABEL
         )
@@ -295,7 +310,7 @@ class MyGui():
 
         # Amount Label
         tmp = tk.Label(
-            dataFrame,
+            f,
             text       ='Amount:',
             font       =FONT_LABEL
         )
@@ -310,7 +325,7 @@ class MyGui():
         # Date Box
         self.displayDate = tk.StringVar(value='')
         tmp = tk.Entry(
-            dataFrame,
+            f,
             textvariable    =self.displayDate,
             font            =FONT_BOXES,
             width           =12,
@@ -328,7 +343,7 @@ class MyGui():
         # Description Box
         self.displayDescription = tk.StringVar(value=' ')
         tmp = tk.Entry(
-            dataFrame,
+            f,
             textvariable    =self.displayDescription,
             font            =FONT_BOXES,
             width           =64,
@@ -346,7 +361,7 @@ class MyGui():
         # Amount Box
         self.displayAmount = tk.StringVar(value=' ')
         tmp = tk.Entry(
-            dataFrame,
+            f,
             textvariable    =self.displayAmount,
             font            =FONT_BOXES,
             width           =12,
@@ -361,23 +376,74 @@ class MyGui():
             columnspan      =3
         )
 
+    # -------------------------------------------------------------------------
+    # Preview Frame
+    # -------------------------------------------------------------------------
+    def _BuildPreviewFrame(self):
+        # Frame
+        f = self._FrameHelper(self.root, 31, 1, 9, 37)
 
-        #----------------------------------------------------------------------
-        # Simple Entry Tab
-        #----------------------------------------------------------------------
-        # Notebook
-        self.notebook = ttk.Notebook(
-            self.root
+        # Preview Label
+        tmp = tk.Label(
+            f,
+            text       ='Preview',
+            font       =FONT_FRAME
         )
-        self.notebook.grid(
-            row        =14,
-            column     =1,
-            rowspan    =13,
-            columnspan =37,
-            sticky     ='nesw'
+        tmp.grid(
+            row        =0,
+            column     =0,
+            rowspan    =1,
+            columnspan =5,
+            sticky     ='w'
         )
 
-        # Simple Entry Tab Frame
+        # Preview box
+        self.previewBox = tk.Text(
+            f,
+            font        =FONT_BOXES,
+            width       =15,
+            height      =8
+        )
+        self.previewBox.grid(
+            row         =1,
+            column      =1,
+            sticky      ='nsew',
+            rowspan     =7,
+            columnspan  =35
+        )
+
+        # Scroll bar for preview box
+        logScroll = tk.Scrollbar(
+            f,
+            orient      ='vertical',
+            command     =self.previewBox.yview
+        )
+        self.previewBox.configure(yscrollcommand=logScroll.set)
+
+        # Tags for different text types for log box
+        self.previewBox.tag_configure(
+            'header',
+            background  ='white',
+            foreground  ='black',
+            font        =('consolas', 7, 'bold')
+        )
+        self.previewBox.tag_configure(
+            'default',
+            background  ='white',
+            foreground  ='black',
+            font        =('consolas', 7)
+        )
+        self.previewBox.tag_configure(
+            'error',
+            background  ='white',
+            foreground  ='red',
+            font        =('consolas', 7)
+        )
+
+    # -------------------------------------------------------------------------
+    # Simple Entry Tab
+    # -------------------------------------------------------------------------
+    def _BuildSimpleEntryTab(self):
         simpleTab = tk.Frame(self.notebook)
         self.notebook.add(simpleTab, text='Simple Entry')
 
@@ -693,11 +759,10 @@ class MyGui():
             columnspan      =12
         )
 
-
-        #----------------------------------------------------------------------
-        # Split Entry Tab
-        #----------------------------------------------------------------------
-        # Split Tab
+    # -------------------------------------------------------------------------
+    # Split Entry Tab
+    # -------------------------------------------------------------------------
+    def _BuildSplitEntryTab(self):
         splitTab = ttk.Frame(self.notebook)
         self.notebook.add(splitTab, text='Split Entry')
 
@@ -796,263 +861,6 @@ class MyGui():
         self.scrollFrame.bind('<Configure>', self._HandleConfigureEvent, add='+')
         self.canvas.bind_all("<MouseWheel>", self._HandleMouseWheelEvent, add='+')
 
-
-        # for i in range(30):
-        #     tmp = tk.Label(self.scrollFrame, text=f"Button {i}", bg='blue')
-        #     tmp.grid(
-        #         row        =i,
-        #         column     =0,
-        #         rowspan    =1,
-        #         columnspan =5,
-        #         sticky     ='w'
-        #     )
-
-        # # Test
-        # tmp = tk.Label(
-        #     self.scrollFrame,
-        #     text       ='Test:',
-        #     font       =FONT_LABEL,
-        #     bg         ='blue'
-        # )
-        # tmp.grid(
-        #     row        =0,
-        #     column     =0,
-        #     rowspan    =11,
-        #     columnspan =27,
-        #     sticky     ='nesw'
-        # )
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        # # Define grid
-        # for i in range(13):
-        #     self.canvas.rowconfigure(i, minsize=self.ROW_SIZE, weight=0)
-        # for i in range(37):
-        #     self.canvas.columnconfigure(i, minsize=self.COL_SIZE, weight=0)
-
-        # self.canvas.grid(
-        #     row        =0,
-        #     column     =0,
-        #     rowspan    =13,
-        #     columnspan =37,
-        #     sticky     ='nesw'
-        # )
-
-        # # Test
-        # tmp = tk.Label(
-        #     self.canvas,
-        #     text       ='Test 2:',
-        #     font       =FONT_LABEL,
-        #     bg         ='blue'
-        # )
-        # tmp.grid(
-        #     row        =0,
-        #     column     =0,
-        #     rowspan    =5,
-        #     columnspan =37,
-        #     sticky     ='nesw'
-        # )
-
-        # # Create scrollbar inside of splitframe
-        # self.scrollbar = ttk.Scrollbar(
-        #     splitTab,
-        #     orient="vertical",
-        #     command=self.canvas.yview
-        # )
-
-        # # Create a frame inside of the canvas
-        # self.scrollableFrame = ttk.Frame(self.canvas)
-
-        # # Create a window on the canvas
-        # id = self.canvas.create_window((0, 0))
-
-        # # Place the frame onto the canvas
-        # self.canvas.itemconfigure(id, window=self.scrollableFrame, anchor="nw")
-
-        # # Define grid
-        # for i in range(13):
-        #     self.scrollableFrame.rowconfigure(i, minsize=self.ROW_SIZE, weight=0)
-        # for i in range(37):
-        #     self.scrollableFrame.columnconfigure(i, minsize=self.COL_SIZE, weight=0)
-
-        # # Test
-        # tmp = tk.Label(
-        #     self.scrollableFrame,
-        #     text       ='Test 3:',
-        #     font       =FONT_LABEL,
-        #     bg         ='gray'
-        # )
-        # tmp.grid(
-        #     row        =0,
-        #     column     =0,
-        #     rowspan    =13,
-        #     columnspan =37,
-        #     sticky     ='nesw'
-        # )
-
-        # # Save ID for later use
-        # self.id = id
-
-        # # Setup the canvas to scroll
-        # self.canvas.configure(yscrollcommand=self.scrollbar.set)
-
-        # # Bind events
-        # self.scrollableFrame.bind('<Configure>', self._HandleConfigureEvent)
-        # self.canvas.bind_all("<MouseWheel>", self._HandleMouseWheelEvent)
-
-
-
-
-
-
-
-        # # Scrollable frame
-        # self.sf = ScrollableFrame(splitTab)
-
-        # # Place sf - idk if this is necessary??
-        # self.sf.grid(
-        #     row        =1,
-        #     column     =1,
-        #     rowspan    =11,
-        #     columnspan =35,
-        #     sticky     ='nesw'
-        # )
-
-        # for i in range(11):
-        #     self.sf.rowconfigure(i, minsize=self.ROW_SIZE, weight=0)
-        # for i in range(35):
-        #     self.sf.columnconfigure(i, minsize=self.COL_SIZE, weight=0)
-
-        # # Test
-        # tmp = tk.Label(
-        #     self.sf,
-        #     text       ='Test 2:',
-        #     font       =FONT_LABEL,
-        #     bg         ='blue'
-        # )
-        # tmp.grid(
-        #     row        =0,
-        #     column     =0,
-        #     rowspan    =11,
-        #     columnspan =35,
-        #     sticky     ='nesw'
-        # )
-
-
-        # # Place canvas in sf
-        # self.sf.canvas.grid(
-        #     row        =1,
-        #     column     =1,
-        #     rowspan    =9,
-        #     columnspan =33,
-        #     sticky     ='nesw'
-        # )
-
-        # for i in range(8):
-        #     self.sf.canvas.rowconfigure(i, minsize=self.ROW_SIZE, weight=0)
-        # for i in range(33):
-        #     self.sf.canvas.columnconfigure(i, minsize=self.COL_SIZE, weight=0)
-
-        # # Test
-        # tmp = tk.Label(
-        #     self.sf.canvas,
-        #     text       ='Test 3:',
-        #     font       =FONT_LABEL,
-        #     bg         ='gray'
-        # )
-        # tmp.grid(
-        #     row        =0,
-        #     column     =0,
-        #     rowspan    =13,
-        #     columnspan =37,
-        #     sticky     ='nesw'
-        # )
-
-
-        # # Account Label
-        # tmp = tk.Label(
-        #     splitTab,
-        #     text       ='Account:',
-        #     font       =FONT_LABEL
-        # )
-        # tmp.grid(
-        #     row        =0,
-        #     column     =6,
-        #     rowspan    =1,
-        #     columnspan =3,
-        #     sticky     ='w'
-        # )
-
-        # # Memo Label
-        # tmp = tk.Label(
-        #     splitTab,
-        #     text       ='Memo:',
-        #     font       =FONT_LABEL
-        # )
-        # tmp.grid(
-        #     row        =0,
-        #     column     =18,
-        #     rowspan    =1,
-        #     columnspan =3,
-        #     sticky     ='w'
-        # )
-
-        # # Amount Label
-        # tmp = tk.Label(
-        #     splitTab,
-        #     text       ='Amount:',
-        #     font       =FONT_LABEL
-        # )
-        # tmp.grid(
-        #     row        =0,
-        #     column     =25,
-        #     rowspan    =1,
-        #     columnspan =3,
-        #     sticky     ='w'
-        # )
-
-
-
-        # # Place scrollbar in sf
-        # self.sf.scrollbar.grid(
-        #     row        =0,
-        #     column     =27,
-        #     rowspan    =11,
-        #     columnspan =1,
-        #     sticky     ='ens'
-        # )
-
-        # for i in range(27):
-        #     self.sf.canvas.columnconfigure(i, minsize=self.COL_SIZE, weight=0)
-        # for i in range(11):
-        #     self.sf.canvas.rowconfigure(i, minsize=self.ROW_SIZE, weight=0)
-
-        # # Place frame inside canvas
-        # self.sf.scrollableFrame.grid(
-        #     row        =1,
-        #     column     =1,
-        #     rowspan    =9,
-        #     columnspan =25,
-        #     sticky     ='nesw'
-        # )
-        # for i in range(25):
-        #     self.sf.canvas.columnconfigure(i, minsize=self.COL_SIZE, weight=0)
-        # for i in range(9):
-        #     self.sf.canvas.rowconfigure(i, minsize=self.ROW_SIZE, weight=0)
-
-
         # Memo List
         self.rows = []
 
@@ -1060,123 +868,21 @@ class MyGui():
         for _ in range(20):
             self._AddSplitRow()
 
-
-        # print(self.rows)
-
-
-        #----------------------------------------------------------------------
-        # Root Buttons
-        #----------------------------------------------------------------------
-        # Add Entry Button
-        self.addEntryButton = tk.Button(
-            root,
-            text        ='Add Entry',
-            font        =FONT_LABEL
-        )
-        self.addEntryButton.grid(
-            row         =28,
-            column      =12,
-            sticky      ='nesw',
-            padx        =10,
-            pady        =0,
-            rowspan     =2,
-            columnspan  =6
-        )
-
-        # Redo Entry Button
-        self.redoButton = tk.Button(
-            root,
-            text        ='Redo Entry',
-            font        =FONT_LABEL
-        )
-        self.redoButton.grid(
-            row         =28,
-            column      =21,
-            sticky      ='nesw',
-            padx        =10,
-            pady        =0,
-            rowspan     =2,
-            columnspan  =6
-        )
-
-
-        #----------------------------------------------------------------------
-        # Preview Frame
-        #----------------------------------------------------------------------
+    # -------------------------------------------------------------------------
+    def _FrameHelper(self, container, r, c, rs, cs):
         # Frame
-        previewFrame = tk.LabelFrame(
-            self.root
-        )
-        previewFrame.grid(
-            row        =31,
-            column     =1,
-            rowspan    =9,
-            columnspan =37,
-            sticky     ='nesw'
-        )
+        f = tk.LabelFrame(container)
 
         # Define grid
-        for i in range(37):
-            previewFrame.columnconfigure(i, minsize=self.COL_SIZE, weight=0)
-        for i in range(9):
-            previewFrame.rowconfigure(i, minsize=self.ROW_SIZE, weight=0)
+        for i in range(rs):
+            f.rowconfigure(i, minsize=self.ROW_SIZE, weight=0)
+        for i in range(cs):
+            f.columnconfigure(i, minsize=self.COL_SIZE, weight=0)
 
-        # Preview Label
-        tmp = tk.Label(
-            previewFrame,
-            text       ='Preview',
-            font       =FONT_FRAME
-        )
-        tmp.grid(
-            row        =0,
-            column     =0,
-            rowspan    =1,
-            columnspan =5,
-            sticky     ='w'
-        )
+        # Place frame
+        f.grid(row=r, column=c, rowspan=rs, columnspan=cs, sticky='nesw')
 
-        # Preview box
-        self.previewBox = tk.Text(
-            previewFrame,
-            font        =FONT_BOXES,
-            width       =15,
-            height      =8
-        )
-        self.previewBox.grid(
-            row         =1,
-            column      =1,
-            sticky      ='nsew',
-            rowspan     =7,
-            columnspan  =35
-        )
-
-        # Scroll bar for preview box
-        logScroll = tk.Scrollbar(
-            previewFrame,
-            orient      ='vertical',
-            command     =self.previewBox.yview
-        )
-        self.previewBox.configure(yscrollcommand=logScroll.set)
-
-        # Tags for different text types for log box
-        self.previewBox.tag_configure(
-            'header',
-            background  ='white',
-            foreground  ='black',
-            font        =('consolas', 7, 'bold')
-        )
-        self.previewBox.tag_configure(
-            'default',
-            background  ='white',
-            foreground  ='black',
-            font        =('consolas', 7)
-        )
-        self.previewBox.tag_configure(
-            'error',
-            background  ='white',
-            foreground  ='red',
-            font        =('consolas', 7)
-        )
+        return f
 
     # -------------------------------------------------------------------------
     def _BindEvents(self):
