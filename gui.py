@@ -382,11 +382,10 @@ class MyGui():
         self.notebook.add(simpleTab, text='Simple Entry')
 
         # Define grid
-        for i in range(37):
-            simpleTab.columnconfigure(i, minsize=self.COL_SIZE, weight=0)
         for i in range(13):
             simpleTab.rowconfigure(i, minsize=self.ROW_SIZE, weight=0)
-
+        for i in range(37):
+            simpleTab.columnconfigure(i, minsize=self.COL_SIZE, weight=0)
 
         # Assets Label
         tmp = tk.Label(
@@ -699,28 +698,14 @@ class MyGui():
         # Split Entry Tab
         #----------------------------------------------------------------------
         # Split Tab
-        splitTab = tk.Frame(self.notebook)
+        splitTab = ttk.Frame(self.notebook)
         self.notebook.add(splitTab, text='Split Entry')
 
         # Define grid
-        for i in range(37):
-            splitTab.columnconfigure(i, minsize=self.COL_SIZE, weight=0)
         for i in range(13):
             splitTab.rowconfigure(i, minsize=self.ROW_SIZE, weight=0)
-
-        # Memo Label
-        tmp = tk.Label(
-            splitTab,
-            text       ='Memo:',
-            font       =FONT_LABEL
-        )
-        tmp.grid(
-            row        =0,
-            column     =3,
-            rowspan    =1,
-            columnspan =3,
-            sticky     ='w'
-        )
+        for i in range(37):
+            splitTab.columnconfigure(i, minsize=self.COL_SIZE, weight=0)
 
         # Account Label
         tmp = tk.Label(
@@ -730,7 +715,21 @@ class MyGui():
         )
         tmp.grid(
             row        =0,
-            column     =17,
+            column     =8,
+            rowspan    =1,
+            columnspan =3,
+            sticky     ='w'
+        )
+
+        # Memo Label
+        tmp = tk.Label(
+            splitTab,
+            text       ='Memo:',
+            font       =FONT_LABEL
+        )
+        tmp.grid(
+            row        =0,
+            column     =18,
             rowspan    =1,
             columnspan =3,
             sticky     ='w'
@@ -744,74 +743,325 @@ class MyGui():
         )
         tmp.grid(
             row        =0,
-            column     =33,
+            column     =27,
             rowspan    =1,
             columnspan =3,
             sticky     ='w'
         )
 
-        # Scrollable frame
-        self.sf = ScrollableFrame(splitTab)
 
-        # Place sf - idk if this is necessary??
-        self.sf.grid(
+        #----------------------------------------------------------------------
+        # Create a scrollable frame
+        #----------------------------------------------------------------------
+        # Build and place canvas inside of split frame
+        self.canvas = tk.Canvas(splitTab, borderwidth=0)
+        self.canvas.grid(
             row        =1,
-            column     =5,
-            rowspan    =11,
-            columnspan =27,
-            sticky     ='nesw'
-        )
-        for i in range(27):
-            self.sf.columnconfigure(i, minsize=self.COL_SIZE, weight=0)
-        for i in range(11):
-            self.sf.rowconfigure(i, minsize=self.ROW_SIZE, weight=0)
-
-        # Place canvas in sf
-        self.sf.canvas.grid(
-            row        =0,
-            column     =0,
+            column     =6,
             rowspan    =11,
             columnspan =27,
             sticky     ='nesw'
         )
 
-        # Place scrollbar in sf
-        self.sf.scrollbar.grid(
-            row        =0,
-            column     =27,
-            rowspan    =11,
-            columnspan =1,
-            sticky     ='ens'
-        )
-
-        for i in range(27):
-            self.sf.canvas.columnconfigure(i, minsize=self.COL_SIZE, weight=0)
+        # Build grid for canvas
         for i in range(11):
-            self.sf.canvas.rowconfigure(i, minsize=self.ROW_SIZE, weight=0)
+            self.canvas.rowconfigure(i, minsize=self.ROW_SIZE, weight=0)
+        for i in range(27):
+            self.canvas.columnconfigure(i, minsize=self.COL_SIZE, weight=0)
 
-        # Place frame inside canvas
-        self.sf.scrollableFrame.grid(
-            row        =1,
-            column     =1,
-            rowspan    =9,
-            columnspan =25,
-            sticky     ='nesw'
+        # Add in scroll feature
+        self.scrollbar = ttk.Scrollbar(
+            self.canvas,
+            orient="vertical",
+            command=self.canvas.yview
         )
-        for i in range(25):
-            self.sf.canvas.columnconfigure(i, minsize=self.COL_SIZE, weight=0)
-        for i in range(9):
-            self.sf.canvas.rowconfigure(i, minsize=self.ROW_SIZE, weight=0)
+
+        # Reset the view
+        self.canvas.xview_moveto(0)
+        self.canvas.yview_moveto(0)
+
+        # Create a frame inside the canvas which will be scrollable
+        self.scrollFrame = ttk.Frame(self.canvas)
+
+        # Create grid for scrollable frame
+        for i in range(11):
+            self.scrollFrame.rowconfigure(i, minsize=self.ROW_SIZE, weight=0)
+        for i in range(27):
+            self.scrollFrame.columnconfigure(i, minsize=self.COL_SIZE, weight=0)
+
+        # Place sf ?
+        self.scrollFrameId = self.canvas.create_window(0, 0, window=self.scrollFrame, anchor='center')
+
+        # Bind events
+        self.scrollFrame.bind('<Configure>', self._HandleConfigureEvent, add='+')
+        self.canvas.bind_all("<MouseWheel>", self._HandleMouseWheelEvent, add='+')
+
+
+        # for i in range(30):
+        #     tmp = tk.Label(self.scrollFrame, text=f"Button {i}", bg='blue')
+        #     tmp.grid(
+        #         row        =i,
+        #         column     =0,
+        #         rowspan    =1,
+        #         columnspan =5,
+        #         sticky     ='w'
+        #     )
+
+        # # Test
+        # tmp = tk.Label(
+        #     self.scrollFrame,
+        #     text       ='Test:',
+        #     font       =FONT_LABEL,
+        #     bg         ='blue'
+        # )
+        # tmp.grid(
+        #     row        =0,
+        #     column     =0,
+        #     rowspan    =11,
+        #     columnspan =27,
+        #     sticky     ='nesw'
+        # )
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        # # Define grid
+        # for i in range(13):
+        #     self.canvas.rowconfigure(i, minsize=self.ROW_SIZE, weight=0)
+        # for i in range(37):
+        #     self.canvas.columnconfigure(i, minsize=self.COL_SIZE, weight=0)
+
+        # self.canvas.grid(
+        #     row        =0,
+        #     column     =0,
+        #     rowspan    =13,
+        #     columnspan =37,
+        #     sticky     ='nesw'
+        # )
+
+        # # Test
+        # tmp = tk.Label(
+        #     self.canvas,
+        #     text       ='Test 2:',
+        #     font       =FONT_LABEL,
+        #     bg         ='blue'
+        # )
+        # tmp.grid(
+        #     row        =0,
+        #     column     =0,
+        #     rowspan    =5,
+        #     columnspan =37,
+        #     sticky     ='nesw'
+        # )
+
+        # # Create scrollbar inside of splitframe
+        # self.scrollbar = ttk.Scrollbar(
+        #     splitTab,
+        #     orient="vertical",
+        #     command=self.canvas.yview
+        # )
+
+        # # Create a frame inside of the canvas
+        # self.scrollableFrame = ttk.Frame(self.canvas)
+
+        # # Create a window on the canvas
+        # id = self.canvas.create_window((0, 0))
+
+        # # Place the frame onto the canvas
+        # self.canvas.itemconfigure(id, window=self.scrollableFrame, anchor="nw")
+
+        # # Define grid
+        # for i in range(13):
+        #     self.scrollableFrame.rowconfigure(i, minsize=self.ROW_SIZE, weight=0)
+        # for i in range(37):
+        #     self.scrollableFrame.columnconfigure(i, minsize=self.COL_SIZE, weight=0)
+
+        # # Test
+        # tmp = tk.Label(
+        #     self.scrollableFrame,
+        #     text       ='Test 3:',
+        #     font       =FONT_LABEL,
+        #     bg         ='gray'
+        # )
+        # tmp.grid(
+        #     row        =0,
+        #     column     =0,
+        #     rowspan    =13,
+        #     columnspan =37,
+        #     sticky     ='nesw'
+        # )
+
+        # # Save ID for later use
+        # self.id = id
+
+        # # Setup the canvas to scroll
+        # self.canvas.configure(yscrollcommand=self.scrollbar.set)
+
+        # # Bind events
+        # self.scrollableFrame.bind('<Configure>', self._HandleConfigureEvent)
+        # self.canvas.bind_all("<MouseWheel>", self._HandleMouseWheelEvent)
+
+
+
+
+
+
+
+        # # Scrollable frame
+        # self.sf = ScrollableFrame(splitTab)
+
+        # # Place sf - idk if this is necessary??
+        # self.sf.grid(
+        #     row        =1,
+        #     column     =1,
+        #     rowspan    =11,
+        #     columnspan =35,
+        #     sticky     ='nesw'
+        # )
+
+        # for i in range(11):
+        #     self.sf.rowconfigure(i, minsize=self.ROW_SIZE, weight=0)
+        # for i in range(35):
+        #     self.sf.columnconfigure(i, minsize=self.COL_SIZE, weight=0)
+
+        # # Test
+        # tmp = tk.Label(
+        #     self.sf,
+        #     text       ='Test 2:',
+        #     font       =FONT_LABEL,
+        #     bg         ='blue'
+        # )
+        # tmp.grid(
+        #     row        =0,
+        #     column     =0,
+        #     rowspan    =11,
+        #     columnspan =35,
+        #     sticky     ='nesw'
+        # )
+
+
+        # # Place canvas in sf
+        # self.sf.canvas.grid(
+        #     row        =1,
+        #     column     =1,
+        #     rowspan    =9,
+        #     columnspan =33,
+        #     sticky     ='nesw'
+        # )
+
+        # for i in range(8):
+        #     self.sf.canvas.rowconfigure(i, minsize=self.ROW_SIZE, weight=0)
+        # for i in range(33):
+        #     self.sf.canvas.columnconfigure(i, minsize=self.COL_SIZE, weight=0)
+
+        # # Test
+        # tmp = tk.Label(
+        #     self.sf.canvas,
+        #     text       ='Test 3:',
+        #     font       =FONT_LABEL,
+        #     bg         ='gray'
+        # )
+        # tmp.grid(
+        #     row        =0,
+        #     column     =0,
+        #     rowspan    =13,
+        #     columnspan =37,
+        #     sticky     ='nesw'
+        # )
+
+
+        # # Account Label
+        # tmp = tk.Label(
+        #     splitTab,
+        #     text       ='Account:',
+        #     font       =FONT_LABEL
+        # )
+        # tmp.grid(
+        #     row        =0,
+        #     column     =6,
+        #     rowspan    =1,
+        #     columnspan =3,
+        #     sticky     ='w'
+        # )
+
+        # # Memo Label
+        # tmp = tk.Label(
+        #     splitTab,
+        #     text       ='Memo:',
+        #     font       =FONT_LABEL
+        # )
+        # tmp.grid(
+        #     row        =0,
+        #     column     =18,
+        #     rowspan    =1,
+        #     columnspan =3,
+        #     sticky     ='w'
+        # )
+
+        # # Amount Label
+        # tmp = tk.Label(
+        #     splitTab,
+        #     text       ='Amount:',
+        #     font       =FONT_LABEL
+        # )
+        # tmp.grid(
+        #     row        =0,
+        #     column     =25,
+        #     rowspan    =1,
+        #     columnspan =3,
+        #     sticky     ='w'
+        # )
+
+
+
+        # # Place scrollbar in sf
+        # self.sf.scrollbar.grid(
+        #     row        =0,
+        #     column     =27,
+        #     rowspan    =11,
+        #     columnspan =1,
+        #     sticky     ='ens'
+        # )
+
+        # for i in range(27):
+        #     self.sf.canvas.columnconfigure(i, minsize=self.COL_SIZE, weight=0)
+        # for i in range(11):
+        #     self.sf.canvas.rowconfigure(i, minsize=self.ROW_SIZE, weight=0)
+
+        # # Place frame inside canvas
+        # self.sf.scrollableFrame.grid(
+        #     row        =1,
+        #     column     =1,
+        #     rowspan    =9,
+        #     columnspan =25,
+        #     sticky     ='nesw'
+        # )
+        # for i in range(25):
+        #     self.sf.canvas.columnconfigure(i, minsize=self.COL_SIZE, weight=0)
+        # for i in range(9):
+        #     self.sf.canvas.rowconfigure(i, minsize=self.ROW_SIZE, weight=0)
 
 
         # Memo List
         self.rows = []
 
         # Create first two rows in split tab
-        for _ in range(5):
+        for _ in range(20):
             self._AddSplitRow()
 
 
-        print(self.rows)
+        # print(self.rows)
 
 
         #----------------------------------------------------------------------
@@ -1016,45 +1266,54 @@ class MyGui():
     def _AddSplitRow(self):
         rowIndex = len(self.rows)
 
-        # Memo
-        memoStr = tk.StringVar(value='')
-        memoBox = tk.Entry(
-            self.sf.scrollableFrame,
-            textvariable    =memoStr,
-            font            =FONT_BOXES,
-            width           =32,
-            justify         ='left'
-        )
-        memoBox.grid(
-            row             =rowIndex,
-            column          =0,
-            sticky          ='w',
-            rowspan         =1,
-            columnspan      =8
+
+        tmp = tk.Label(self.scrollFrame, text=rowIndex)
+        tmp.grid(
+            row        =rowIndex,
+            column     =1,
+            rowspan    =1,
+            columnspan =1,
+            sticky     ='w'
         )
 
         # Account
         acctStr = tk.StringVar(value='')
         acctBox = ttk.Combobox(
-            self.sf.scrollableFrame,
+            self.scrollFrame,
             textvariable    =acctStr,
             font            =FONT_BOXES,
-            width           =52,
+            width           =37,
             state           ='readonly'
         )
         acctBox.grid(
             row             =rowIndex,
-            column          =10,
-            sticky          ='w',
+            column          =2,
             rowspan         =1,
-            columnspan      =12
+            columnspan      =10,
+            sticky          ='w',
         )
 
+        # Memo
+        memoStr = tk.StringVar(value='')
+        memoBox = tk.Entry(
+            self.scrollFrame,
+            textvariable    =memoStr,
+            font            =FONT_BOXES,
+            width           =37,
+            justify         ='left'
+        )
+        memoBox.grid(
+            row             =rowIndex,
+            column          =12,
+            sticky          ='w',
+            rowspan         =1,
+            columnspan      =10
+        )
 
         # Amount
         amntStr = tk.StringVar(value='')
         amntBox = tk.Entry(
-            self.sf.scrollableFrame,
+            self.scrollFrame,
             textvariable    =amntStr,
             font            =FONT_BOXES,
             width           =12,
@@ -1062,10 +1321,10 @@ class MyGui():
         )
         amntBox.grid(
             row             =rowIndex,
-            column          =24,
+            column          =21,
             sticky          ='w',
             rowspan         =1,
-            columnspan      =3
+            columnspan      =5
         )
 
         self.rows.append((memoStr, memoBox, acctStr, acctBox, amntStr, amntBox))
@@ -1343,8 +1602,14 @@ class MyGui():
         txt = entry.GetDataAsText()
         self.Log(txt, 'default')
 
+    # -------------------------------------------------------------------------
+    def _HandleConfigureEvent(self, event):
+        self.canvas.configure(scrollregion=self.canvas.bbox(self.scrollFrameId))
 
-
+    # -------------------------------------------------------------------------
+    def _HandleMouseWheelEvent(self, event):
+        self.canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
+        print('balls')
 
 
 class ScrollableFrame(ttk.Frame):
@@ -1355,7 +1620,7 @@ class ScrollableFrame(ttk.Frame):
         super().__init__(container, *args, **kwargs)
 
         # Create a canvas inside of given frame
-        self.canvas = tk.Canvas(self, borderwidth=0)
+        self.canvas = tk.Canvas(self, borderwidth=5)
 
         # Create scrollbar inside of given frame
         self.scrollbar = ttk.Scrollbar(
