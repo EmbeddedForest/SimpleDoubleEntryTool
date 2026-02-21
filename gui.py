@@ -69,20 +69,23 @@ class MyGui():
         #----------------------------------------------------------------------
         # Create Notebook
         #----------------------------------------------------------------------
-        # Notebook
+        self.nbRs = 13
+        self.nbCs = 37
+
         self.notebook = ttk.Notebook(
             self.root
         )
         self.notebook.grid(
             row        =14,
             column     =1,
-            rowspan    =13,
-            columnspan =37,
+            rowspan    =self.nbRs,
+            columnspan =self.nbCs,
             sticky     ='nesw'
         )
 
         self._BuildSimpleEntryTab()
         self._BuildSplitEntryTab()
+        self._BuildScrollableFrame()
 
         #----------------------------------------------------------------------
         # Root Buttons
@@ -448,11 +451,14 @@ class MyGui():
         self.notebook.add(simpleTab, text='Simple Entry')
 
         # Define grid
-        for i in range(13):
+        for i in range(self.nbRs):
             simpleTab.rowconfigure(i, minsize=self.ROW_SIZE, weight=0)
-        for i in range(37):
+        for i in range(self.nbCs):
             simpleTab.columnconfigure(i, minsize=self.COL_SIZE, weight=0)
 
+        #----------------------------------------------------------------------
+        # Assets
+        #----------------------------------------------------------------------
         # Assets Label
         tmp = tk.Label(
             simpleTab,
@@ -521,7 +527,9 @@ class MyGui():
             font        =FONT_CHOICES
         )
 
-
+        #----------------------------------------------------------------------
+        # Liabilities
+        #----------------------------------------------------------------------
         # Liabilities Label
         tmp = tk.Label(
             simpleTab,
@@ -590,7 +598,9 @@ class MyGui():
             font        =FONT_CHOICES
         )
 
-
+        #----------------------------------------------------------------------
+        # Income
+        #----------------------------------------------------------------------
         # Income Label
         tmp = tk.Label(
             simpleTab,
@@ -658,7 +668,9 @@ class MyGui():
             font        =FONT_CHOICES
         )
 
-
+        #----------------------------------------------------------------------
+        # Expenses
+        #----------------------------------------------------------------------
         # Expenses Label
         tmp = tk.Label(
             simpleTab,
@@ -727,7 +739,9 @@ class MyGui():
             font        =FONT_CHOICES
         )
 
-
+        #----------------------------------------------------------------------
+        # Memo
+        #----------------------------------------------------------------------
         # Memo Label
         tmp = tk.Label(
             simpleTab,
@@ -767,9 +781,9 @@ class MyGui():
         self.notebook.add(splitTab, text='Split Entry')
 
         # Define grid
-        for i in range(13):
+        for i in range(self.nbRs):
             splitTab.rowconfigure(i, minsize=self.ROW_SIZE, weight=0)
-        for i in range(37):
+        for i in range(self.nbCs):
             splitTab.columnconfigure(i, minsize=self.COL_SIZE, weight=0)
 
         # Account Label
@@ -814,24 +828,29 @@ class MyGui():
             sticky     ='w'
         )
 
+        self.splitTab = splitTab
 
-        #----------------------------------------------------------------------
-        # Create a scrollable frame
-        #----------------------------------------------------------------------
+    # -------------------------------------------------------------------------
+    # Scrollable frame
+    # -------------------------------------------------------------------------
+    def _BuildScrollableFrame(self):
+        rs = 11
+        cs = 27
+
         # Build and place canvas inside of split frame
-        self.canvas = tk.Canvas(splitTab, borderwidth=0)
+        self.canvas = tk.Canvas(self.splitTab, borderwidth=0)
         self.canvas.grid(
             row        =1,
             column     =6,
-            rowspan    =11,
-            columnspan =27,
+            rowspan    =rs,
+            columnspan =cs,
             sticky     ='nesw'
         )
 
         # Build grid for canvas
-        for i in range(11):
+        for i in range(rs):
             self.canvas.rowconfigure(i, minsize=self.ROW_SIZE, weight=0)
-        for i in range(27):
+        for i in range(cs):
             self.canvas.columnconfigure(i, minsize=self.COL_SIZE, weight=0)
 
         # Add in scroll feature
@@ -849,13 +868,14 @@ class MyGui():
         self.scrollFrame = ttk.Frame(self.canvas)
 
         # Create grid for scrollable frame
-        for i in range(11):
+        for i in range(rs):
             self.scrollFrame.rowconfigure(i, minsize=self.ROW_SIZE, weight=0)
-        for i in range(27):
+        for i in range(cs):
             self.scrollFrame.columnconfigure(i, minsize=self.COL_SIZE, weight=0)
 
-        # Place sf ?
-        self.scrollFrameId = self.canvas.create_window(0, 0, window=self.scrollFrame, anchor='center')
+        # Place scroll frame in window
+        self.scrollFrameId = self.canvas.create_window(
+            0, 0, window=self.scrollFrame, anchor='center')
 
         # Bind events
         self.scrollFrame.bind('<Configure>', self._HandleConfigureEvent, add='+')
@@ -1360,6 +1380,7 @@ class ScrollableFrame(ttk.Frame):
 
     # -------------------------------------------------------------------------
     def _HandleMouseWheelEvent(self, event):
+        event
         self.canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
         print('balls')
 
