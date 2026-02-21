@@ -1035,12 +1035,12 @@ class MyGui():
 
         # Account
         acctStr = tk.StringVar(value='')
-        acctBox = tk.Entry(
+        acctBox = ttk.Combobox(
             self.sf.scrollableFrame,
             textvariable    =acctStr,
             font            =FONT_BOXES,
             width           =52,
-            justify         ='left'
+            state           ='readonly'
         )
         acctBox.grid(
             row             =rowIndex,
@@ -1050,11 +1050,12 @@ class MyGui():
             columnspan      =12
         )
 
+
         # Amount
         amntStr = tk.StringVar(value='')
         amntBox = tk.Entry(
             self.sf.scrollableFrame,
-            textvariable    =acctStr,
+            textvariable    =amntStr,
             font            =FONT_BOXES,
             width           =12,
             justify         ='left'
@@ -1268,6 +1269,13 @@ class MyGui():
     # -------------------------------------------------------------------------
     def LoadImportDropdown(self, list):
         self.importDropdown['values'] = list
+
+    # -------------------------------------------------------------------------
+    def LoadSplitAcctDropdowns(self, list):
+        self.fullAcctList = list
+
+        for mS, mB, acctS, acctB, amntS, amntB in self.rows:
+            acctB['values'] = list
 
     # -------------------------------------------------------------------------
     def LoadAssAcctDropdown(self, list):

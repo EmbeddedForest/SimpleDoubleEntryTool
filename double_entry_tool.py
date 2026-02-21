@@ -62,6 +62,7 @@ class Sdet():
 
         # Load import dropdown in GUI
         gui.LoadImportDropdown(iFile.importFileList)
+        gui.LoadSplitAcctDropdowns(accts.allAcctsFullName)
 
         # Load account boxes in GUI
         gui.LoadAssets(accts.assetDic)
