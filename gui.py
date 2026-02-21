@@ -862,7 +862,6 @@ class MyGui():
         )
 
         # Reset the view
-        self.canvas.xview_moveto(0)
         self.canvas.yview_moveto(0)
 
         # Create a frame inside the canvas which will be scrollable
@@ -1067,6 +1066,9 @@ class MyGui():
 
         self.rows.append((memoStr, memoBox, acctStr, acctBox, amntStr, amntBox))
 
+        # Reset the view
+        self.canvas.yview_moveto(0)
+
     # -------------------------------------------------------------------------
     def _CanvasScrollStop(self):
         self.stopScroll = True
@@ -1086,6 +1088,9 @@ class MyGui():
             self.simpleEntry = True
         else:
             self.simpleEntry = False
+
+        # Reset view in split tap
+        self.canvas.yview_moveto(0)
 
     # -------------------------------------------------------------------------
     def _LoadAccounts(self, catBox: tk.Text, selBox: tk.Text, dic: dict):
