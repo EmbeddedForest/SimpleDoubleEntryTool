@@ -77,12 +77,12 @@ class Sdet():
         gui.addEntryButton.configure(command=self._AddToJournal)
 
         # Setup GUI events
-        gui.root.bind('<Return>', self._UpdateAll)
+        gui.root.bind('<Return>', self._UpdateEntry)
         gui.root.bind('<<NotebookTabChanged>>', self._TabChanged)
-        gui.assSelBox.bind('<ButtonRelease-1>', self._UpdateSimple, add='+')
-        gui.incSelBox.bind('<ButtonRelease-1>', self._UpdateSimple, add='+')
-        gui.liaSelBox.bind('<ButtonRelease-1>', self._UpdateSimple, add='+')
-        gui.expSelBox.bind('<ButtonRelease-1>', self._UpdateSimple, add='+')
+        gui.assSelBox.bind('<ButtonRelease-1>', self._UpdateEntry, add='+')
+        gui.incSelBox.bind('<ButtonRelease-1>', self._UpdateEntry, add='+')
+        gui.liaSelBox.bind('<ButtonRelease-1>', self._UpdateEntry, add='+')
+        gui.expSelBox.bind('<ButtonRelease-1>', self._UpdateEntry, add='+')
         gui.importDropdown.bind('<<ComboboxSelected>>', self._UpdateImportFile)
 
         # Begin main thread
@@ -133,11 +133,15 @@ class Sdet():
             gui.Log('Journal does not exist', 'error')
             return
 
-        # Update GUI
-        gui.Update(entry)
-
         # Update self entry
         self.entry = entry
+
+        if (self.splitActive == True):
+            # We have split entry tab open
+            self._UpdateSplitGuiFromEntry()
+
+        # Update GUI
+        gui.Update(self.entry)
 
     # -------------------------------------------------------------------------
     def _FindNextTransactionIndex(self):
@@ -215,7 +219,7 @@ class Sdet():
         return entry
 
     # -------------------------------------------------------------------------
-    def _UpdateSimple(self, event):
+    def _UpdateSimpleEntryFromGui(self, event):
         '''
         Handler to update memo and account data for a simple entry. If entry is
         more than 2 lines, the extra lines are deleted. (Forces a transition
@@ -246,7 +250,7 @@ class Sdet():
         gui.Update(self.entry)
 
     # -------------------------------------------------------------------------
-    def _UpdateSplit(self, event):
+    def _UpdateSplitEntryFromGui(self, event):
         '''
         Handler to update acct, memo, and amount data in entry using data in
         split tab input boxes.
@@ -317,17 +321,17 @@ class Sdet():
         gui.Update(self.entry)
 
     # -------------------------------------------------------------------------
-    def _UpdateAll(self, event):
+    def _UpdateEntry(self, event):
         '''
         Handler to update entry/preview for either simple or split entry
 
         '''
         if (self.splitActive == False):
             # Do a simple entry update
-            self._UpdateSimple(event)
+            self._UpdateSimpleEntryFromGui(event)
         else:
-            # Do a simple entry update
-            self._UpdateSplit(event)
+            # Do a split entry update
+            self._UpdateSplitEntryFromGui(event)
 
     # -------------------------------------------------------------------------
     def _TabChanged(self, event):
@@ -337,22 +341,28 @@ class Sdet():
 
         '''
         gui = self.gui
-        accts = self.accts
 
         tabIndex = gui.notebook.index('current')
         if (tabIndex == 1):
             self.splitActive = True
+            self._UpdateSplitGuiFromEntry()
         else:
             self.splitActive = False
 
-        # We have entered the split tab
-        self.entry.split = True
+    # -------------------------------------------------------------------------
+    def _UpdateSplitGuiFromEntry(self):
+        '''
+        Update the GUI with the latest entry data.
 
-        if (self.entry.size == 0):
-            # No valid entry loaded, just open as blank
-            gui.ResetSplitRows()
-            gui.LoadSplitAcctDropdowns()
-            return
+        '''
+        gui = self.gui
+
+        # if (self.entry.size == 0):
+        #     # No valid entry loaded, just open as blank
+        #     print('what')
+        #     gui.ResetSplitRows()
+        #     gui.LoadSplitAcctDropdowns()
+        #     return
 
         # Load GUI with existing current entry data
         i = 0
