@@ -75,7 +75,8 @@ class Sdet():
         gui.addEntryButton.configure(command=self.AddToJournal)
 
         # Setup GUI events
-        gui.root.bind('<Return>', self._UpdateSimple)
+        gui.root.bind('<Return>', self._UpdateAll)
+        gui.root.bind('<<NotebookTabChanged>>', self._TabChanged)
         gui.assSelBox.bind('<ButtonRelease-1>', self._UpdateSimple, add='+')
         gui.incSelBox.bind('<ButtonRelease-1>', self._UpdateSimple, add='+')
         gui.liaSelBox.bind('<ButtonRelease-1>', self._UpdateSimple, add='+')
@@ -236,6 +237,82 @@ class Sdet():
         self.curEntry[1].acctS = accts.GetShortHand(acctF)
 
         gui.Update(self.curEntry)
+
+    # -------------------------------------------------------------------------
+    def _UpdateAll(self, event):
+        '''
+        Handler to update entry/preview for either simple or split entry
+
+        '''
+        gui   = self.gui
+        accts = self.accts
+
+        if (self.curEntry.size == 2):
+            # Do a simple entry update only
+            self._UpdateSimple(event)
+            return
+
+        # # Validate data that was loaded and update current entry
+        # for mS, mB, acctS, acctB, amntS, amntB in gui.rows:
+        #     acctB['values'] = list
+
+
+
+        # # Update memo
+        # self.curEntry[1].memo = gui.memo.get()
+
+        # # Validate new account info
+        # acctF = gui.selectedAcct
+        # retVal = accts.IsAccountValid(acctF)
+        # if (retVal == c.BAD):
+        #     # Silent return, don't update GUI
+        #     return
+
+        # # Update account info in entry
+        # self.curEntry[1].acctF = acctF
+        # self.curEntry[1].acctS = accts.GetShortHand(acctF)
+
+        # gui.Update(self.curEntry)
+
+    # -------------------------------------------------------------------------
+    def _TabChanged(self, event):
+        '''
+        When tab is changed, and the new tab is the split tab, check if entry
+        has valid first line, if so, update the GUI with the latest entry data.
+
+        '''
+        gui = self.gui
+
+        tabIndex = gui.notebook.index('current')
+        if (tabIndex == 0):
+            # Update curEntry split state
+            self.curEntry.split = False
+            return
+
+        # We have entered the split tab
+        self.curEntry.split = True
+
+        if (self.curEntry.size == 0):
+            # No valid entry loaded, just open as blank
+            gui.ResetSplitRows()
+            return
+
+        # Load GUI with existing current entry data
+        i = 0
+        gui.ResetSplitRows()
+        for line in self.curEntry:
+            # Add new row if need be
+            if (i > len(gui.rows)):
+                gui._AddSplitRow()
+
+            # Update data boxes
+            l, acctS, acctB, mS, mB, amntS, amntB = gui.rows[i]
+            acctS.set(line.acctF)
+            mS.set(line.memo)
+            amntS.set(line.amnt)
+
+            i = i + 1
+
 
     # -------------------------------------------------------------------------
     def _UpdateImportFile(self, event):

@@ -1179,6 +1179,21 @@ class MyGui():
             amntB.destroy()
 
     # -------------------------------------------------------------------------
+    def ResetSplitRows(self):
+        rowIndex = len(self.rows)
+
+        for i in range(rowIndex,0,-1):
+            l, acctS, acctB, mS, mB, amntS, amntB = self.rows.pop(i-1)
+            l.destroy()
+            mB.destroy()
+            acctB.destroy()
+            amntB.destroy()
+
+        # Create first three rows in split tab
+        for _ in range(3):
+            self._AddSplitRow()
+
+    # -------------------------------------------------------------------------
     def _CanvasScrollStop(self):
         self.stopScroll = True
 
