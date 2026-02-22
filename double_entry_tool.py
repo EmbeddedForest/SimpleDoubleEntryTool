@@ -136,9 +136,13 @@ class Sdet():
         # Update self entry
         self.entry = entry
 
-        if (self.splitActive == True):
-            # We have split entry tab open
+        if ((self.splitActive == True) or (self.entry.split == True)):
+            # Open split tab and update
+            gui.notebook.select(1)
             self._UpdateSplitGuiFromEntry()
+        else:
+            # Open simple tab
+            gui.notebook.select(0)
 
         # Update GUI
         gui.Update(self.entry)
@@ -219,7 +223,7 @@ class Sdet():
         return entry
 
     # -------------------------------------------------------------------------
-    def _UpdateSimpleEntryFromGui(self, event):
+    def _UpdateSimpleEntryFromGui(self, event=None):
         '''
         Handler to update memo and account data for a simple entry. If entry is
         more than 2 lines, the extra lines are deleted. (Forces a transition
@@ -348,28 +352,51 @@ class Sdet():
             self._UpdateSplitGuiFromEntry()
         else:
             self.splitActive = False
+            self._UpdateSimpleGuiFromEntry()
+
+    # -------------------------------------------------------------------------
+    def _UpdateSimpleGuiFromEntry(self):
+        '''
+        Update the GUI with the latest entry data for simple entry.
+
+        '''
+        gui   = self.gui
+        accts = self.accts
+
+        if (self.entry.size > 2):
+            # Not a simple entry, force from split to simple entry
+
+            # Remove extra lines
+            while (self.entry.size != 2):
+                self.entry.RemoveLine(2)
+
+            # Update amount
+            amnt = self.entry[0].amnt
+            if ('-' in amnt):
+                self.entry[1].amnt = amnt.replace('-', '')
+            else:
+                self.entry[1].amnt = '-' + amnt
+
+        if (self.entry.size == 0):
+            # Do nothing, no entry data
+            return
+
+        gui.Update(self.entry)
 
     # -------------------------------------------------------------------------
     def _UpdateSplitGuiFromEntry(self):
         '''
-        Update the GUI with the latest entry data.
+        Update the GUI with the latest entry data for split entry.
 
         '''
         gui = self.gui
-
-        # if (self.entry.size == 0):
-        #     # No valid entry loaded, just open as blank
-        #     print('what')
-        #     gui.ResetSplitRows()
-        #     gui.LoadSplitAcctDropdowns()
-        #     return
 
         # Load GUI with existing current entry data
         i = 0
         gui.ResetSplitRows()
         for line in self.entry:
             # Add new row if need be
-            if (i > len(gui.rows)):
+            if (i >= len(gui.rows)):
                 gui._AddSplitRow()
 
             # Update data boxes
