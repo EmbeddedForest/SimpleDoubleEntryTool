@@ -844,12 +844,12 @@ class MyGui():
         )
 
         # Add Line Button
-        self.addEntryButton = tk.Button(
+        self.addLineButton = tk.Button(
             splitTab,
             text        ='Add Line',
             font        =FONT_LABEL
         )
-        self.addEntryButton.grid(
+        self.addLineButton.grid(
             row         =2,
             column      =33,
             rowspan     =3,
@@ -859,13 +859,13 @@ class MyGui():
             sticky      ='nesw',
         )
 
-        # Add Line Button
-        self.addEntryButton = tk.Button(
+        # Remove Last Line Button
+        self.removeLineButton = tk.Button(
             splitTab,
             text        ='Remove Last Line',
             font        =FONT_LABEL
         )
-        self.addEntryButton.grid(
+        self.removeLineButton.grid(
             row         =6,
             column      =33,
             rowspan     =3,
@@ -908,6 +908,10 @@ class MyGui():
         )
 
         self.splitTab = splitTab
+
+        # Bind events
+        self.addLineButton.configure(command=self._AddSplitRow)
+        self.removeLineButton.configure(command=self._DeleteSplitRow)
 
     # -------------------------------------------------------------------------
     # Scrollable frame
@@ -1080,8 +1084,8 @@ class MyGui():
     def _AddSplitRow(self):
         rowIndex = len(self.rows)
 
-        tmp = tk.Label(self.scrollFrame, text=rowIndex)
-        tmp.grid(
+        line = tk.Label(self.scrollFrame, text=rowIndex)
+        line.grid(
             row        =rowIndex,
             column     =0,
             rowspan    =1,
@@ -1141,6 +1145,12 @@ class MyGui():
             columnspan      =3
         )
 
+        # If this is the first row, make it readonly
+        if (rowIndex == 0):
+            acctBox.configure(state='disabled')
+            memoBox.configure(state='readonly')
+            amntBox.configure(state='readonly')
+
         # Prevent scrolling while hovering
         acctBox.bind('<MouseWheel>', self._StopScrollOnHover)
 
@@ -1152,10 +1162,21 @@ class MyGui():
 
         # TODO - figure out a way to resume scroll when user clicks away
 
-        self.rows.append((memoStr, memoBox, acctStr, acctBox, amntStr, amntBox))
+        self.rows.append((line, acctStr, acctBox, memoStr, memoBox, amntStr, amntBox))
 
         # Reset the view
         self.canvas.yview_moveto(0)
+
+    # -------------------------------------------------------------------------
+    def _DeleteSplitRow(self):
+        rowIndex = len(self.rows)
+
+        if (rowIndex > 2):
+            l, acctS, acctB, mS, mB, amntS, amntB = self.rows.pop(rowIndex-1)
+            l.destroy()
+            mB.destroy()
+            acctB.destroy()
+            amntB.destroy()
 
     # -------------------------------------------------------------------------
     def _CanvasScrollStop(self):
@@ -1171,12 +1192,6 @@ class MyGui():
 
     # -------------------------------------------------------------------------
     def _TabChanged(self, event):
-        tabIndex = self.notebook.index('current')
-        if (tabIndex == 0):
-            self.simpleEntry = True
-        else:
-            self.simpleEntry = False
-
         # Reset view in split tap
         self.canvas.yview_moveto(0)
 
@@ -1381,7 +1396,7 @@ class MyGui():
     def LoadSplitAcctDropdowns(self, list):
         self.fullAcctList = list
 
-        for mS, mB, acctS, acctB, amntS, amntB in self.rows:
+        for l, acctS, acctB, mS, mB, amntS, amntB in self.rows:
             acctB['values'] = list
 
     # -------------------------------------------------------------------------
