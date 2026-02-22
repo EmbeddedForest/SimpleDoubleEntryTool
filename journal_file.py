@@ -18,6 +18,7 @@ import pandas as pd
 import constants as c
 from entry import Line
 from entry import Entry
+from difflib import SequenceMatcher
 from decimal import Decimal, ROUND_HALF_UP
 
 class JournalFile():
@@ -112,11 +113,12 @@ class JournalFile():
         Iterate through dataframe in reverse. If match on desc, amnt, and acct,
         load suggested entry with entire entry found.
 
-        If only match on desc and acct, load suggested entry as a simple entry
-        (one line) with reversed amount and suggested account in second line.
+        If only match on desc and acct, load suggested entry with reversed
+        amount and suggested account in second line.
 
-        If no match on desc and acct, don't load any more lines to suggested
-        entry.
+        If no match on desc and acct, use fuzzy comparison on description.
+
+        If no match on desc, only load what we know in to entry.
         '''
         try:
             df = pd.read_csv(c.JOURNAL_FP)
@@ -162,7 +164,50 @@ class JournalFile():
                 # Exact match found
                 return 'ExactMatch', entry
 
-        # Go for simple partial match
+        # Have at partial match
+        for index, row in df.iloc[::-1].iterrows():
+            jDesc = row[c.JRNL_DSCRP]
+            jAmnt = float(row[c.JRNL_AMOUNT])
+            jAcct = row[c.JRNL_ACCT_NAME_F]
+            jHash = row[c.JRNL_ID]
+
+            jAmnt = str(round(jAmnt, 2))
+
+            if (jDesc == l.desc) and (jAcct == l.acctF):
+                # Partial match found, load entry with data
+                i = 1
+                lineNum = 1
+                while(lineNum != 0):
+                    newLine = Line()
+                    newLine.date = l.date
+                    newLine.hash = l.hash
+                    newLine.desc = l.desc
+                    try:
+                        lineNum = df.loc[index+i, c.JRNL_LINE]
+                        if (lineNum == 0):
+                            break
+                        if (lineNum == 1):
+                            # For partial match, use reverse amount for 2st entry line
+                            if ('-' in l.amnt):
+                                newLine.amnt = l.amnt.replace('-', '')
+                            else:
+                                newLine.amnt = '-' + l.amnt
+                        else:
+                            # Just leave amount blank for additional lines in entry
+                            newLine.amnt = ''
+                        newLine.memo = df.loc[index+i, c.JRNL_MEMO]
+                        newLine.acctF = df.loc[index+i, c.JRNL_ACCT_NAME_F]
+                        newLine.acctS = df.loc[index+i, c.JRNL_ACCT_NAME]
+                        entry.AddLine(newLine)
+                        i = i + 1
+                    except IndexError:
+                        # This is the end of the journal, exit
+                        lineNum = 0
+
+                # Partial match found
+                return 'PartialMatch', entry
+
+        # Go for best guess based on string comparison
         newLine = Line()
         newLine.date = l.date
         newLine.hash = l.hash
@@ -184,14 +229,19 @@ class JournalFile():
 
             jAmnt = str(round(jAmnt, 2))
 
-            if (jDesc == l.desc) and (jAcct == l.acctF):
-                # Partial match found, suggest acct
-                newLine.acctF = df.loc[index+1, c.JRNL_ACCT_NAME_F]
-                newLine.acctS = df.loc[index+1, c.JRNL_ACCT_NAME]
+            if (jAcct == l.acctF):
+                # Calculate the similarity ratio in description strings
+                ratio = SequenceMatcher(None, jDesc, l.desc ).ratio()
+                # print(f"Similarity ratio: {ratio:.2f}")
 
-                # Append to entry
-                entry.AddLine(newLine)
-                return 'PartialMatch', entry
+                if ratio > 0.75:
+                    # Partial match found, suggest acct
+                    newLine.acctF = df.loc[index+1, c.JRNL_ACCT_NAME_F]
+                    newLine.acctS = df.loc[index+1, c.JRNL_ACCT_NAME]
+
+                    # Append to entry
+                    entry.AddLine(newLine)
+                    return 'PartialMatch', entry
 
         # No matches found, append only what we know
         entry.AddLine(newLine)
