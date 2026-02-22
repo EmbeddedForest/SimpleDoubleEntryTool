@@ -67,6 +67,11 @@ class Entry():
         else:
             self.split = False
 
+    def Clear(self):
+        self.entry = []
+        self.size = 0
+        self.split = False
+
     def GetHeader(self):
         # Build Header
         msg = c.JRNL_LINE

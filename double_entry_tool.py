@@ -29,6 +29,8 @@ class Sdet():
     ''' Class to manage the Simple Double Entry Tool application '''
 
     importIndex = 0
+    entry = Entry()
+    splitActive = False
 
     # -------------------------------------------------------------------------
     def Run(self):
@@ -40,11 +42,11 @@ class Sdet():
         '''
         # Initialization
         self.gui = MyGui()
-        self.entry = Entry()
         self.accts = Accounts()
         self.iFile = ImportFile()
         self.jFile = JournalFile()
 
+        # Load shorthands for non-mutable objects
         gui = self.gui
         accts = self.accts
         iFile = self.iFile
@@ -60,7 +62,7 @@ class Sdet():
         if (retVal == c.BAD):
             gui.Log(msg)
 
-        # Load import dropdown in GUI
+        # Load dropdowns in GUI
         gui.LoadImportDropdown(iFile.importFileList)
         gui.LoadSplitAcctDropdowns(accts.allAcctsFullName)
 
@@ -122,17 +124,20 @@ class Sdet():
         # Load new transaction data into GUI
         self._LoadNewTransaction(self.importIndex)
 
-        # Create new entry object with new transaction data
-        newEntry = self._CreateNewEntry(self.importIndex)
+        # Load entry object with new transaction data
+        entry = self._CreateNewEntry(self.importIndex)
 
         # Attempt to find and load suggested entry
-        retVal, self.entry = jFile.FindSuggestedEntry(newEntry)
+        retVal, entry = jFile.FindSuggestedEntry(entry)
         if (retVal == c.BAD):
             gui.Log('Journal does not exist', 'error')
             return
 
         # Update GUI
-        gui.Update(self.entry)
+        gui.Update(entry)
+
+        # Update self entry
+        self.entry = entry
 
     # -------------------------------------------------------------------------
     def _FindNextTransactionIndex(self):
@@ -180,8 +185,8 @@ class Sdet():
     # -------------------------------------------------------------------------
     def _CreateNewEntry(self, i):
         '''
-        Gets latest transaction data and loads it as the first lin into an new
-        entry object. That object is then saved as object attribute 'entry'.
+        Gets latest transaction data and loads it as the first line into an new
+        entry object. That object is then returned.
 
         '''
         gui   = self.gui
@@ -241,40 +246,88 @@ class Sdet():
         gui.Update(self.entry)
 
     # -------------------------------------------------------------------------
+    def _UpdateSplit(self, event):
+        '''
+        Handler to update acct, memo, and amount data in entry using data in
+        split tab input boxes.
+
+        '''
+        gui   = self.gui
+        entry = self.entry
+        accts = self.accts
+
+        # Force transition of entry to split
+        self.entry.split = True
+
+        if (self.entry.size == 0):
+            # Entry is not active, do nothing
+            return
+
+        # Reset old entry data (keep original line)
+        for i in range(1, entry.size, 1):
+            entry.RemoveLine(i)
+
+        # Load entry with data from GUI
+        for i in range(1, len(gui.rows), 1):
+            l, acctF, acctB, memo, mB, amnt, amntB = gui.rows[i]
+            try:
+                entry[i].date = entry[i-1].date
+                entry[i].hash = entry[i-1].hash
+                entry[i].desc = entry[i-1].desc
+                entry[i].memo = memo.get()
+                entry[i].acctF = acctF.get()
+                entry[i].acctS = accts.GetShortHand(acctF.get())
+                entry[i].amnt = amnt.get()
+            except IndexError:
+                # Entry needs new line
+                newLine = Line()
+                newLine.date = entry[i-1].date
+                newLine.hash = entry[i-1].hash
+                newLine.desc = entry[i-1].desc
+                newLine.memo = memo.get()
+                newLine.acctF = acctF.get()
+                newLine.acctS = accts.GetShortHand(acctF.get())
+                newLine.amnt = amnt.get()
+                entry.AddLine(newLine)
+
+        # Validate accounts
+        for l in entry:
+            retVal = accts.IsAccountValid(l.acctF)
+            if (retVal == c.BAD):
+                gui.Log('One or more accounts are not valid', 'error')
+                return
+
+        # Update balance
+        balance = 0
+        for l in entry:
+            try:
+                balance =  balance + float(l.amnt)
+            except ValueError:
+                gui.Log('One or more amounts are not valid', 'error')
+                return
+
+        balance = round(balance, 2)
+        gui.balanceStr.set(str(balance))
+
+        if (balance != 0):
+            gui.Log('Entry is not balanced', 'error')
+            return
+
+        self.entry = entry
+        gui.Update(self.entry)
+
+    # -------------------------------------------------------------------------
     def _UpdateAll(self, event):
         '''
         Handler to update entry/preview for either simple or split entry
 
         '''
-        gui   = self.gui
-        accts = self.accts
-
-        if (self.entry.size == 2):
-            # Do a simple entry update only
+        if (self.splitActive == False):
+            # Do a simple entry update
             self._UpdateSimple(event)
-            return
-
-        # # Validate data that was loaded and update current entry
-        # for mS, mB, acctS, acctB, amntS, amntB in gui.rows:
-        #     acctB['values'] = list
-
-
-
-        # # Update memo
-        # self.entry[1].memo = gui.memo.get()
-
-        # # Validate new account info
-        # acctF = gui.selectedAcct
-        # retVal = accts.IsAccountValid(acctF)
-        # if (retVal == c.BAD):
-        #     # Silent return, don't update GUI
-        #     return
-
-        # # Update account info in entry
-        # self.entry[1].acctF = acctF
-        # self.entry[1].acctS = accts.GetShortHand(acctF)
-
-        # gui.Update(self.entry)
+        else:
+            # Do a simple entry update
+            self._UpdateSplit(event)
 
     # -------------------------------------------------------------------------
     def _TabChanged(self, event):
@@ -287,10 +340,10 @@ class Sdet():
         accts = self.accts
 
         tabIndex = gui.notebook.index('current')
-        if (tabIndex == 0):
-            # Update entry split state
-            self.entry.split = False
-            return
+        if (tabIndex == 1):
+            self.splitActive = True
+        else:
+            self.splitActive = False
 
         # We have entered the split tab
         self.entry.split = True

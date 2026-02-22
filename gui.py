@@ -1410,8 +1410,8 @@ class MyGui():
         self.importDropdown['values'] = list
 
     # -------------------------------------------------------------------------
-    def LoadSplitAcctDropdowns(self, list=[]):
-        if (len(list) == 0):
+    def LoadSplitAcctDropdowns(self, list=None):
+        if (list == None):
             list = self.fullAcctList
         else:
             self.fullAcctList = list
@@ -1475,8 +1475,8 @@ class MyGui():
             acct = entry[1].acctF
             if (acct != ''):
                 self._UpdateSimple(acct)
-        elif (entry.split == True):
-            self._UpdateSplit(entry)
+        # elif (entry.split == True):
+        #     self._UpdateSplit(entry)
 
         # Update log box
         self.Log(' ')
