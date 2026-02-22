@@ -875,6 +875,38 @@ class MyGui():
             sticky      ='nesw',
         )
 
+        # Balance Label
+        tmp = tk.Label(
+            splitTab,
+            text       ='Balance:',
+            font       =FONT_LABEL
+        )
+        tmp.grid(
+            row        =10,
+            column     =33,
+            rowspan    =1,
+            columnspan =3,
+            sticky     ='nesw'
+        )
+
+        # Balance Box
+        self.balanceStr = tk.StringVar(value='')
+        amntBox = tk.Entry(
+            splitTab,
+            textvariable    =self.balanceStr,
+            font            =FONT_BOXES,
+            width           =4*WSCALE,
+            justify         ='center',
+            state           ='readonly'
+        )
+        amntBox.grid(
+            row             =11,
+            column          =33,
+            sticky          ='nesw',
+            rowspan         =1,
+            columnspan      =3
+        )
+
         self.splitTab = splitTab
 
     # -------------------------------------------------------------------------
@@ -920,9 +952,6 @@ class MyGui():
             command=self.canvas.yview
         )
 
-        # Reset the view
-        self.canvas.yview_moveto(0)
-
         # Create a frame inside the canvas which will be scrollable
         self.scrollFrame = tk.Frame(self.canvas)
 
@@ -943,8 +972,8 @@ class MyGui():
         # Memo List
         self.rows = []
 
-        # Create first two rows in split tab
-        for _ in range(20):
+        # Create first three rows in split tab
+        for _ in range(3):
             self._AddSplitRow()
 
     # -------------------------------------------------------------------------
@@ -1275,7 +1304,7 @@ class MyGui():
         self.selectedAcct = acct
 
     # -------------------------------------------------------------------------
-    def UpdateSimple(self, acctNameFull):
+    def _UpdateSimple(self, acctNameFull):
         # Get category
         tmp = acctNameFull.split(':')
         selCat = tmp[1]
@@ -1338,6 +1367,11 @@ class MyGui():
 
         # Clear memo
         self.memo.set('')
+
+    # # -------------------------------------------------------------------------
+    # def _UpdateSplit(self, entry):
+    #     for mS, mB, acctS, acctB, amntS, amntB in self.rows:
+    #         acctB['values'] = list
 
     # -------------------------------------------------------------------------
     def LoadImportDropdown(self, list):
@@ -1405,9 +1439,9 @@ class MyGui():
         if ((entry.split == False) and (entry.size == 2)):
             acct = entry[1].acctF
             if (acct != ''):
-                self.UpdateSimple(acct)
+                self._UpdateSimple(acct)
         elif (entry.split == True):
-            self.UpdateSplit(entry)
+            self._UpdateSplit(entry)
 
         # Update log box
         self.Log(' ')
