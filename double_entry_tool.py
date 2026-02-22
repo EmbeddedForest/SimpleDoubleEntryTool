@@ -29,7 +29,6 @@ class Sdet():
     ''' Class to manage the Simple Double Entry Tool application '''
 
     importIndex = 0
-    curEntry = Entry()
 
     # -------------------------------------------------------------------------
     def Run(self):
@@ -41,6 +40,7 @@ class Sdet():
         '''
         # Initialization
         self.gui = MyGui()
+        self.entry = Entry()
         self.accts = Accounts()
         self.iFile = ImportFile()
         self.jFile = JournalFile()
@@ -72,7 +72,7 @@ class Sdet():
 
         # Bind GUI buttons
         gui.startButton.configure(command=self._PrepareForNewTransaction)
-        gui.addEntryButton.configure(command=self.AddToJournal)
+        gui.addEntryButton.configure(command=self._AddToJournal)
 
         # Setup GUI events
         gui.root.bind('<Return>', self._UpdateAll)
@@ -126,13 +126,13 @@ class Sdet():
         newEntry = self._CreateNewEntry(self.importIndex)
 
         # Attempt to find and load suggested entry
-        retVal, self.curEntry = jFile.FindSuggestedEntry(newEntry)
+        retVal, self.entry = jFile.FindSuggestedEntry(newEntry)
         if (retVal == c.BAD):
             gui.Log('Journal does not exist', 'error')
             return
 
         # Update GUI
-        gui.Update(self.curEntry)
+        gui.Update(self.entry)
 
     # -------------------------------------------------------------------------
     def _FindNextTransactionIndex(self):
@@ -181,7 +181,7 @@ class Sdet():
     def _CreateNewEntry(self, i):
         '''
         Gets latest transaction data and loads it as the first lin into an new
-        entry object. That object is then saved as object attribute 'curEntry'.
+        entry object. That object is then saved as object attribute 'entry'.
 
         '''
         gui   = self.gui
@@ -212,18 +212,20 @@ class Sdet():
     # -------------------------------------------------------------------------
     def _UpdateSimple(self, event):
         '''
-        Handler to update memo and account data for a simple entry
+        Handler to update memo and account data for a simple entry. If entry is
+        more than 2 lines, the extra lines are deleted. (Forces a transition
+        from split to simple)
 
         '''
         gui   = self.gui
         accts = self.accts
 
-        if (self.curEntry.size != 2):
+        if (self.entry.size != 2):
             # Not a simple entry
             return
 
         # Update memo
-        self.curEntry[1].memo = gui.memo.get()
+        self.entry[1].memo = gui.memo.get()
 
         # Validate new account info
         acctF = gui.selectedAcct
@@ -233,10 +235,10 @@ class Sdet():
             return
 
         # Update account info in entry
-        self.curEntry[1].acctF = acctF
-        self.curEntry[1].acctS = accts.GetShortHand(acctF)
+        self.entry[1].acctF = acctF
+        self.entry[1].acctS = accts.GetShortHand(acctF)
 
-        gui.Update(self.curEntry)
+        gui.Update(self.entry)
 
     # -------------------------------------------------------------------------
     def _UpdateAll(self, event):
@@ -247,7 +249,7 @@ class Sdet():
         gui   = self.gui
         accts = self.accts
 
-        if (self.curEntry.size == 2):
+        if (self.entry.size == 2):
             # Do a simple entry update only
             self._UpdateSimple(event)
             return
@@ -259,7 +261,7 @@ class Sdet():
 
 
         # # Update memo
-        # self.curEntry[1].memo = gui.memo.get()
+        # self.entry[1].memo = gui.memo.get()
 
         # # Validate new account info
         # acctF = gui.selectedAcct
@@ -269,10 +271,10 @@ class Sdet():
         #     return
 
         # # Update account info in entry
-        # self.curEntry[1].acctF = acctF
-        # self.curEntry[1].acctS = accts.GetShortHand(acctF)
+        # self.entry[1].acctF = acctF
+        # self.entry[1].acctS = accts.GetShortHand(acctF)
 
-        # gui.Update(self.curEntry)
+        # gui.Update(self.entry)
 
     # -------------------------------------------------------------------------
     def _TabChanged(self, event):
@@ -282,25 +284,27 @@ class Sdet():
 
         '''
         gui = self.gui
+        accts = self.accts
 
         tabIndex = gui.notebook.index('current')
         if (tabIndex == 0):
-            # Update curEntry split state
-            self.curEntry.split = False
+            # Update entry split state
+            self.entry.split = False
             return
 
         # We have entered the split tab
-        self.curEntry.split = True
+        self.entry.split = True
 
-        if (self.curEntry.size == 0):
+        if (self.entry.size == 0):
             # No valid entry loaded, just open as blank
             gui.ResetSplitRows()
+            gui.LoadSplitAcctDropdowns()
             return
 
         # Load GUI with existing current entry data
         i = 0
         gui.ResetSplitRows()
-        for line in self.curEntry:
+        for line in self.entry:
             # Add new row if need be
             if (i > len(gui.rows)):
                 gui._AddSplitRow()
@@ -312,6 +316,8 @@ class Sdet():
             amntS.set(line.amnt)
 
             i = i + 1
+
+        gui.LoadSplitAcctDropdowns()
 
 
     # -------------------------------------------------------------------------
@@ -343,7 +349,7 @@ class Sdet():
         gui.selectedAssAcct.set(iFile.assAccts[0])
 
     # -------------------------------------------------------------------------
-    def AddToJournal(self):
+    def _AddToJournal(self):
         '''
         Does a bunch of checks. If all checks pass, the entry is added to the
         journal and the next transaction is loaded.
@@ -378,14 +384,14 @@ class Sdet():
             return
 
         # If simple transaction, check that selected account is valid
-        if (self.curEntry.split == False):
-            acct = self.curEntry[1].acctF
+        if (self.entry.split == False):
+            acct = self.entry[1].acctF
             retVal = accts.IsAccountValid(acct)
             if (retVal == c.BAD):
                 gui.Log('Selected account is not valid', 'error')
                 return
 
-        retVal = jFile.AddEntryToJournal(self.curEntry)
+        retVal = jFile.AddEntryToJournal(self.entry)
         if (retVal == c.BAD):
             gui.Log('Selected Journal csv file does not exist', 'error')
             return
