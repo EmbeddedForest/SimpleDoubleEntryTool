@@ -70,7 +70,11 @@ class JournalFile():
         df[amntC] = df[amntC].astype(str)
 
         # Description data (only take first 50 characters)
-        df[descC] = df[descC].str.strip().str[:50]
+        try:
+            df[descC] = df[descC].str.strip().str[:50]
+        except AttributeError:
+            # Assume no data in journal yet
+            log = 'Fresh journal, no worries'
 
         # Order by date and description
         df = df.sort_values(by=[dateC, descC, hashC, lineC])
@@ -134,20 +138,26 @@ class JournalFile():
 
             if (jDesc == l.desc) and (jAcct == l.acctF) and (jAmnt == l.amnt):
                 # Exact match found, load entry with data
-                count = row[c.JRNL_LINE]
                 i = 1
-                for i in range(count,0,-1):
+                lineNum = 1
+                while(lineNum != 0):
                     newLine = Line()
                     newLine.date = l.date
                     newLine.hash = l.hash
                     newLine.desc = l.desc
-                    newLine.memo = df.loc[index-i, c.JRNL_MEMO]
-                    newLine.acctF = df.loc[index-i, c.JRNL_ACCT_NAME_F]
-                    newLine.acctS = df.loc[index-i, c.JRNL_ACCT_NAME]
-                    newLine.amnt = df.loc[index-i, c.JRNL_AMOUNT]
-                    tmpHash = df.loc[index+i+1, c.JRNL_ID]
-                    entry.AddLine(newLine)
-                    i = i + 1
+                    try:
+                        lineNum = df.loc[index+i, c.JRNL_LINE]
+                        if (lineNum == 0):
+                            break
+                        newLine.memo = df.loc[index+i, c.JRNL_MEMO]
+                        newLine.acctF = df.loc[index+i, c.JRNL_ACCT_NAME_F]
+                        newLine.acctS = df.loc[index+i, c.JRNL_ACCT_NAME]
+                        newLine.amnt = df.loc[index+i, c.JRNL_AMOUNT]
+                        entry.AddLine(newLine)
+                        i = i + 1
+                    except IndexError:
+                        # This is the end of the journal, exit
+                        lineNum = 0
 
                 # Exact match found
                 return 'ExactMatch', entry
@@ -175,7 +185,7 @@ class JournalFile():
             jAmnt = str(round(jAmnt, 2))
 
             if (jDesc == l.desc) and (jAcct == l.acctF):
-                # Partial match found, suggested acct
+                # Partial match found, suggest acct
                 newLine.acctF = df.loc[index+1, c.JRNL_ACCT_NAME_F]
                 newLine.acctS = df.loc[index+1, c.JRNL_ACCT_NAME]
 
