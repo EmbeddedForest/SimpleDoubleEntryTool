@@ -787,6 +787,20 @@ class MyGui():
         for i in range(self.nbCs):
             splitTab.columnconfigure(i, minsize=self.COL_SIZE, weight=0)
 
+        # Line Label
+        tmp = tk.Label(
+            splitTab,
+            text       ='Line:',
+            font       =FONT_LABEL
+        )
+        tmp.grid(
+            row        =0,
+            column     =1,
+            rowspan    =1,
+            columnspan =2,
+            sticky     ='w'
+        )
+
         # Account Label
         tmp = tk.Label(
             splitTab,
@@ -795,7 +809,7 @@ class MyGui():
         )
         tmp.grid(
             row        =0,
-            column     =8,
+            column     =3,
             rowspan    =1,
             columnspan =3,
             sticky     ='w'
@@ -809,7 +823,7 @@ class MyGui():
         )
         tmp.grid(
             row        =0,
-            column     =18,
+            column     =15,
             rowspan    =1,
             columnspan =3,
             sticky     ='w'
@@ -829,22 +843,67 @@ class MyGui():
             sticky     ='w'
         )
 
+        # Add Line Button
+        self.addEntryButton = tk.Button(
+            splitTab,
+            text        ='Add Line',
+            font        =FONT_LABEL
+        )
+        self.addEntryButton.grid(
+            row         =2,
+            column      =33,
+            rowspan     =3,
+            columnspan  =3,
+            padx        =0,
+            pady        =0,
+            sticky      ='nesw',
+        )
+
+        # Add Line Button
+        self.addEntryButton = tk.Button(
+            splitTab,
+            text        ='Remove Last Line',
+            font        =FONT_LABEL
+        )
+        self.addEntryButton.grid(
+            row         =6,
+            column      =33,
+            rowspan     =3,
+            columnspan  =3,
+            padx        =0,
+            pady        =0,
+            sticky      ='nesw',
+        )
+
         self.splitTab = splitTab
 
     # -------------------------------------------------------------------------
     # Scrollable frame
     # -------------------------------------------------------------------------
     def _BuildScrollableFrame(self):
-        rs = 11
-        cs = 27
+        # Create border around scrollable area
+        self._FrameHelper(self.splitTab, 1, 1, self.nbRs-2, self.nbCs-6)
+
+        # Canvas dims
+        rs = 9
+        cs = 29
 
         # Build and place canvas inside of split frame
-        self.canvas = tk.Canvas(self.splitTab, borderwidth=0)
+        self.canvas = tk.Canvas(
+            self.splitTab,
+            height =rs*WSCALE,
+            width =cs*WSCALE,
+            borderwidth=0,
+            highlightthickness=0
+            # highlightcolor='gray',
+        )
         self.canvas.grid(
-            row        =1,
-            column     =6,
+            row        =2,
+            column     =2,
             rowspan    =rs,
             columnspan =cs,
+            padx        =0,
+            pady        =0,
             sticky     ='nesw'
         )
 
@@ -865,7 +924,7 @@ class MyGui():
         self.canvas.yview_moveto(0)
 
         # Create a frame inside the canvas which will be scrollable
-        self.scrollFrame = ttk.Frame(self.canvas)
+        self.scrollFrame = tk.Frame(self.canvas)
 
         # Create grid for scrollable frame
         for i in range(rs):
@@ -875,7 +934,7 @@ class MyGui():
 
         # Place scroll frame in window
         self.scrollFrameId = self.canvas.create_window(
-            0, 0, window=self.scrollFrame, anchor='center')
+            0, 0, window=self.scrollFrame, anchor='nw')
 
         # Bind events
         self.scrollFrame.bind('<Configure>', self._HandleConfigureEvent, add='+')
@@ -995,7 +1054,7 @@ class MyGui():
         tmp = tk.Label(self.scrollFrame, text=rowIndex)
         tmp.grid(
             row        =rowIndex,
-            column     =1,
+            column     =0,
             rowspan    =1,
             columnspan =1,
             sticky     ='w'
@@ -1007,15 +1066,15 @@ class MyGui():
             self.scrollFrame,
             textvariable    =acctStr,
             font            =FONT_BOXES,
-            width           =37,
+            width           =11*WSCALE,
             state           ='readonly',
             postcommand     =self._CanvasScrollStop
         )
         acctBox.grid(
             row             =rowIndex,
-            column          =2,
+            column          =1,
             rowspan         =1,
-            columnspan      =10,
+            columnspan      =11,
             sticky          ='w',
         )
 
@@ -1025,15 +1084,15 @@ class MyGui():
             self.scrollFrame,
             textvariable    =memoStr,
             font            =FONT_BOXES,
-            width           =37,
+            width           =11*WSCALE,
             justify         ='left'
         )
         memoBox.grid(
             row             =rowIndex,
-            column          =12,
+            column          =13,
             sticky          ='w',
             rowspan         =1,
-            columnspan      =10
+            columnspan      =11
         )
 
         # Amount
@@ -1042,15 +1101,15 @@ class MyGui():
             self.scrollFrame,
             textvariable    =amntStr,
             font            =FONT_BOXES,
-            width           =12,
+            width           =3*WSCALE,
             justify         ='left'
         )
         amntBox.grid(
             row             =rowIndex,
-            column          =21,
+            column          =25,
             sticky          ='w',
             rowspan         =1,
-            columnspan      =5
+            columnspan      =3
         )
 
         # Prevent scrolling while hovering
