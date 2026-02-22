@@ -42,6 +42,7 @@ class MyGui():
     selectedAcct = ''
     simpleEntry = True
     stopScroll = False
+    fullAcctList = []
 
     # -------------------------------------------------------------------------
     def __init__(self):
@@ -1165,6 +1166,7 @@ class MyGui():
         self.rows.append((line, acctStr, acctBox, memoStr, memoBox, amntStr, amntBox))
 
         # Reset the view
+        self.LoadSplitAcctDropdowns()
         self.canvas.yview_moveto(0)
 
     # -------------------------------------------------------------------------
@@ -1408,8 +1410,11 @@ class MyGui():
         self.importDropdown['values'] = list
 
     # -------------------------------------------------------------------------
-    def LoadSplitAcctDropdowns(self, list):
-        self.fullAcctList = list
+    def LoadSplitAcctDropdowns(self, list=[]):
+        if (len(list) == 0):
+            list = self.fullAcctList
+        else:
+            self.fullAcctList = list
 
         for l, acctS, acctB, mS, mB, amntS, amntB in self.rows:
             acctB['values'] = list
