@@ -485,7 +485,13 @@ class Sdet():
         if (retVal == c.BAD):
             gui.Log('Selected Journal csv file does not exist', 'error')
             return
-        
+
+        # Get memo
+        self.entry[1].memo = gui.memo.get()
+
+        # Clear memo box
+        gui.memo.set('')
+
         self._PrepareForNewTransaction()
 
 

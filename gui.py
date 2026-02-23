@@ -1397,14 +1397,6 @@ class MyGui():
         # Update the selected account
         self.selectedAcct = acctNameFull
 
-        # Clear memo
-        self.memo.set('')
-
-    # # -------------------------------------------------------------------------
-    # def _UpdateSplit(self, entry):
-    #     for mS, mB, acctS, acctB, amntS, amntB in self.rows:
-    #         acctB['values'] = list
-
     # -------------------------------------------------------------------------
     def LoadImportDropdown(self, list):
         self.importDropdown['values'] = list
@@ -1475,8 +1467,6 @@ class MyGui():
             acct = entry[1].acctF
             if (acct != ''):
                 self._UpdateSimple(acct)
-        # elif (entry.split == True):
-        #     self._UpdateSplit(entry)
 
         # Update log box
         self.Log(' ')
