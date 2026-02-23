@@ -229,19 +229,19 @@ class JournalFile():
 
             jAmnt = str(round(jAmnt, 2))
 
-            if (jAcct == l.acctF):
-                # Calculate the similarity ratio in description strings
-                ratio = SequenceMatcher(None, jDesc, l.desc ).ratio()
-                # print(f"Similarity ratio: {ratio:.2f}")
+            # Calculate the similarity ratio in description strings
+            ratio = SequenceMatcher(None, jDesc, l.desc ).ratio()
+            # print(f"Similarity ratio: {ratio:.2f}")
 
-                if ratio > 0.75:
-                    # Partial match found, suggest acct
-                    newLine.acctF = df.loc[index+1, c.JRNL_ACCT_NAME_F]
-                    newLine.acctS = df.loc[index+1, c.JRNL_ACCT_NAME]
+            if ratio > 0.60:
+                # Partial match found, suggest acct
+                newLine.acctF = df.loc[index, c.JRNL_ACCT_NAME_F]
+                newLine.acctS = df.loc[index, c.JRNL_ACCT_NAME]
+                newLine.memo = df.loc[index, c.JRNL_MEMO]
 
-                    # Append to entry
-                    entry.AddLine(newLine)
-                    return 'PartialMatch', entry
+                # Append to entry
+                entry.AddLine(newLine)
+                return 'PartialMatch', entry
 
         # No matches found, append only what we know
         entry.AddLine(newLine)
