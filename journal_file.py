@@ -183,6 +183,8 @@ class JournalFile():
                     newLine.hash = l.hash
                     newLine.desc = l.desc
                     try:
+                        # TODO - failing here if there is wild card (*) as part of search?
+                        # Possibly just related to back to back identical descriptions?
                         lineNum = df.loc[index+i, c.JRNL_LINE]
                         if (lineNum == 0):
                             break
