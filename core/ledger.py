@@ -8,6 +8,12 @@
 #   re-scanned the whole file once per already-processed transaction (O(n^2)).
 #   Ledger loads the file once into a DataFrame, answers all queries from
 #   memory, and writes back only on save().
+#
+#   Derived views (the grouped Entry list, the set of TransactionIDs, and a
+#   (desc, account) -> entry index) are built once and cached; any mutation
+#   invalidates the caches so they rebuild lazily on next use. The index backs
+#   classify(), a cheap exact/partial check used to colour the queue without
+#   paying for fuzzy matching on every row.
 #------------------------------------------------------------------------------
 
 import pandas as pd
@@ -15,7 +21,7 @@ import pandas as pd
 import constants as c
 from core.models import Line, Entry
 from core.normalize import normalize_date, normalize_amount, normalize_desc
-from core.suggest import suggest_entry
+from core.suggest import suggest_entry, EXACT, PARTIAL, NONE
 
 
 class JournalNotFoundError(FileNotFoundError):
@@ -30,6 +36,9 @@ class Ledger:
     def __init__(self, path=c.JOURNAL_FP):
         self.path = path
         self.df = None
+        self._history = None      # cached list[Entry], oldest-first
+        self._ids = None          # cached set of TransactionIDs
+        self._index = None        # cached {(desc, acct_full): Entry} most-recent
 
     # -- load / save ------------------------------------------------------
 
@@ -40,6 +49,7 @@ class Ledger:
             raise JournalNotFoundError(self.path) from e
 
         self.df = self._sort(self._normalize_df(df))
+        self._invalidate()
         return self
 
     def save(self):
@@ -65,30 +75,92 @@ class Ledger:
             return df
         return df.sort_values(by=self.SORT_COLS).reset_index(drop=True)
 
+    # -- derived-view cache ----------------------------------------------
+
+    def _invalidate(self):
+        self._history = self._ids = self._index = None
+
+    # Column order used for the fast itertuples scan below.
+    _SCAN_COLS = [c.JRNL_LINE, c.JRNL_DATE, c.JRNL_ID, c.JRNL_DSCRP,
+                  c.JRNL_MEMO, c.JRNL_ACCT_NAME_F, c.JRNL_ACCT_NAME, c.JRNL_AMOUNT]
+
+    def _ensure_caches(self):
+        ''' Build the grouped history, id set and match index in one pass. '''
+        self._ensure_loaded()
+        if self._history is not None:
+            return
+
+        self._history, self._ids, self._index = [], set(), {}
+        if self.df.empty:
+            return
+
+        # The df is sorted by (date, desc, id, line), so all lines of an entry
+        # are contiguous and line-ordered. A single itertuples scan that breaks
+        # on TransactionID change is far faster than groupby + iterrows, which
+        # matters because the caches rebuild after every add/edit.
+        current_id = None
+        lines = []
+        for (_ln, date, txn_id, desc, memo, acct_f, acct_s, amount) in \
+                self.df[self._SCAN_COLS].itertuples(index=False, name=None):
+            txn_id = str(txn_id)
+            if lines and txn_id != current_id:
+                self._cache_entry(lines)
+                lines = []
+            current_id = txn_id
+            lines.append(Line(
+                date=str(date), txn_id=txn_id, desc=str(desc),
+                memo='' if pd.isna(memo) else str(memo),
+                acct_full=str(acct_f), acct_short=str(acct_s),
+                amount=str(amount),          # df amounts are already canonical
+            ))
+        if lines:
+            self._cache_entry(lines)
+
+    def _cache_entry(self, lines):
+        entry = Entry(lines)
+        first = entry[0]
+        self._history.append(entry)
+        self._ids.add(first.txn_id)
+        self._index[(first.desc, first.acct_full)] = entry
+
     # -- queries ----------------------------------------------------------
 
     def transaction_exists(self, txn_id):
-        self._ensure_loaded()
-        return txn_id in self.df[c.JRNL_ID].values
+        self._ensure_caches()
+        return txn_id in self._ids
 
     def history(self):
-        ''' All past entries as list[Entry], oldest-first. '''
-        self._ensure_loaded()
-        entries = []
-        if self.df.empty:
-            return entries
+        ''' All past entries as list[Entry], oldest-first (cached). '''
+        self._ensure_caches()
+        return self._history
 
-        # sort=False preserves the date-sorted order so reversed(history)
-        # yields the most recent entries first.
-        for _, group in self.df.groupby(c.JRNL_ID, sort=False):
-            group = group.sort_values(by=c.JRNL_LINE)
-            lines = [self._row_to_line(row) for _, row in group.iterrows()]
-            entries.append(Entry(lines))
-        return entries
+    def classify(self, first_line):
+        '''
+        Fast suggestion tier for the new transaction in first_line, using only
+        the (desc, account) index - EXACT if a same-amount match exists,
+        PARTIAL if same desc+account but different amount, else NONE. Cheap
+        enough to run for every queue row; no fuzzy matching (that only runs in
+        find_suggested_entry when a row is actually opened).
+        '''
+        self._ensure_caches()
+        entry = self._index.get((first_line.desc, first_line.acct_full))
+        if entry is None:
+            return NONE
+        if normalize_amount(entry[0].amount) == normalize_amount(first_line.amount):
+            return EXACT
+        return PARTIAL
 
     def find_suggested_entry(self, entry: Entry):
-        ''' Suggest a categorisation for the new transaction in entry[0]. '''
+        ''' Full (incl. fuzzy) suggestion for the transaction in entry[0]. '''
         return suggest_entry(self.history(), entry[0])
+
+    def get_entry(self, txn_id):
+        ''' The stored Entry for a TransactionID, or None if not present. '''
+        self._ensure_loaded()
+        group = self.df[self.df[c.JRNL_ID] == txn_id].sort_values(by=c.JRNL_LINE)
+        if group.empty:
+            return None
+        return Entry([self._row_to_line(row) for _, row in group.iterrows()])
 
     # -- mutation ---------------------------------------------------------
 
@@ -109,6 +181,19 @@ class Ledger:
             })
         new = pd.DataFrame(rows, columns=self.df.columns)
         self.df = self._sort(pd.concat([self.df, new], ignore_index=True))
+        self._invalidate()
+
+    def delete_entry(self, txn_id):
+        ''' Remove every line of the entry with this TransactionID. '''
+        self._ensure_loaded()
+        self.df = self.df[self.df[c.JRNL_ID] != txn_id].reset_index(drop=True)
+        self._invalidate()
+
+    def replace_entry(self, entry: Entry):
+        ''' Replace the stored entry sharing entry[0]'s TransactionID with the
+            given (edited) entry. Call save() to persist. '''
+        self.delete_entry(entry[0].txn_id)
+        self.add_entry(entry)
 
     # -- helpers ----------------------------------------------------------
 
