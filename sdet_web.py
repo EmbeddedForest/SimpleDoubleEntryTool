@@ -25,15 +25,19 @@
 import os
 import sys
 
+import plotly.graph_objects as go
 from nicegui import ui
 
 import constants as c
 from accounts import Accounts
+from core import reports
 from core.models import Line, Entry
 from core.config import load_config, ConfigNotFoundError
 from core.importer import load_transactions, list_import_files, ImportStyleError
 from core.ledger import Ledger, JournalNotFoundError
 from core.suggest import EXACT, PARTIAL, NONE
+
+_GREEN, _RED, _BLUE = '#16a34a', '#dc2626', '#2563eb'
 
 
 #==============================================================================
@@ -504,6 +508,118 @@ def build_journal():
 
 
 #==============================================================================
+# Reports tab - cash flow, spending by category, money-flow Sankey
+#==============================================================================
+def _plot(fig, height):
+    fig.update_layout(margin=dict(l=10, r=10, t=10, b=10), height=height,
+                      autosize=True, legend=dict(orientation='h'))
+    return ui.plotly(fig).classes('w-full')
+
+
+def build_reports():
+    @ui.refreshable
+    def body():
+        entries = state.ledger.history()
+        if not entries:
+            ui.label('No journal entries yet.').classes('text-gray-500')
+            return
+
+        alloc = reports.income_allocation(entries)
+        months = [r['month'] for r in alloc]
+
+        # ---- headline trend: true cost of living vs take-home pay --------
+        ui.label('True cost of living vs take-home pay').classes('text-lg font-bold')
+        trend = go.Figure()
+        trend.add_scatter(name='Take-home pay', x=months,
+                          y=[r['take_home'] for r in alloc],
+                          mode='lines+markers', line=dict(color=_GREEN, width=2))
+        trend.add_scatter(name='True cost of living', x=months,
+                          y=[r['cost_of_living'] for r in alloc],
+                          mode='lines+markers', line=dict(color=_RED, width=2),
+                          fill='tonexty', fillcolor='rgba(220,38,38,0.08)')
+        trend.update_xaxes(type='category')
+        _plot(trend, 320)
+        ui.label('Take-home = income minus taxes & benefit deductions. True cost '
+                 'of living = living expenses + debt principal, excluding taxes, '
+                 'benefits and one-off wedding costs. The waterfall below shows '
+                 'where each dollar of income actually went.') \
+            .classes('text-xs text-gray-500')
+
+        ui.separator().classes('my-2')
+
+        # ---- period selector drives breakdown + sankey -------------------
+        month_opts = ['All time'] + reports.available_months(entries)
+        with ui.row().classes('items-center gap-3'):
+            ui.label('Period').classes('font-bold')
+            month_select = ui.select(month_opts, value=month_opts[0],
+                                     on_change=lambda: detail.refresh()).classes('w-48')
+
+        @ui.refreshable
+        def detail():
+            month = None if month_select.value == 'All time' else month_select.value
+
+            # where the income went (waterfall): gross income descends through
+            # each use down to what stayed as cash
+            ui.label(f'Where your income went - {month or "all time"}') \
+                .classes('font-bold')
+            t = reports.allocation_totals(entries, month)
+            wf = go.Figure(go.Waterfall(
+                orientation='v',
+                measure=['relative'] * 7 + ['total'],
+                x=['Gross income', 'Taxes', 'Benefits', 'Living', 'Debt principal',
+                   'Wedding', 'Investing', 'Saved (cash)'],
+                y=[t['income'], -t['taxes'], -t['benefits'], -t['living'],
+                   -t['debt_principal'], -t['wedding'], -t['investing'], t['saved']],
+                connector=dict(line=dict(color='#bbb')),
+                increasing=dict(marker=dict(color=_GREEN)),
+                decreasing=dict(marker=dict(color=_RED)),
+                totals=dict(marker=dict(color=_BLUE)),
+            ))
+            wf.update_layout(showlegend=False)
+            _plot(wf, 340)
+
+            ui.separator().classes('my-2')
+
+            with ui.row().classes('w-full gap-4 no-wrap items-start'):
+                # spending by category
+                with ui.column().classes('w-1/2'):
+                    ui.label('Spending by category').classes('font-bold')
+                    cats = reports.expenses_by_category(entries, month=month, depth=2)
+                    if cats:
+                        fig = go.Figure(go.Bar(
+                            orientation='h', marker_color=_RED,
+                            x=[c2['amount'] for c2 in cats],
+                            y=[c2['category'].replace('Expenses:', '') for c2 in cats]))
+                        fig.update_layout(yaxis=dict(autorange='reversed'),
+                                          showlegend=False)
+                        _plot(fig, 460)
+                    else:
+                        ui.label('No expenses in this period.').classes('text-gray-500')
+
+                # money-flow sankey
+                with ui.column().classes('w-1/2'):
+                    ui.label('Money flow').classes('font-bold')
+                    sk = reports.sankey_flows(entries, month=month)
+                    if sk['value']:
+                        fig = go.Figure(go.Sankey(
+                            node=dict(label=sk['labels'], pad=12, thickness=14),
+                            link=dict(source=sk['source'], target=sk['target'],
+                                      value=sk['value'])))
+                        fig.update_layout(font_size=10, showlegend=False)
+                        _plot(fig, 460)
+                    else:
+                        ui.label('No balanced transactions in this period.') \
+                            .classes('text-gray-500')
+
+        detail()
+
+    with ui.row().classes('items-center w-full'):
+        ui.button(icon='refresh', on_click=body.refresh).props('flat dense') \
+            .tooltip('Recompute from the latest journal')
+    body()
+
+
+#==============================================================================
 # The page
 #==============================================================================
 @ui.page('/')
@@ -520,12 +636,15 @@ def index():
     with ui.tabs() as tabs:
         cat_tab = ui.tab('Categorize')
         jrnl_tab = ui.tab('Journal')
+        rpt_tab = ui.tab('Reports')
 
     with ui.tab_panels(tabs, value=cat_tab).classes('w-full'):
         with ui.tab_panel(cat_tab):
             build_categorize()
         with ui.tab_panel(jrnl_tab):
             build_journal()
+        with ui.tab_panel(rpt_tab):
+            build_reports()
 
 
 #==============================================================================

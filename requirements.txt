@@ -1,0 +1,9 @@
+# Simple Double Entry Tool - runtime dependencies
+# Install with:  python -m pip install -r requirements.txt
+
+nicegui>=3.12      # web GUI (new front-end)
+pandas>=2.0        # journal / import data handling
+pyyaml>=6.0        # config.yaml
+plotly>=5.0        # Sankey / reporting
+openpyxl>=3.1      # Excel report export
+pillow>=10.0       # logo image (legacy tkinter GUI)
