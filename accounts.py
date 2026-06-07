@@ -2,127 +2,84 @@
 # File:
 #   accounts.py
 #
-# Author:
-#   EmbeddedForest
-#
-# Date:
-#   01/17/2026
-#
 # Description:
-#   This file creates a class which manages the accounts listed in config.yaml
-#
+#   Manages the chart of accounts defined in config.yaml. Reworked to keep all
+#   state on the instance, to read config via core.config, and to raise on a
+#   missing config rather than returning string flags.
 #------------------------------------------------------------------------------
 
-import yaml
 import constants as c
+from core.config import load_config
 
 
 class Accounts():
-    ''' Class which manages the account information from config.yaml '''
+    ''' The chart of accounts, grouped by type and category. '''
 
-    allAcctsFullName = []
-    allAcctsShortName = []
-    assetAcctList = []
-    incomeAcctList = []
-    expenseAcctList = []
-    liabilityAcctList = []
-    assetDic = {}
-    incomeDic = {}
-    liabilityDic = {}
-    expenseDic = {}
-    active = False
+    def __init__(self, config_path=c.CONFIG_FILE):
+        self.config_path = config_path
+        self._reset()
 
-    def Setup(self):
-        ''' Setup the accounts which are stored in config.yaml '''
-        self._ResetData()
-
-        # Make sure config is present
-        try:
-            with open(c.CONFIG_FILE) as f:
-                config = yaml.safe_load(f)
-
-        except FileNotFoundError:
-            log = 'Config file does not exist', 'error'
-            return c.BAD, log
-
-        # Put all accounts listed in config file into single full list
-        fullList = []
-        fullList.extend(config['Accounts']['Assets'])
-        fullList.extend(config['Accounts']['Liabilities'])
-        fullList.extend(config['Accounts']['Income'])
-        fullList.extend(config['Accounts']['Expenses'])
-        self.fullList = fullList
-
-        for acctF in fullList:
-            # Strip out all placeholder accounts
-            if (acctF.count(':') != 2):
-                continue
-
-            # Get category
-            tmp = acctF.split(':')
-            cat = tmp[1]
-
-            # Get short hand account name
-            acctS = acctF.rpartition(':')[-1]
-
-            self.allAcctsFullName.append(acctF)
-            self.allAcctsShortName.append(acctS)
-
-            if ('Assets' in acctF):
-                self.assetAcctList.append(acctF)
-                self.assetDic.setdefault(cat, []).append(acctS)
-            if ('Liabilities' in acctF):
-                self.liabilityAcctList.append(acctF)
-                self.liabilityDic.setdefault(cat, []).append(acctS)
-            if ('Income' in acctF):
-                self.incomeAcctList.append(acctF)
-                self.incomeDic.setdefault(cat, []).append(acctS)
-            if ('Expenses' in acctF):
-                self.expenseAcctList.append(acctF)
-                self.expenseDic.setdefault(cat, []).append(acctS)
-
-        # Looks good
-        self.active = True
-        log = 'Account setup is successful', 'default'
-        return c.GOOD, log
-
-    def _ResetData(self):
-        self.fullList = []
-        self.allAcctsFullName = []
-        self.allAcctsShortName = []
-        self.assetAcctList = []
-        self.incomeAcctList = []
-        self.expenseAcctList = []
-        self.liabilityAcctList = []
-        self.assetDic = {}
-        self.incomeDic = {}
-        self.liabilityDic = {}
-        self.expenseDic = {}
+    def _reset(self):
+        self.full_list = []
+        self.all_full_names = []
+        self.all_short_names = []
+        self.asset_accts = []
+        self.income_accts = []
+        self.expense_accts = []
+        self.liability_accts = []
+        self.asset_dic = {}
+        self.income_dic = {}
+        self.liability_dic = {}
+        self.expense_dic = {}
         self.active = False
 
-    def GetShortHand(self, fullAcctName):
-        '''
-        Returns short hand account name of given full account name.
-        Returns blank string if no match is found
-        '''
-        try:
-            index = self.allAcctsFullName.index(fullAcctName)
+    def setup(self, config=None):
+        ''' Load and index the accounts. Pass a config dict to skip file IO
+            (used by tests); otherwise it is read from config_path. '''
+        self._reset()
+        if config is None:
+            config = load_config(self.config_path)
 
+        accounts = config['Accounts']
+        for group in (c.ASSETS, c.LIABILITIES, c.INCOME, c.EXPENSES):
+            self.full_list.extend(accounts.get(group, []))
+
+        for full in self.full_list:
+            # Keep only leaf accounts of the form Group:Category:Account;
+            # the Group and Group:Category placeholders are skipped.
+            if full.count(':') != 2:
+                continue
+
+            category = full.split(':')[1]
+            short = full.rpartition(':')[-1]
+
+            self.all_full_names.append(full)
+            self.all_short_names.append(short)
+
+            if full.startswith(c.ASSETS):
+                self.asset_accts.append(full)
+                self.asset_dic.setdefault(category, []).append(short)
+            elif full.startswith(c.LIABILITIES):
+                self.liability_accts.append(full)
+                self.liability_dic.setdefault(category, []).append(short)
+            elif full.startswith(c.INCOME):
+                self.income_accts.append(full)
+                self.income_dic.setdefault(category, []).append(short)
+            elif full.startswith(c.EXPENSES):
+                self.expense_accts.append(full)
+                self.expense_dic.setdefault(category, []).append(short)
+
+        self.active = True
+        return self
+
+    def is_account_valid(self, full_name):
+        ''' True if full_name is a known leaf account. '''
+        return full_name in self.all_full_names
+
+    def short_name(self, full_name):
+        ''' Short (leaf) name for a full account name, or '' if unknown. '''
+        try:
+            index = self.all_full_names.index(full_name)
         except ValueError:
             return ''
-
-        return self.allAcctsShortName[index]
-
-    def IsAccountValid(self, fullAcctName):
-        '''
-        Checks whether or not given account is valid or not
-        Returns 'good' if valid, 'bad' if not.
-        '''
-        try:
-            index = self.allAcctsFullName.index(fullAcctName)
-
-        except ValueError:
-            return c.BAD
-
-        # All Good
-        return c.GOOD
+        return self.all_short_names[index]

@@ -67,9 +67,9 @@ class Ledger:
 
     # -- queries ----------------------------------------------------------
 
-    def transaction_exists(self, hash):
+    def transaction_exists(self, txn_id):
         self._ensure_loaded()
-        return hash in self.df[c.JRNL_ID].values
+        return txn_id in self.df[c.JRNL_ID].values
 
     def history(self):
         ''' All past entries as list[Entry], oldest-first. '''
@@ -96,16 +96,16 @@ class Ledger:
         ''' Append an entry to the in-memory journal. Call save() to persist. '''
         self._ensure_loaded()
         rows = []
-        for line_num, l in enumerate(entry):
+        for line_num, line in enumerate(entry):
             rows.append({
                 c.JRNL_LINE:        line_num,
-                c.JRNL_DATE:        l.date,
-                c.JRNL_ID:          l.hash,
-                c.JRNL_DSCRP:       l.desc,
-                c.JRNL_MEMO:        l.memo,
-                c.JRNL_ACCT_NAME_F: l.acctF,
-                c.JRNL_ACCT_NAME:   l.acctS,
-                c.JRNL_AMOUNT:      normalize_amount(l.amnt) if l.amnt != '' else '',
+                c.JRNL_DATE:        line.date,
+                c.JRNL_ID:          line.txn_id,
+                c.JRNL_DSCRP:       line.desc,
+                c.JRNL_MEMO:        line.memo,
+                c.JRNL_ACCT_NAME_F: line.acct_full,
+                c.JRNL_ACCT_NAME:   line.acct_short,
+                c.JRNL_AMOUNT:      normalize_amount(line.amount) if line.amount != '' else '',
             })
         new = pd.DataFrame(rows, columns=self.df.columns)
         self.df = self._sort(pd.concat([self.df, new], ignore_index=True))
@@ -115,11 +115,11 @@ class Ledger:
     def _row_to_line(self, row):
         memo = row[c.JRNL_MEMO]
         return Line(
-            date  = str(row[c.JRNL_DATE]),
-            hash  = str(row[c.JRNL_ID]),
-            desc  = str(row[c.JRNL_DSCRP]),
-            memo  = '' if pd.isna(memo) else str(memo),
-            acctF = str(row[c.JRNL_ACCT_NAME_F]),
-            acctS = str(row[c.JRNL_ACCT_NAME]),
-            amnt  = normalize_amount(row[c.JRNL_AMOUNT]),
+            date       = str(row[c.JRNL_DATE]),
+            txn_id     = str(row[c.JRNL_ID]),
+            desc       = str(row[c.JRNL_DSCRP]),
+            memo       = '' if pd.isna(memo) else str(memo),
+            acct_full  = str(row[c.JRNL_ACCT_NAME_F]),
+            acct_short = str(row[c.JRNL_ACCT_NAME]),
+            amount     = normalize_amount(row[c.JRNL_AMOUNT]),
         )

@@ -18,50 +18,50 @@ from dataclasses import dataclass
 @dataclass
 class Line:
     ''' A single line of a journal entry (one account posting). '''
-    date:  str = ''
-    hash:  str = ''   # TransactionID shared by every line of the entry
-    desc:  str = ''
-    memo:  str = ''
-    acctF: str = ''   # Full account name, e.g. 'Expenses:Everyday:Groceries'
-    acctS: str = ''   # Short account name, e.g. 'Groceries'
-    amnt:  str = ''   # Signed amount as a canonical 2-decimal string
+    date:       str = ''
+    txn_id:     str = ''   # TransactionID shared by every line of the entry
+    desc:       str = ''
+    memo:       str = ''
+    acct_full:  str = ''   # e.g. 'Expenses:Everyday:Groceries'
+    acct_short: str = ''   # e.g. 'Groceries'
+    amount:     str = ''   # signed amount as a canonical 2-decimal string
 
 
 class Entry:
     ''' An ordered collection of Lines that together form one transaction. '''
 
     def __init__(self, lines=None):
-        self.entry = []
+        self.lines = []
         self.split = False
         for line in (lines or []):
-            self.AddLine(line)
+            self.add_line(line)
 
     # -- size / split -----------------------------------------------------
 
     @property
     def size(self):
-        return len(self.entry)
+        return len(self.lines)
 
     def _refresh_split(self):
         # split auto-tracks size. Callers may still force it True for a
-        # 2-line entry being edited in the split view; the next Add/Remove
+        # 2-line entry being edited in the split view; the next add/remove
         # recomputes it, matching the original entry.py behaviour.
         self.split = self.size > 2
 
     # -- mutation ---------------------------------------------------------
 
-    def AddLine(self, line: Line):
-        self.entry.append(line)
+    def add_line(self, line: Line):
+        self.lines.append(line)
         self._refresh_split()
 
-    def RemoveLine(self, index):
+    def remove_line(self, index):
         if index >= self.size:
             return
-        self.entry.pop(index)
+        self.lines.pop(index)
         self._refresh_split()
 
-    def Clear(self):
-        self.entry = []
+    def clear(self):
+        self.lines = []
         self.split = False
 
     # -- balance ----------------------------------------------------------
@@ -75,8 +75,8 @@ class Entry:
         that, rather than a silently-wrong "balanced" result).
         '''
         total = 0.0
-        for line in self.entry:
-            total += float(line.amnt)
+        for line in self.lines:
+            total += float(line.amount)
         return round(total, 2)
 
     @property
@@ -89,7 +89,7 @@ class Entry:
         return self.size
 
     def __iter__(self):
-        return iter(self.entry)
+        return iter(self.lines)
 
     def __getitem__(self, key):
-        return self.entry[key]
+        return self.lines[key]

@@ -42,9 +42,10 @@ class LedgerTestBase(unittest.TestCase):
             os.remove(self.path)
         os.rmdir(self.dir)
 
-    def new_entry(self, desc, acctF, amnt):
-        return Entry([Line(date='2026-02-01', hash='newhash', desc=desc,
-                           acctF=acctF, acctS=acctF.split(':')[-1], amnt=amnt)])
+    def new_entry(self, desc, acct_full, amount):
+        return Entry([Line(date='2026-02-01', txn_id='newhash', desc=desc,
+                           acct_full=acct_full, acct_short=acct_full.split(':')[-1],
+                           amount=amount)])
 
 
 class TestExistsAndHistory(LedgerTestBase):
@@ -63,7 +64,7 @@ class TestExistsAndHistory(LedgerTestBase):
         for entry in history:
             for line in entry:
                 self.assertRegex(line.date, r'^\d{4}-\d{2}-\d{2}$')
-                self.assertRegex(line.amnt, r'^-?\d+\.\d{2}$')  # always 2dp
+                self.assertRegex(line.amount, r'^-?\d+\.\d{2}$')  # always 2dp
 
 
 class TestSuggestionThroughLedger(LedgerTestBase):
@@ -72,24 +73,26 @@ class TestSuggestionThroughLedger(LedgerTestBase):
         flag, entry = self.ledger.find_suggested_entry(
             self.new_entry('NETFLIX', 'Liabilities:CreditCard:CC1', '-17.99'))
         self.assertEqual(flag, EXACT)
-        self.assertEqual(entry[1].acctF, 'Expenses:Entertainment:Streaming')
+        self.assertEqual(entry[1].acct_full, 'Expenses:Entertainment:Streaming')
 
     def test_exact_match_on_trailing_zero_amount(self):
         # Stored as '-200'; new txn as '-200.00'. Must still match exactly.
         flag, entry = self.ledger.find_suggested_entry(
             self.new_entry('Brokerage Transfer', 'Assets:Bank:Checking', '-200.00'))
         self.assertEqual(flag, EXACT)
-        self.assertEqual(entry[1].acctF, 'Assets:Investments:Brokerage')
+        self.assertEqual(entry[1].acct_full, 'Assets:Investments:Brokerage')
 
 
 class TestAddAndPersist(LedgerTestBase):
 
     def test_add_entry_persists_after_save_and_reload(self):
         entry = Entry([
-            Line(date='2026-02-01', hash='txNEW', desc='COFFEE',
-                 acctF='Liabilities:CreditCard:CC1', acctS='CC1', amnt='-4.50'),
-            Line(date='2026-02-01', hash='txNEW', desc='COFFEE',
-                 acctF='Expenses:Everyday:Coffee', acctS='Coffee', amnt='4.50'),
+            Line(date='2026-02-01', txn_id='txNEW', desc='COFFEE',
+                 acct_full='Liabilities:CreditCard:CC1', acct_short='CC1',
+                 amount='-4.50'),
+            Line(date='2026-02-01', txn_id='txNEW', desc='COFFEE',
+                 acct_full='Expenses:Everyday:Coffee', acct_short='Coffee',
+                 amount='4.50'),
         ])
         self.ledger.add_entry(entry)
         self.assertTrue(self.ledger.transaction_exists('txNEW'))

@@ -26,39 +26,39 @@ PARTIAL = 'PartialMatch'
 NONE    = 'NoMatch'
 
 
-def _reverse_amount(amnt):
+def _reverse_amount(amount):
     ''' Flip the sign of a canonical amount string ('' stays ''). '''
-    if amnt == '':
+    if amount == '':
         return ''
-    if amnt.startswith('-'):
-        return amnt[1:]
-    return '-' + amnt
+    if amount.startswith('-'):
+        return amount[1:]
+    return '-' + amount
 
 
-def _offset_line(src_line, l, amnt):
-    ''' Build a follow-on line, taking identity fields from the new txn (l)
-        and account/memo from a historical line. '''
-    return Line(date=l.date, hash=l.hash, desc=l.desc,
-                memo=src_line.memo, acctF=src_line.acctF,
-                acctS=src_line.acctS, amnt=amnt)
+def _offset_line(src_line, first, amount):
+    ''' Build a follow-on line, taking identity fields from the new txn
+        (first) and account/memo from a historical line. '''
+    return Line(date=first.date, txn_id=first.txn_id, desc=first.desc,
+                memo=src_line.memo, acct_full=src_line.acct_full,
+                acct_short=src_line.acct_short, amount=amount)
 
 
-def _replay_exact(hist, l):
+def _replay_exact(hist, first):
     ''' Exact match: replay every follow-on line verbatim. '''
-    entry = Entry([l])
+    entry = Entry([first])
     for hline in hist[1:]:
-        entry.AddLine(_offset_line(hline, l, normalize_amount(hline.amnt)))
+        entry.add_line(_offset_line(hline, first, normalize_amount(hline.amount)))
     return entry
 
 
-def _replay_partial(hist, l):
+def _replay_partial(hist, first):
     ''' Partial match: keep accounts/memos, but the first offset line gets
         the reversed transaction amount and the rest are left blank for the
         user to fill. '''
-    entry = Entry([l])
-    rev = _reverse_amount(normalize_amount(l.amnt))
+    entry = Entry([first])
+    rev = _reverse_amount(normalize_amount(first.amount))
     for idx, hline in enumerate(hist[1:], start=1):
-        entry.AddLine(_offset_line(hline, l, rev if idx == 1 else ''))
+        entry.add_line(_offset_line(hline, first, rev if idx == 1 else ''))
     return entry
 
 
@@ -70,34 +70,34 @@ def suggest_entry(history, first_line):
     Returns (result_flag, Entry) where the returned Entry always begins with
     first_line. result_flag is one of EXACT / PARTIAL / NONE.
     '''
-    l = first_line
-    target_amnt = normalize_amount(l.amnt) if l.amnt != '' else ''
+    first = first_line
+    target = normalize_amount(first.amount) if first.amount != '' else ''
 
     # Tier 1 - exact: same description, account and amount.
     for hist in reversed(history):
         h0 = hist[0]
-        if (h0.desc == l.desc and h0.acctF == l.acctF
-                and normalize_amount(h0.amnt) == target_amnt):
-            return EXACT, _replay_exact(hist, l)
+        if (h0.desc == first.desc and h0.acct_full == first.acct_full
+                and normalize_amount(h0.amount) == target):
+            return EXACT, _replay_exact(hist, first)
 
     # Tier 2 - partial: same description and account, any amount.
     for hist in reversed(history):
         h0 = hist[0]
-        if h0.desc == l.desc and h0.acctF == l.acctF:
-            return PARTIAL, _replay_partial(hist, l)
+        if h0.desc == first.desc and h0.acct_full == first.acct_full:
+            return PARTIAL, _replay_partial(hist, first)
 
     # Tier 3 - fuzzy: closest description above the similarity threshold.
-    rev = _reverse_amount(target_amnt)
+    rev = _reverse_amount(target)
     for hist in reversed(history):
         for hline in reversed(list(hist)):
-            ratio = SequenceMatcher(None, hline.desc, l.desc).ratio()
+            ratio = SequenceMatcher(None, hline.desc, first.desc).ratio()
             if ratio > FUZZY_THRESHOLD:
-                entry = Entry([l])
-                entry.AddLine(_offset_line(hline, l, rev))
+                entry = Entry([first])
+                entry.add_line(_offset_line(hline, first, rev))
                 return PARTIAL, entry
 
     # No match: hand back only what we know, with the reversed amount.
-    entry = Entry([l])
-    entry.AddLine(Line(date=l.date, hash=l.hash, desc=l.desc,
-                       acctF='', acctS='', amnt=rev))
+    entry = Entry([first])
+    entry.add_line(Line(date=first.date, txn_id=first.txn_id, desc=first.desc,
+                        acct_full='', acct_short='', amount=rev))
     return NONE, entry

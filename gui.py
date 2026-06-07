@@ -16,8 +16,9 @@
 import tkinter as tk
 from tkinter import ttk
 from PIL import Image, ImageTk
-from entry import Line
-from entry import Entry
+import constants as c
+from core.models import Line
+from core.models import Entry
 
 
 # Generic Fonts
@@ -1464,16 +1465,53 @@ class MyGui():
     # -------------------------------------------------------------------------
     def Update(self, entry: Entry):
         if ((entry.split == False) and (entry.size == 2)):
-            acct = entry[1].acctF
+            acct = entry[1].acct_full
             if (acct != ''):
                 self._UpdateSimple(acct)
 
         # Update log box
         self.Log(' ')
-        txt = entry.GetHeader()
-        self.Log(txt, 'header')
-        txt = entry.GetDataAsText()
-        self.Log(txt, 'default')
+        self.Log(self._FormatHeader(), 'header')
+        self.Log(self._FormatRows(entry), 'default')
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def _Pad(text, width):
+        ''' Left-justify text into a fixed-width column (no truncation). '''
+        text = str(text)
+        return text + ' ' * max(0, width - len(text))
+
+    # -------------------------------------------------------------------------
+    def _FormatHeader(self):
+        ''' Fixed-width header row for the preview box. '''
+        cols = [
+            (c.JRNL_LINE,        c.SIZE_LINE_COL),
+            (c.JRNL_DATE,        c.SIZE_DATE_COL),
+            (c.JRNL_ID,          c.SIZE_ID_COL),
+            (c.JRNL_DSCRP,       c.SIZE_DESC_COL),
+            (c.JRNL_MEMO,        c.SIZE_MEMO_COL),
+            (c.JRNL_ACCT_NAME_F, c.SIZE_ACCTF_COL),
+            (c.JRNL_AMOUNT,      c.SIZE_AMNT_COL),
+        ]
+        return ''.join(self._Pad(label, width) for label, width in cols)
+
+    # -------------------------------------------------------------------------
+    def _FormatRows(self, entry: Entry):
+        ''' Fixed-width data rows for the preview box. '''
+        out = ''
+        for i, line in enumerate(entry):
+            cells = [
+                (i,              c.SIZE_LINE_COL),
+                (line.date,      c.SIZE_DATE_COL),
+                (line.txn_id,    c.SIZE_ID_COL),
+                (line.desc,      c.SIZE_DESC_COL),
+                (line.memo,      c.SIZE_MEMO_COL),
+                (line.acct_full, c.SIZE_ACCTF_COL),
+                (line.amount,    c.SIZE_AMNT_COL),
+            ]
+            out += ''.join(self._Pad(value, width) for value, width in cells)
+            out += '\n'
+        return out
 
     # -------------------------------------------------------------------------
     def _HandleConfigureEvent(self, event):
