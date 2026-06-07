@@ -49,6 +49,8 @@ class AppState:
         self.accounts = Accounts()
         self.ledger = None
         self.import_result = None     # ImportResult for the selected file
+        self.import_filename = None   # remembered so the dropdown survives a rebuild
+        self.assoc_acct = None        # remembered associated account
         self.entry = None             # Entry currently being edited
         self.match_flag = None        # EXACT / PARTIAL / NONE for that entry
 
@@ -79,6 +81,7 @@ class AppState:
         ''' Load an import file; returns its candidate associated accounts. '''
         path = c.DATA_FOLDER + filename
         self.import_result = load_transactions(path, self.config)
+        self.import_filename = filename
         return self.import_result.assoc_accts
 
     def _first_line(self, txn, assoc):
@@ -187,47 +190,67 @@ def _balance_label():
     return ui.label(f'Balance: {bal:.2f}').classes(colour + ' font-mono')
 
 
+# Shared column widths so headers, the read-only source line, and the editable
+# rows all line up.
+_W_NUM = 'w-6'
+_W_MEMO = 'w-44'
+_W_AMOUNT = 'w-28'
+
+
 def _line_headers():
-    ''' Column captions aligned to the inputs produced by _render_lines. '''
-    with ui.row().classes('items-center w-full gap-2 text-xs uppercase '
-                          'tracking-wide text-gray-400'):
-        ui.label('#').classes('w-5')
+    ''' Column captions aligned to the rows produced by _render_lines. '''
+    with ui.row().classes('items-center w-full gap-2 px-1 pb-1 border-b no-wrap '
+                          'text-xs uppercase tracking-wide text-gray-400'):
+        ui.label('#').classes(_W_NUM)
         ui.label('Account').classes('grow')
-        ui.label('Memo').classes('w-40')
-        ui.label('Amount').classes('w-24 text-right pr-2')
+        ui.label('Memo').classes(_W_MEMO)
+        ui.label('Amount').classes(_W_AMOUNT + ' text-right pr-3')
 
 
 def _render_lines(entry, on_amount_blur):
     ''' Render posting rows aligned to _line_headers(). Line 0 (the associated
-        / bank account) is shaded and read-only; lines 1+ get editable
-        account / memo / amount inputs. '''
+        / bank account) is shaded and read-only; lines 1+ get editable outlined
+        account / memo / amount fields. Each row has a divider for a table feel. '''
     for i, line in enumerate(entry):
-        row = ui.row().classes('items-center w-full gap-2')
+        row = ui.row().classes('items-center w-full gap-2 px-1 border-b '
+                               'border-gray-100 no-wrap')
         if i == 0:
-            row.classes('bg-gray-100 rounded')               # the source account
+            row.classes('bg-gray-100')                        # the source account
         with row:
-            ui.label(str(i)).classes('w-5 text-gray-400')
+            ui.label(str(i)).classes(_W_NUM + ' text-gray-400')
             if i == 0:
-                ui.label(line.acct_full).classes('grow')
-                ui.element('div').classes('w-40')             # memo spacer
-                ui.label(line.amount).classes('font-mono w-24 text-right pr-2')
+                # read-only source line: a small "locked" tag, then plain text
+                with ui.row().classes('grow items-center gap-2 no-wrap'):
+                    ui.badge('source').props('color=grey-5 outline')
+                    ui.label(line.acct_full)
+                ui.element('div').classes(_W_MEMO)            # memo spacer
+                ui.label(line.amount).classes(
+                    'font-mono ' + _W_AMOUNT + ' text-right pr-3')
             else:
                 ui.select(state.account_options, with_input=True,
                           value=line.acct_full or None) \
-                    .bind_value(line, 'acct_full').classes('grow')
+                    .props('outlined dense options-dense').bind_value(line, 'acct_full') \
+                    .classes('grow')
                 ui.input(placeholder='memo', value=line.memo) \
-                    .bind_value(line, 'memo').classes('w-40')
+                    .props('outlined dense').bind_value(line, 'memo').classes(_W_MEMO)
                 ui.input(placeholder='0.00', value=line.amount) \
+                    .props('outlined dense input-class=text-right') \
                     .bind_value(line, 'amount') \
-                    .on('blur', on_amount_blur).classes('w-24')
+                    .on('blur', on_amount_blur).classes(_W_AMOUNT + ' font-mono')
 
 
-def _entry_summary(entry):
-    ''' One-line description of an entry's offsetting side, for the list. '''
+def _entry_accounts(entry):
+    ''' The offsetting account(s) of an entry, for the journal list. '''
     if entry.size == 2:
-        return f'{entry[1].acct_full}  {entry[1].amount}'
-    accts = ', '.join(l.acct_short for l in list(entry)[1:])
-    return f'split ({entry.size} lines): {accts}'
+        return entry[1].acct_full
+    return f'split ({entry.size} lines): ' + \
+        ', '.join(l.acct_short for l in list(entry)[1:])
+
+
+def _entry_amount(entry):
+    ''' The headline amount of an entry: the categorised leg for a simple
+        entry, otherwise the source (bank/card) line's amount. '''
+    return entry[1].amount if entry.size == 2 else entry[0].amount
 
 
 #==============================================================================
@@ -249,11 +272,13 @@ def build_categorize():
         except FileNotFoundError:
             ui.notify('Import file not found', type='negative')
             return
-        assoc_select.set_options(accts, value=accts[0] if accts else None)
+        state.assoc_acct = accts[0] if accts else None
+        assoc_select.set_options(accts, value=state.assoc_acct)
         state.entry = None
         refresh_all()
 
     def on_assoc_change():
+        state.assoc_acct = assoc_select.value
         state.entry = None
         refresh_all()
 
@@ -365,11 +390,15 @@ def build_categorize():
         _balance_label()
 
     # ---- layout ---------------------------------------------------------
+    # Initial values come from state so a page rebuild (refresh / reconnect)
+    # restores the previously-selected file and account instead of blanking out.
+    assoc_opts = state.import_result.assoc_accts if state.import_result else []
     with ui.row().classes('items-center gap-4 w-full'):
         import_select = ui.select(state.import_files(), label='Import file',
-                                  with_input=True,
+                                  with_input=True, value=state.import_filename,
                                   on_change=on_import_change).classes('w-72')
-        assoc_select = ui.select([], label='Associated account',
+        assoc_select = ui.select(assoc_opts, label='Associated account',
+                                 value=state.assoc_acct,
                                  on_change=on_assoc_change).classes('w-72')
         progress_label()
 
@@ -388,18 +417,23 @@ def build_categorize():
 #==============================================================================
 def build_journal():
     columns = [
-        {'name': 'date', 'label': 'Date', 'field': 'date',
-         'align': 'left', 'sortable': True},
-        {'name': 'desc', 'label': 'Description', 'field': 'desc',
-         'align': 'left', 'sortable': True},
-        {'name': 'summary', 'label': 'Categorisation', 'field': 'summary',
-         'align': 'left'},
+        {'name': 'date', 'label': 'Date', 'field': 'date', 'align': 'left',
+         'sortable': True, 'style': 'width: 96px', 'headerStyle': 'width: 96px'},
+        {'name': 'desc', 'label': 'Description', 'field': 'desc', 'align': 'left',
+         'sortable': True, 'classes': 'ellipsis',
+         'style': 'max-width: 200px', 'headerStyle': 'max-width: 200px'},
+        {'name': 'account', 'label': 'Categorisation', 'field': 'account',
+         'align': 'left', 'classes': 'ellipsis',
+         'style': 'max-width: 220px', 'headerStyle': 'max-width: 220px'},
+        {'name': 'amount', 'label': 'Amount', 'field': 'amount', 'align': 'right',
+         'sortable': True, 'classes': 'font-mono text-weight-medium',
+         'style': 'width: 120px', 'headerStyle': 'width: 120px'},
     ]
 
     def build_rows():
         ''' Every entry, most-recent first, as plain dicts for the table. '''
-        return [{'txn_id': e[0].txn_id, 'date': e[0].date,
-                 'desc': e[0].desc, 'summary': _entry_summary(e)}
+        return [{'txn_id': e[0].txn_id, 'date': e[0].date, 'desc': e[0].desc,
+                 'account': _entry_accounts(e), 'amount': _entry_amount(e)}
                 for e in reversed(state.ledger.history())]
 
     def refresh_table():
