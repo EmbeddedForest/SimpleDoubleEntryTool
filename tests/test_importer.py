@@ -91,6 +91,22 @@ class TestLoadTransactions(unittest.TestCase):
         self.assertEqual(result.style, 'DiscoverCC')
         self.assertEqual(result.transactions[0].amount, '-40.00')
 
+    def test_trailing_comma_does_not_shift_columns(self):
+        # Chase checking exports end each row with a trailing comma, so a row
+        # has one more field than the header. Without index_col=False pandas
+        # treats the first column as the index and shifts Description onto the
+        # Amount numbers, breaking the skip-string filter. This guards that.
+        path = self._csv(
+            'Transaction Date,Description,Amount,Type\n'
+            '1/2/2026,GROCERY MART,52.10,DEBIT,\n'
+            '1/5/2026,COFFEE SHOP,4.50,DEBIT,\n'
+        )
+        result = load_transactions(path, CONFIG)
+        self.assertEqual(result.count, 2)
+        self.assertEqual([t.desc for t in result.transactions],
+                         ['GROCERY MART', 'COFFEE SHOP'])   # date-sorted
+        self.assertEqual(result.transactions[0].amount, '52.10')
+
     def test_hashes_are_unique_and_stable(self):
         text = (
             'Transaction Date,Description,Amount\n'

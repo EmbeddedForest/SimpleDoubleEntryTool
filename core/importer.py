@@ -88,7 +88,10 @@ def load_transactions(file_path, config):
     Read file_path, auto-detect its style from config, and return an
     ImportResult of normalised, hashed, date/desc-sorted transactions.
     '''
-    df = pd.read_csv(file_path)
+    # index_col=False stops pandas from treating the first column as the index
+    # when a row has more fields than headers - e.g. Chase checking exports add
+    # a trailing comma, which would otherwise shift every column left.
+    df = pd.read_csv(file_path, index_col=False)
 
     style, cfg = detect_style(config, list(df.columns))
     date_c = cfg['DateColName']
