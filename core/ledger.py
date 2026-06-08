@@ -165,8 +165,15 @@ class Ledger:
     # -- mutation ---------------------------------------------------------
 
     def add_entry(self, entry: Entry):
-        ''' Append an entry to the in-memory journal. Call save() to persist. '''
+        '''
+        Insert (or replace) an entry in the in-memory journal, keyed by
+        TransactionID. Any existing rows for the same id are dropped first, so
+        the journal can never hold two entries with the same id - an accidental
+        double-add overwrites rather than duplicates. Call save() to persist.
+        '''
         self._ensure_loaded()
+        txn_id = entry[0].txn_id
+        self.df = self.df[self.df[c.JRNL_ID] != txn_id]    # upsert by id
         rows = []
         for line_num, line in enumerate(entry):
             rows.append({
@@ -191,8 +198,8 @@ class Ledger:
 
     def replace_entry(self, entry: Entry):
         ''' Replace the stored entry sharing entry[0]'s TransactionID with the
-            given (edited) entry. Call save() to persist. '''
-        self.delete_entry(entry[0].txn_id)
+            given (edited) entry. add_entry already upserts by id, so this is
+            just an alias kept for intent at call sites. Call save() to persist. '''
         self.add_entry(entry)
 
     # -- helpers ----------------------------------------------------------

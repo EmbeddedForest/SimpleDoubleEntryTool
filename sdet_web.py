@@ -154,6 +154,8 @@ class AppState:
             return False, err
         self.ledger.replace_entry(self.entry)
         self.ledger.save()
+        self.entry = None          # don't leave the edited entry loaded
+        self.match_flag = None
         return True, 'Saved.'
 
     # -- journal browsing -------------------------------------------------

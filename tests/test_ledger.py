@@ -116,6 +116,23 @@ class TestGetDeleteReplace(LedgerTestBase):
         self.assertFalse(self.ledger.transaction_exists('txNETFLIX'))
         self.assertEqual(len(self.ledger.history()), 2)
 
+    def test_add_entry_is_upsert_not_duplicate(self):
+        # Re-adding a transaction with an existing TransactionID must overwrite,
+        # never create a second copy (the journal-duplication bug).
+        entry = Entry([
+            Line(date='2026-02-01', txn_id='txDUP', desc='THING',
+                 acct_full='Liabilities:CreditCard:CC1', acct_short='CC1',
+                 amount='-9.00'),
+            Line(date='2026-02-01', txn_id='txDUP', desc='THING',
+                 acct_full='Expenses:Everyday:Coffee', acct_short='Coffee',
+                 amount='9.00'),
+        ])
+        self.ledger.add_entry(entry)
+        self.ledger.add_entry(entry)             # accidental second add
+        self.ledger.add_entry(entry)             # ...and a third
+        self.assertEqual(len(self.ledger.history()), 4)   # 3 original + 1
+        self.assertEqual(self.ledger.get_entry('txDUP').size, 2)  # not 4 or 6
+
     def test_replace_entry_recategorises(self):
         entry = self.ledger.get_entry('txPUB')
         entry[1].acct_full = 'Expenses:Entertainment:Bars'
